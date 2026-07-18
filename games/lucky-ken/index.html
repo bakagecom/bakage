@@ -39,7 +39,7 @@ a{color:var(--ink)}
 .btn.secondary{background:#fff;margin-top:12px}
 .btn.share{background:var(--blue);color:#fff;margin-top:12px}
 
-#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column;overflow-y:auto}
 #screen-play.active{display:flex}
 .hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
 
@@ -312,7 +312,7 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     screenPlay.classList.remove('active');
     screenResult.style.display = 'block';
 
-    var avg = roundsPlayed > 0 ? totalScore / Math.max(roundsPlayed, 3) : 0;
+    var avg = roundsPlayed > 0 ? totalScore / roundsPlayed : 0;
     var avgRounded = Math.round(avg);
     var title = titleFor(avg, roundsPlayed);
     var rank = rankFor(avg);
