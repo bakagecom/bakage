@@ -12,7 +12,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@bakage_com">
 <meta name="twitter:image" content="https://bakage.com/assets/ogp.png">
-<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="icon" type="image/png" href="./assets/favicon.png">
 <style>
 :root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -36,7 +36,7 @@ footer a{color:var(--ink)}
 </head>
 <body>
 <header>
-  <img src="/assets/favicon.png" alt="バカゲー製作所マスコット">
+  <img src="./assets/favicon.png" alt="バカゲー製作所マスコット">
   <h1>バカゲー製作所</h1>
   <p class="tagline">バカゲー製作所が毎日ゲームを製造する工場⚙️ 30秒で遊べるムダなゲームをどうぞ。</p>
 </header>
@@ -51,12 +51,12 @@ footer a{color:var(--ink)}
   <p>運営: バカゲー製作所 | 工場見学: <a href="https://x.com/bakage_com">@bakage_com</a></p>
 </footer>
 <script>
-fetch('/games/index.json').then(r=>r.json()).then(list=>{
+fetch('./games/index.json').then(r=>r.json()).then(list=>{
   const c=document.getElementById('games');
   if(!list.length){document.getElementById('empty').hidden=false;return}
   list.sort((a,b)=>b.date.localeCompare(a.date)).forEach(g=>{
     const a=document.createElement('a');
-    a.className='game-card';a.href='/games/'+g.slug+'/';
+    a.className='game-card';a.href='./games/'+g.slug+'/';
     a.innerHTML='<h2>'+g.emoji+' '+g.title+'</h2><p>'+g.description+'</p><span class="date">'+g.date+' 出荷</span>';
     c.appendChild(a);
   });
