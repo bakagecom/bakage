@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>都道府県当てパンチ | バカゲー製作所</title>
+<meta name="description" content="シルエットだけで都道府県を当てて30秒間パンチしまくれ。間違えると県民が激怒(?)するバカゲー。">
+<meta property="og:title" content="都道府県当てパンチ | バカゲー製作所">
+<meta property="og:description" content="シルエットだけで都道府県を当てろ!30秒でどこまで正解できる?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-todofuken-punch.png">
+<meta property="og:url" content="https://bakage.com/games/todofuken-punch/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-todofuken-punch.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.note{font-size:.75rem;opacity:.6;margin-bottom:18px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column;overflow-y:auto}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.timerbar-wrap{height:14px;margin:0 20px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+#timerbar{height:100%;background:var(--pink);width:100%;transform-origin:left}
+
+.silzone{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;padding:8px}
+.silcard{background:#fff;border:5px solid var(--ink);border-radius:20px;box-shadow:8px 8px 0 var(--gear);width:min(64vw,34vh,240px);height:min(64vw,34vh,240px);display:flex;align-items:center;justify-content:center;padding:14px}
+#silsvg{width:100%;height:100%}
+#silsvg path{fill:var(--ink)}
+
+.feedback{position:absolute;left:50%;top:8%;transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:900;font-size:.9rem;padding:8px 16px;border-radius:10px;opacity:0;transition:opacity .15s;text-align:center;max-width:88%;pointer-events:none}
+.feedback.show{opacity:1}
+.feedback.correct{background:#1a9b57}
+.feedback.wrong{background:var(--pink);color:var(--ink)}
+
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 18px 22px}
+.choice{background:#fff;border:4px solid var(--ink);border-radius:12px;padding:14px 8px;font-weight:900;font-size:.95rem;box-shadow:5px 5px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.choice:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.choice:focus-visible{outline:3px solid var(--blue)}
+.choice.correct{background:#1a9b57;color:#fff}
+.choice.wrong{background:var(--pink)}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.1rem;margin:10px 0}
+.rank-line{font-size:.9rem;margin-bottom:6px}
+.score-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>👊 都道府県当てパンチ</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>👊 都道府県当てパンチ</h1>
+      <p>シルエットだけで都道府県を当てろ。<br>制限時間<b>30秒</b>で正解した数を競うバカゲー。<br>間違えるとその県民が激怒するので気をつけろ。</p>
+      <p class="note">※シルエットは分かりやすさ優先でデフォルメしています</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="score-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">問、正解した</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>正解数: <b id="score-num">0</b></span>
+      <span>⏱ <b id="time-num">30</b>s</span>
+    </div>
+    <div class="timerbar-wrap"><div id="timerbar"></div></div>
+    <div class="silzone">
+      <div class="silcard">
+        <svg id="silsvg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path id="silpath" d=""/></svg>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var DURATION = 30;
+  var GAME_URL = 'https://bakage.com/games/todofuken-punch/';
+
+  var PREFS = [
+    {name:'北海道', d:'M60,20 L100,10 L140,30 L160,70 L185,90 L170,110 L150,150 L110,185 L70,170 L40,140 L20,90 L35,50 Z'},
+    {name:'青森県', d:'M40,40 L90,20 L120,15 L150,30 L170,55 L150,70 L160,90 L130,95 L110,70 L90,90 L60,120 L40,90 L55,65 Z'},
+    {name:'千葉県', d:'M50,20 L110,15 L130,40 L120,70 L140,100 L160,140 L130,170 L100,150 L90,110 L60,100 L40,70 L45,40 Z'},
+    {name:'神奈川県', d:'M30,30 L150,25 L170,60 L150,90 L110,100 L100,150 L80,100 L50,95 L20,70 Z'},
+    {name:'石川県', d:'M90,10 L110,15 L120,60 L140,80 L130,110 L100,100 L80,130 L60,160 L40,140 L50,100 L70,70 L60,40 Z'},
+    {name:'島根県', d:'M10,80 L60,60 L110,70 L160,55 L190,75 L185,95 L150,100 L100,90 L50,100 L15,95 Z'},
+    {name:'香川県', d:'M60,40 L110,35 L140,55 L150,90 L120,110 L80,105 L50,85 L45,60 Z'},
+    {name:'沖縄県', d:'M40,30 L70,25 L100,45 L130,70 L150,100 L140,130 L110,120 L80,90 L55,65 L35,50 Z'},
+    {name:'静岡県', d:'M20,40 L80,20 L140,30 L170,50 L160,80 L130,90 L120,130 L140,170 L110,180 L95,140 L100,95 L70,90 L30,70 Z'},
+    {name:'京都府', d:'M70,10 L100,15 L95,50 L120,70 L110,110 L130,140 L100,175 L70,160 L60,120 L80,90 L60,60 L65,30 Z'},
+    {name:'長崎県', d:'M30,60 L50,40 L60,60 L80,35 L95,55 L110,30 L130,50 L120,75 L140,85 L125,105 L140,130 L110,120 L100,150 L80,125 L60,140 L55,110 L35,100 L45,80 Z'},
+    {name:'高知県', d:'M30,50 L70,30 L120,25 L160,45 L150,80 L170,110 L140,130 L100,110 L60,120 L40,90 Z'}
+  ];
+
+  var score = 0;
+  var timeLeft = DURATION;
+  var timerId = null;
+  var answerTimeoutId = null;
+  var deck = [];
+  var current = -1;
+  var locked = false;
+  var lastTapAt = 0;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var scoreNumEl = document.getElementById('score-num');
+  var timeNumEl = document.getElementById('time-num');
+  var timerbarEl = document.getElementById('timerbar');
+  var silpathEl = document.getElementById('silpath');
+  var feedbackEl = document.getElementById('feedback');
+  var choicesEl = document.getElementById('choices');
+
+  function titleFor(n){
+    if(n < 1) return '社会科がんばれ勢';
+    if(n < 4) return '都道府県ちょっとだけ分かる人';
+    if(n < 7) return '地図帳めくったことある人';
+    if(n < 10) return '都道府県マイスター見習い';
+    if(n < 15) return 'ご当地博士';
+    return '日本地図と結婚できるレベル';
+  }
+
+  function rankFor(n){
+    var rank = 1234567 - n * 9876;
+    if(rank < 1) rank = 1;
+    return rank;
+  }
+
+  function shuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function shuffleDeck(){
+    deck = shuffle(PREFS.map(function(_, i){ return i; }));
+  }
+
+  function startGame(){
+    clearInterval(timerId);
+    clearTimeout(answerTimeoutId);
+    score = 0;
+    timeLeft = DURATION;
+    locked = false;
+    scoreNumEl.textContent = '0';
+    timeNumEl.textContent = String(DURATION);
+    timerbarEl.style.transition = 'none';
+    timerbarEl.style.width = '100%';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+
+    shuffleDeck();
+    nextQuestion();
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        timerbarEl.style.transition = 'width ' + DURATION + 's linear';
+        timerbarEl.style.width = '0%';
+      });
+    });
+
+    timerId = setInterval(function(){
+      timeLeft -= 1;
+      timeNumEl.textContent = String(Math.max(timeLeft, 0));
+      if(timeLeft <= 0){
+        clearInterval(timerId);
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function nextQuestion(){
+    var previous = current;
+    if(deck.length === 0) shuffleDeck();
+    if(deck.length > 1 && deck[deck.length - 1] === previous){
+      var swapAt = Math.floor(Math.random() * (deck.length - 1));
+      var tmp = deck[deck.length - 1];
+      deck[deck.length - 1] = deck[swapAt];
+      deck[swapAt] = tmp;
+    }
+    current = deck.pop();
+    silpathEl.setAttribute('d', PREFS[current].d);
+    feedbackEl.className = 'feedback';
+    feedbackEl.textContent = '';
+
+    var wrongPool = PREFS.map(function(_, i){ return i; }).filter(function(i){ return i !== current; });
+    shuffle(wrongPool);
+    var options = [current, wrongPool[0], wrongPool[1], wrongPool[2]];
+    shuffle(options);
+
+    choicesEl.innerHTML = '';
+    options.forEach(function(idx){
+      var btn = document.createElement('div');
+      btn.className = 'choice';
+      btn.textContent = PREFS[idx].name;
+      btn.setAttribute('role', 'button');
+      btn.setAttribute('tabindex', '0');
+      function fire(e){ e.preventDefault(); checkAnswer(idx, btn); }
+      btn.addEventListener('click', fire);
+      btn.addEventListener('touchstart', fire, {passive: false});
+      btn.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' ') fire(e);
+      });
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function checkAnswer(selectedIdx, btnEl){
+    var now = Date.now();
+    if(now - lastTapAt < 50) return;
+    lastTapAt = now;
+    if(locked || timeLeft <= 0) return;
+    locked = true;
+    var correctName = PREFS[current].name;
+    var isCorrect = selectedIdx === current;
+
+    if(isCorrect){
+      score += 1;
+      scoreNumEl.textContent = String(score);
+      btnEl.classList.add('correct');
+      feedbackEl.textContent = '正解!👊';
+      feedbackEl.className = 'feedback correct show';
+    } else {
+      btnEl.classList.add('wrong');
+      Array.prototype.forEach.call(choicesEl.children, function(child){
+        if(child.textContent === correctName) child.classList.add('correct');
+      });
+      feedbackEl.textContent = 'ブッブー!正解は' + correctName + '!' + correctName + '民が激怒中!😡';
+      feedbackEl.className = 'feedback wrong show';
+    }
+
+    answerTimeoutId = setTimeout(function(){
+      locked = false;
+      if(timeLeft > 0) nextQuestion();
+    }, isCorrect ? 450 : 900);
+  }
+
+  function endGame(){
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = titleFor(score);
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rankFor(score).toLocaleString() + ' 番目の地理マスターでした';
+
+    var shareText = '都道府県当てパンチで' + score + '問正解して「' + titleFor(score) + '」の称号を獲得!\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onRetry(e){
+    e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  }
+  function onStart(e){ e.preventDefault(); startGame(); }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive: false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive: false});
+})();
+</script>
+</body>
+</html>
