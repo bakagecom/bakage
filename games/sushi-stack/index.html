@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>寿司積み選手権 | バカゲー製作所</title>
+<meta name="description" content="揺れる寿司を狙ったタイミングでタップして積み上げるだけのバカゲー。1回でも外したら終わり、何段いける?">
+<meta property="og:title" content="寿司積み選手権 | バカゲー製作所">
+<meta property="og:description" content="揺れる寿司をタップして積み上げろ。1回外したら終了。あなたのタワーは日本で何番目の高さ?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-sushi-stack.png">
+<meta property="og:url" content="https://bakage.com/games/sushi-stack/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-sushi-stack.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+
+.towerzone{flex:1;position:relative;overflow:hidden}
+.rail{position:absolute;top:16px;left:0;right:0;height:2px;background:rgba(24,24,32,.15)}
+#mover{
+  position:absolute;top:0;
+  width:min(28vw,110px);height:min(28vw,110px);
+  transform:translate(-50%,0);
+  font-size:min(20vw,80px);line-height:1;
+  display:flex;align-items:center;justify-content:center;
+}
+#tower{position:absolute;left:0;right:0;bottom:0;transition:transform .15s ease-out}
+.piece{
+  position:absolute;left:50%;
+  width:min(28vw,110px);height:42px;
+  transform:translate(-50%,0);
+  font-size:min(18vw,68px);line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.tapzone{padding:18px 16px 8px}
+.howto{text-align:center;font-size:.8rem;opacity:.6;padding:0 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🍣 寿司積み選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🍣 寿司積み選手権</h1>
+      <p>左右に揺れる寿司をタイミングよくタップして積み上げろ。<br>ズレすぎたらタワー崩壊、<b>1回外したら終了</b>。<br>何段いける?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">段、積み上げた</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>段数: <b id="height-num">0</b></span>
+      <span>🍣</span>
+    </div>
+    <div class="towerzone">
+      <div class="rail"></div>
+      <div id="mover">🍣</div>
+      <div id="tower"></div>
+    </div>
+    <div class="tapzone">
+      <button class="btn" id="btn-drop">積む!</button>
+    </div>
+    <div class="howto">揺れる寿司がちょうど重なった瞬間にタップ</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/sushi-stack/';
+  var PERFECT_PX = 14;
+  var MISS_PX = 46;
+  var PIECE_H = 42;
+
+  var height = 0;
+  var running = false;
+  var rafId = null;
+  var startTime = 0;
+  var speed = 1.4;
+  var amplitude = 90;
+  var centerX = 0;
+  var currentTargetX = 0;
+  var towerY = 0;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var towerZone = document.querySelector('.towerzone');
+  var moverEl = document.getElementById('mover');
+  var towerEl = document.getElementById('tower');
+  var heightNumEl = document.getElementById('height-num');
+
+  function titleFor(n){
+    if(n < 3) return '崩壊職人';
+    if(n < 8) return '見習い板前';
+    if(n < 15) return '寿司職人';
+    if(n < 25) return '積みの達人';
+    return '伝説の大トロタワー建築士';
+  }
+
+  function rankFor(n){
+    var rank = 987654 - n * 4213;
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function currentMoverX(t){
+    var w = towerZone.clientWidth;
+    var amp = Math.min(amplitude, w/2 - 30);
+    return currentTargetX + amp * Math.sin(speed * t / 1000);
+  }
+
+  function tick(ts){
+    if(!running) return;
+    if(!startTime) startTime = ts;
+    var t = ts - startTime;
+    var x = currentMoverX(t);
+    moverEl.style.left = x + 'px';
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function resetTower(){
+    towerEl.innerHTML = '';
+    towerY = 0;
+    towerEl.style.transform = 'translateY(0)';
+  }
+
+  function startGame(){
+    cancelAnimationFrame(rafId);
+    height = 0;
+    speed = 1.4;
+    heightNumEl.textContent = '0';
+    resetTower();
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+
+    var w = towerZone.clientWidth;
+    centerX = w / 2;
+    currentTargetX = clampX(centerX, w);
+    moverEl.style.left = currentTargetX + 'px';
+
+    running = true;
+    startTime = 0;
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function clampX(x, w){
+    var margin = 40;
+    return Math.max(margin, Math.min(w - margin, x));
+  }
+
+  function placePiece(x){
+    var el = document.createElement('div');
+    el.className = 'piece';
+    el.textContent = '🍣';
+    el.style.left = x + 'px';
+    el.style.bottom = (height * PIECE_H) + 'px';
+    towerEl.appendChild(el);
+  }
+
+  function dropPiece(){
+    if(!running) return;
+    running = false;
+    cancelAnimationFrame(rafId);
+
+    var moverX = parseFloat(moverEl.style.left);
+    if(isNaN(moverX)) moverX = currentTargetX;
+    var offset = moverX - currentTargetX;
+
+    if(Math.abs(offset) > MISS_PX){
+      endGame();
+      return;
+    }
+
+    var drift = Math.abs(offset) <= PERFECT_PX ? 0 : offset * 0.5;
+    var landX = clampX(currentTargetX + drift, towerZone.clientWidth);
+    placePiece(landX);
+    currentTargetX = landX;
+    height += 1;
+    heightNumEl.textContent = String(height);
+
+    speed = Math.min(speed + 0.12, 4.2);
+
+    var visibleRows = Math.floor((towerZone.clientHeight - 40) / PIECE_H);
+    if(height >= visibleRows){
+      towerY = (height - visibleRows + 1) * PIECE_H;
+      towerEl.style.transform = 'translateY(' + towerY + 'px)';
+    }
+
+    running = true;
+    startTime = 0;
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function endGame(){
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    document.getElementById('result-count').textContent = String(height);
+    document.getElementById('result-title').textContent = titleFor(height);
+    document.getElementById('result-rank').textContent =
+      'あなたの寿司タワーは今日、日本で ' + rankFor(height).toLocaleString() + ' 番目の高さでした';
+
+    var shareText = '寿司を' + height + '段積み上げて「' + titleFor(height) + '」の称号を獲得!\n寿司タワーは日本で' + rankFor(height).toLocaleString() + '番目の高さでした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  var lastTapAt = 0;
+  function onDrop(e){
+    if(e) e.preventDefault();
+    var now = Date.now();
+    if(now - lastTapAt < 50) return;
+    lastTapAt = now;
+    dropPiece();
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-start').addEventListener('touchstart', function(e){e.preventDefault(); startGame();}, {passive:false});
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  });
+  document.getElementById('btn-retry').addEventListener('touchstart', function(e){
+    e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  }, {passive:false});
+
+  screenPlay.addEventListener('click', onDrop);
+  screenPlay.addEventListener('touchstart', onDrop, {passive:false});
+})();
+</script>
+</body>
+</html>
