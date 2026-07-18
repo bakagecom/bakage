@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>満員電車サバイバル | バカゲー製作所</title>
+<meta name="description" content="連打して圧力に耐えるだけのバカゲー。20秒間、満員電車で押し出されずに生き残れ。">
+<meta property="og:title" content="満員電車サバイバル | バカゲー製作所">
+<meta property="og:description" content="連打して耐えろ。20秒間押し出されずに生き残れるか?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-manin-densha.png">
+<meta property="og:url" content="https://bakage.com/games/manin-densha/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-manin-densha.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.gaugewrap{height:28px;margin:0 20px;border:3px solid var(--ink);border-radius:10px;background:#fff;overflow:hidden;position:relative}
+#gauge{height:100%;background:var(--pink);width:30%;transition:width .1s linear,background .2s linear}
+.gaugelabel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900;color:var(--ink)}
+
+.pushzone{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
+#pushbtn{
+  width:min(60vw,38vh,240px);height:min(60vw,38vh,240px);border-radius:50%;
+  background:#fff;border:6px solid var(--ink);box-shadow:8px 8px 0 var(--gear);
+  font-size:1.3rem;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;
+}
+.announce{position:absolute;top:8px;left:0;right:0;text-align:center;font-size:.85rem;font-weight:900;color:var(--pink);opacity:0;transition:opacity .2s;pointer-events:none}
+.announce.show{opacity:1}
+.howto{text-align:center;font-size:.8rem;opacity:.6;padding:0 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🚃 満員電車サバイバル</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🚃 満員電車サバイバル</h1>
+      <p>満員電車の圧力に連打で耐えろ。<br>放っておくと圧力がどんどん上がり、100%になると押し出されて即終了。<br>20秒間、生き残れるか?</p>
+      <button class="btn" id="btn-start">タップして乗車</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">秒、生き残った</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>残り: <b id="time-num">20</b>s</span>
+      <span>生存中</span>
+    </div>
+    <div class="gaugewrap">
+      <div id="gauge"></div>
+      <div class="gaugelabel">満員度 <span id="pressure-num">30</span>%</div>
+    </div>
+    <div class="pushzone">
+      <div class="announce" id="announce">まもなく発車します</div>
+      <button id="pushbtn">押し返す!</button>
+    </div>
+    <div class="howto">連打して圧力を下げろ</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/manin-densha/';
+  var DURATION = 20;
+  var TICK_MS = 100;
+  var RISE_PER_TICK = 1.6;
+  var PUSH_AMOUNT = 6;
+  var SPIKE_CHANCE_PER_TICK = 0.012;
+  var SPIKE_AMOUNT = 14;
+  var SPIKE_COOLDOWN_SEC = 2.5;
+
+  var ANNOUNCES = ['まもなく発車します','駆け込み乗車はおやめください','次は名もなき駅','ドアが閉まります','車内混雑しております','お客様が乗車します'];
+
+  var pressure = 30;
+  var timeLeft = DURATION;
+  var elapsed = 0;
+  var tickId = null;
+  var announceTimeoutId = null;
+  var running = false;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var gaugeEl = document.getElementById('gauge');
+  var pressureNumEl = document.getElementById('pressure-num');
+  var timeNumEl = document.getElementById('time-num');
+  var announceEl = document.getElementById('announce');
+
+  function titleFor(survivedSec, won){
+    if(won) return '満員電車マスター';
+    if(survivedSec < 5) return '一瞬で押し出された人';
+    if(survivedSec < 10) return '序盤リタイア組';
+    if(survivedSec < 15) return '健闘した通勤者';
+    return 'あと少しだった人';
+  }
+
+  function rankFor(survivedSec){
+    var rank = 999983 - Math.round(survivedSec * survivedSec * 2100);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function updateGaugeColor(){
+    if(pressure >= 80) gaugeEl.style.background = '#E23B4E';
+    else if(pressure >= 50) gaugeEl.style.background = 'var(--pink)';
+    else gaugeEl.style.background = '#3BAA5C';
+  }
+
+  function renderGauge(){
+    gaugeEl.style.width = Math.max(0, Math.min(100, pressure)) + '%';
+    pressureNumEl.textContent = String(Math.round(pressure));
+    updateGaugeColor();
+  }
+
+  function showAnnounce(){
+    clearTimeout(announceTimeoutId);
+    announceEl.textContent = ANNOUNCES[Math.floor(Math.random() * ANNOUNCES.length)];
+    announceEl.classList.add('show');
+    announceTimeoutId = setTimeout(function(){
+      announceEl.classList.remove('show');
+    }, 1200);
+  }
+
+  function startGame(){
+    clearInterval(tickId);
+    clearTimeout(announceTimeoutId);
+    pressure = 30;
+    timeLeft = DURATION;
+    elapsed = 0;
+    timeNumEl.textContent = String(DURATION);
+    renderGauge();
+    announceEl.classList.remove('show');
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+
+    running = true;
+    var elapsedSinceSpike = SPIKE_COOLDOWN_SEC;
+    tickId = setInterval(function(){
+      pressure += RISE_PER_TICK;
+      elapsedSinceSpike += TICK_MS / 1000;
+      if(elapsedSinceSpike >= SPIKE_COOLDOWN_SEC && Math.random() < SPIKE_CHANCE_PER_TICK){
+        pressure += SPIKE_AMOUNT;
+        elapsedSinceSpike = 0;
+        showAnnounce();
+      }
+      elapsed += TICK_MS / 1000;
+      timeLeft = Math.max(0, DURATION - elapsed);
+      timeNumEl.textContent = String(Math.ceil(timeLeft));
+
+      if(pressure >= 100){
+        pressure = 100;
+        renderGauge();
+        endGame(elapsed, false);
+        return;
+      }
+      renderGauge();
+
+      if(elapsed >= DURATION){
+        endGame(DURATION, true);
+        return;
+      }
+    }, TICK_MS);
+  }
+
+  var lastTapAt = 0;
+  function onPush(e){
+    if(!running) return;
+    if(e) e.preventDefault();
+    var now = Date.now();
+    if(now - lastTapAt < 50) return;
+    lastTapAt = now;
+    pressure = Math.max(0, pressure - PUSH_AMOUNT);
+    renderGauge();
+  }
+
+  function endGame(survivedSec, won){
+    if(!running) return;
+    running = false;
+    clearInterval(tickId);
+    clearTimeout(announceTimeoutId);
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var survivedRounded = Math.round(survivedSec);
+    document.getElementById('result-count').textContent = String(survivedRounded);
+    document.getElementById('result-title').textContent = titleFor(survivedRounded, won);
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rankFor(survivedRounded).toLocaleString() + ' 番目に満員電車に強い人でした';
+
+    var shareText = '満員電車に' + survivedRounded + '秒生き残って「' + titleFor(survivedRounded, won) + '」の称号を獲得!\n日本で' + rankFor(survivedRounded).toLocaleString() + '番目に満員電車に強い人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-start').addEventListener('touchstart', function(e){e.preventDefault(); startGame();}, {passive:false});
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  });
+  document.getElementById('btn-retry').addEventListener('touchstart', function(e){
+    e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  }, {passive:false});
+
+  var pushBtn = document.getElementById('pushbtn');
+  pushBtn.addEventListener('click', onPush);
+  pushBtn.addEventListener('touchstart', onPush, {passive:false});
+})();
+</script>
+</body>
+</html>
