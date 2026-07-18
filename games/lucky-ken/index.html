@@ -87,7 +87,7 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     <div class="card" id="screen-result" style="display:none">
       <h1>結果発表</h1>
       <div class="combo-count" id="result-count">0</div>
-      <p style="margin-bottom:4px">平均スコア(100点満点)</p>
+      <p style="margin-bottom:4px">運試しスコア(100点満点)</p>
       <div class="title-badge" id="result-title">称号</div>
       <p class="lucky-line" id="result-lucky"></p>
       <p class="rank-line" id="result-rank"></p>
@@ -312,7 +312,7 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     screenPlay.classList.remove('active');
     screenResult.style.display = 'block';
 
-    var avg = roundsPlayed > 0 ? totalScore / roundsPlayed : 0;
+    var avg = roundsPlayed > 0 ? totalScore / Math.max(roundsPlayed, 3) : 0;
     var avgRounded = Math.round(avg);
     var title = titleFor(avg, roundsPlayed);
     var rank = rankFor(avg);
@@ -326,7 +326,7 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     document.getElementById('result-rank').textContent =
       'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に運が良い人でした';
 
-    var shareText = 'リールを' + roundsPlayed + '回ピタ止めして平均' + avgRounded + '点、「' + title + '」の称号を獲得!\n' + luckyText + '。日本で' + rank.toLocaleString() + '番目に運が良い人でした。\n#バカゲー製作所';
+    var shareText = 'リールを' + roundsPlayed + '回ピタ止めして運試しスコア' + avgRounded + '点、「' + title + '」の称号を獲得!\n' + luckyText + '。日本で' + rank.toLocaleString() + '番目に運が良い人でした。\n#バカゲー製作所';
     var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
     document.getElementById('btn-share').onclick = function(){
       window.open(shareUrl, '_blank', 'noopener');
