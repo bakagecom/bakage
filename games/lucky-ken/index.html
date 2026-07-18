@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>今日のラッキー県 | バカゲー製作所</title>
+<meta name="description" content="流れる都道府県リールをピタッと止めるだけのバカゲー。止めた精度で今日の運試し。">
+<meta property="og:title" content="今日のラッキー県 | バカゲー製作所">
+<meta property="og:description" content="リールをピタッと止めろ。20秒間で何回、県の真ん中に止められるか?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-lucky-ken.png">
+<meta property="og:url" content="https://bakage.com/games/lucky-ken/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-lucky-ken.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+
+.reelwrap{padding:0 20px;position:relative}
+.reel-viewport{width:100%;height:74px;overflow:hidden;position:relative;border:4px solid var(--ink);border-radius:12px;background:#fff}
+.reel-track{position:absolute;top:0;left:50%;margin-left:-50px;height:100%;display:flex;will-change:transform}
+.reel-item{width:100px;height:100%;flex:0 0 100px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.85rem;border-right:2px dashed rgba(24,24,32,.15);text-align:center;padding:0 4px}
+.reel-marker{position:absolute;top:-6px;bottom:-6px;left:50%;width:94px;margin-left:-47px;border:3px solid var(--pink);border-radius:10px;pointer-events:none;box-sizing:border-box}
+.reel-center-line{position:absolute;top:-14px;bottom:-14px;left:50%;width:2px;margin-left:-1px;background:var(--pink);pointer-events:none;opacity:.5}
+
+.feedback{text-align:center;font-size:1.1rem;font-weight:900;color:var(--pink);height:1.6rem;margin:10px 0 2px;opacity:0;transition:opacity .15s}
+.feedback.show{opacity:1}
+
+.stopzone{padding:14px 20px 8px}
+#btn-stop{
+  width:100%;padding:22px;font-size:1.35rem;font-weight:900;
+  border:6px solid var(--ink);border-radius:16px;background:var(--pink);
+  box-shadow:8px 8px 0 var(--ink);cursor:pointer;
+}
+.howto{text-align:center;font-size:.8rem;opacity:.6;padding:10px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.lucky-line{font-size:1rem;margin-bottom:10px;font-weight:900}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🎯 今日のラッキー県</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🎯 今日のラッキー県</h1>
+      <p>都道府県の名前がずらずら流れるリールを、ピタッと止めろ。<br>真ん中に近いほど高得点。20秒間で何回ピタ止めできるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">平均スコア(100点満点)</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="lucky-line" id="result-lucky"></p>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>残り: <b id="time-num">20</b>s</span>
+      <span>ピタ止め回数: <b id="score-num">0</b></span>
+    </div>
+    <div class="reelwrap">
+      <div class="reel-viewport">
+        <div class="reel-track" id="reel-track"></div>
+        <div class="reel-center-line"></div>
+        <div class="reel-marker"></div>
+      </div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="stopzone">
+      <button id="btn-stop">ピタッと止める!</button>
+    </div>
+    <div class="howto">まん中の枠に合わせてタップ</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/lucky-ken/';
+  var DURATION = 20;
+  var ITEM_WIDTH = 100;
+  var BASE_SPEED = 200;
+  var SPEED_STEP = 15;
+  var MAX_SPEED = 420;
+  var STOP_FEEDBACK_MS = 700;
+
+  var PREFS = [
+    '北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県',
+    '茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県',
+    '新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県',
+    '静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県',
+    '奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県',
+    '徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県',
+    '熊本県','大分県','宮崎県','鹿児島県','沖縄県'
+  ];
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  var running = false;
+  var scoring = false;
+  var position = 0;
+  var speed = BASE_SPEED;
+  var baseList = [];
+  var renderList = [];
+  var loopWidth = 0;
+  var rafId = null;
+  var lastFrameTs = 0;
+  var timeLeft = DURATION;
+  var gameTimerId = null;
+  var resumeTimeoutId = null;
+  var totalScore = 0;
+  var roundsPlayed = 0;
+  var bestScore = -1;
+  var bestPref = null;
+  var lastTapAt = 0;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var trackEl = document.getElementById('reel-track');
+  var feedbackEl = document.getElementById('feedback');
+  var timeNumEl = document.getElementById('time-num');
+  var scoreNumEl = document.getElementById('score-num');
+
+  function titleFor(avg, rounds){
+    if(rounds <= 0) return '見送ってしまった人';
+    if(avg >= 85) return 'ピタ止めの達人';
+    if(avg >= 65) return 'なかなかの目利き';
+    if(avg >= 40) return 'まずまずの反射神経';
+    if(avg >= 20) return '運試し初心者';
+    return '力を出し切れなかった人';
+  }
+
+  function rankFor(avg){
+    var rank = 999983 - Math.round(avg * avg * 100);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function buildTrack(){
+    baseList = shuffle(PREFS);
+    loopWidth = baseList.length * ITEM_WIDTH;
+    renderList = baseList.concat(baseList);
+    var frag = document.createDocumentFragment();
+    for(var i = 0; i < renderList.length; i++){
+      var d = document.createElement('div');
+      d.className = 'reel-item';
+      d.textContent = renderList[i];
+      frag.appendChild(d);
+    }
+    trackEl.innerHTML = '';
+    trackEl.appendChild(frag);
+  }
+
+  function renderPosition(){
+    trackEl.style.transform = 'translateX(' + (-position) + 'px)';
+  }
+
+  function tickFrame(ts){
+    if(!running){ return; }
+    if(!scoring){
+      if(!lastFrameTs) lastFrameTs = ts;
+      var dt = (ts - lastFrameTs) / 1000;
+      lastFrameTs = ts;
+      position = (position + speed * dt) % loopWidth;
+      renderPosition();
+    } else {
+      lastFrameTs = 0;
+    }
+    rafId = requestAnimationFrame(tickFrame);
+  }
+
+  function showFeedback(score, pref){
+    feedbackEl.textContent = '+' + score + ' ' + pref + '!';
+    feedbackEl.classList.add('show');
+  }
+
+  function hideFeedback(){
+    feedbackEl.classList.remove('show');
+  }
+
+  function startGame(){
+    clearInterval(gameTimerId);
+    cancelAnimationFrame(rafId);
+    clearTimeout(resumeTimeoutId);
+
+    speed = BASE_SPEED;
+    totalScore = 0;
+    roundsPlayed = 0;
+    bestScore = -1;
+    bestPref = null;
+    scoring = false;
+    lastFrameTs = 0;
+    lastTapAt = 0;
+    timeLeft = DURATION;
+
+    timeNumEl.textContent = String(DURATION);
+    scoreNumEl.textContent = '0';
+    hideFeedback();
+    buildTrack();
+    position = Math.random() * loopWidth;
+    renderPosition();
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+
+    running = true;
+    rafId = requestAnimationFrame(tickFrame);
+
+    gameTimerId = setInterval(function(){
+      timeLeft -= 1;
+      if(timeLeft <= 0){
+        timeNumEl.textContent = '0';
+        endGame();
+        return;
+      }
+      timeNumEl.textContent = String(timeLeft);
+    }, 1000);
+  }
+
+  function onStop(e){
+    if(!running || scoring) return;
+    if(e) e.preventDefault();
+    var now = Date.now();
+    if(now - lastTapAt < 50) return;
+    lastTapAt = now;
+
+    scoring = true;
+    var rawIndex = Math.round(position / ITEM_WIDTH);
+    var dist = Math.abs(position - rawIndex * ITEM_WIDTH);
+    var score = Math.max(0, Math.round(100 - dist * 2));
+    var pref = baseList[rawIndex % baseList.length];
+
+    totalScore += score;
+    roundsPlayed++;
+    scoreNumEl.textContent = String(roundsPlayed);
+    if(score > bestScore){
+      bestScore = score;
+      bestPref = pref;
+    }
+    showFeedback(score, pref);
+    speed = Math.min(MAX_SPEED, speed + SPEED_STEP);
+
+    clearTimeout(resumeTimeoutId);
+    resumeTimeoutId = setTimeout(function(){
+      if(!running) return;
+      hideFeedback();
+      scoring = false;
+    }, STOP_FEEDBACK_MS);
+  }
+
+  function endGame(){
+    if(!running) return;
+    running = false;
+    clearInterval(gameTimerId);
+    cancelAnimationFrame(rafId);
+    clearTimeout(resumeTimeoutId);
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var avg = roundsPlayed > 0 ? totalScore / Math.max(roundsPlayed, 3) : 0;
+    var avgRounded = Math.round(avg);
+    var title = titleFor(avg, roundsPlayed);
+    var rank = rankFor(avg);
+    var luckyText = bestPref
+      ? '本日のラッキー県は「' + bestPref + '」でした'
+      : '今日はラッキー県が見つかりませんでした';
+
+    document.getElementById('result-count').textContent = String(avgRounded);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-lucky').textContent = luckyText;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に運が良い人でした';
+
+    var shareText = 'リールを' + roundsPlayed + '回ピタ止めして平均' + avgRounded + '点、「' + title + '」の称号を獲得!\n' + luckyText + '。日本で' + rank.toLocaleString() + '番目に運が良い人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-start').addEventListener('touchstart', function(e){e.preventDefault(); startGame();}, {passive:false});
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  });
+  document.getElementById('btn-retry').addEventListener('touchstart', function(e){
+    e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  }, {passive:false});
+
+  var stopBtn = document.getElementById('btn-stop');
+  stopBtn.addEventListener('click', onStop);
+  stopBtn.addEventListener('touchstart', onStop, {passive:false});
+})();
+</script>
+</body>
+</html>
