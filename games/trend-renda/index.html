@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>猛暑連打 | バカゲー製作所</title>
+<meta name="description" content="15秒で「猛暑」をひたすら連打するだけの暇つぶしゲーム。逃げる文字を追いかけて、謎の称号と謎の順位をゲットしよう。">
+<meta property="og:title" content="猛暑連打 | バカゲー製作所">
+<meta property="og:description" content="15秒で「猛暑」を連打するだけのバカゲー。あなたは今日、日本で何番目に暇?">
+<meta property="og:image" content="https://bakage.com/assets/ogp.png">
+<meta property="og:url" content="https://bakage.com/games/trend-renda/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+/* start / result cards */
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:28px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.6rem;margin-bottom:10px}
+.card p{font-size:.95rem;line-height:1.6;margin-bottom:18px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+/* play screen */
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.timerbar-wrap{height:14px;margin:0 20px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+#timerbar{height:100%;background:var(--pink);width:100%;transform-origin:left}
+.combo{font-size:1.1rem}
+.wordzone{flex:1;position:relative}
+#word{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-size:min(16vw,84px);font-weight:900;color:var(--ink);
+  background:#fff;border:5px solid var(--ink);border-radius:24px;
+  padding:.3em .6em;box-shadow:8px 8px 0 var(--gear);
+  cursor:pointer;white-space:nowrap;
+}
+.howto{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:.8rem;opacity:.6;pointer-events:none}
+
+/* result extras */
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🥵 猛暑連打</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🥵 猛暑連打</h1>
+      <p>今日のトレンドは「猛暑」。<br>制限時間<b>15秒</b>で「猛暑」を連打しろ。<br>調子に乗ると文字が逃げ出すので気をつけろ。</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">回、猛暑を連打した</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span class="combo">連打数: <b id="combo-num">0</b></span>
+      <span>⏱ <b id="time-num">15</b>s</span>
+    </div>
+    <div class="timerbar-wrap"><div id="timerbar"></div></div>
+    <div class="wordzone">
+      <div id="word">猛暑</div>
+    </div>
+    <div class="howto">文字をタップし続けろ</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var WORD = '猛暑';
+  var DURATION = 15;
+  var GAME_URL = 'https://bakage.com/games/trend-renda/';
+
+  var combo = 0;
+  var timeLeft = DURATION;
+  var timerId = null;
+  var escapeThreshold = 6; // この連打数を超えると文字が逃げ始める
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var wordEl = document.getElementById('word');
+  var comboNumEl = document.getElementById('combo-num');
+  var timeNumEl = document.getElementById('time-num');
+  var timerbarEl = document.getElementById('timerbar');
+
+  function titleFor(n){
+    if(n < 8) return '省エネ勢';
+    if(n < 20) return 'ただの元気な人';
+    if(n < 40) return '猛暑に負けない人';
+    if(n < 70) return '猛暑警察';
+    if(n < 110) return '自称・猛暑マイスター';
+    return '伝説の猛暑連打職人';
+  }
+
+  function rankFor(n){
+    var rank = 1234567 - n * 3691;
+    if(rank < 1) rank = 1;
+    return rank;
+  }
+
+  function startGame(){
+    clearInterval(timerId);
+    combo = 0;
+    timeLeft = DURATION;
+    comboNumEl.textContent = '0';
+    timeNumEl.textContent = String(DURATION);
+    timerbarEl.style.transition = 'none';
+    timerbarEl.style.width = '100%';
+    resetWordPosition();
+    wordEl.style.transform = 'translate(-50%,-50%) scale(1) rotate(0deg)';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        timerbarEl.style.transition = 'width ' + DURATION + 's linear';
+        timerbarEl.style.width = '0%';
+      });
+    });
+
+    timerId = setInterval(function(){
+      timeLeft -= 1;
+      timeNumEl.textContent = String(Math.max(timeLeft,0));
+      if(timeLeft <= 0){
+        clearInterval(timerId);
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function resetWordPosition(){
+    wordEl.style.left = '50%';
+    wordEl.style.top = '50%';
+  }
+
+  var lastTapAt = 0;
+  function tapWord(e){
+    e.preventDefault();
+    var now = Date.now();
+    if(now - lastTapAt < 50) return;
+    lastTapAt = now;
+    combo += 1;
+    comboNumEl.textContent = String(combo);
+
+    var scale = (0.85 + Math.random() * 0.5).toFixed(2);
+    var rot = (Math.random() * 30 - 15).toFixed(1);
+    wordEl.style.transform = 'translate(-50%,-50%) scale(' + scale + ') rotate(' + rot + 'deg)';
+
+    if(combo > escapeThreshold){
+      var zone = wordEl.parentElement.getBoundingClientRect();
+      var w = wordEl.offsetWidth, h = wordEl.offsetHeight;
+      var maxX = Math.max(zone.width - w, 40);
+      var maxY = Math.max(zone.height - h, 40);
+      var runChance = Math.min(0.35 + combo * 0.02, 0.9);
+      if(Math.random() < runChance){
+        var nx = (w/2) + Math.random() * maxX;
+        var ny = (h/2) + Math.random() * maxY;
+        wordEl.style.left = nx + 'px';
+        wordEl.style.top = ny + 'px';
+      }
+    }
+  }
+
+  function endGame(){
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    document.getElementById('result-count').textContent = String(combo);
+    document.getElementById('result-title').textContent = titleFor(combo);
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rankFor(combo).toLocaleString() + ' 番目に暇でした';
+
+    var shareText = '「猛暑」を' + combo + '回連打して「' + titleFor(combo) + '」の称号を獲得!\nあなたは今日、日本で' + rankFor(combo).toLocaleString() + '番目に暇でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  });
+
+  wordEl.addEventListener('click', tapWord);
+  wordEl.addEventListener('touchstart', tapWord, {passive:false});
+})();
+</script>
+</body>
+</html>
