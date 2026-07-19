@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>色のウソ発見器 | バカゲー製作所</title>
+<meta name="description" content="文字の色と意味がケンカする!表示された文字の「本当の色」だけを見て正しいスイッチをタップし続けるバカゲー。正解するほど時間が短くなる。">
+<meta property="og:title" content="色のウソ発見器 | バカゲー製作所">
+<meta property="og:description" content="文字の意味に惑わされるな。本当に塗られている色だけを見て当て続けろ!正解するほど加速する反射神経バカゲー。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-iro-uso.png">
+<meta property="og:url" content="https://bakage.com/games/iro-uso/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-iro-uso.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.timerbar-wrap{height:14px;margin:0 20px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+#timerbar{height:100%;background:var(--pink);width:100%;transform-origin:left}
+
+.wordzone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:10px 20px}
+#wordcard{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:28px 40px;box-shadow:6px 6px 0 var(--ink)}
+#wordtext{font-size:3rem;font-weight:900;transition:transform .06s}
+#wordtext.pop{animation:wordPop .18s ease-out}
+@keyframes wordPop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+#swatchgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(78vw,300px)}
+.swatch{aspect-ratio:1/1;border-radius:14px;border:4px solid var(--ink);cursor:pointer;transition:transform .08s;box-shadow:5px 5px 0 var(--ink)}
+.swatch:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.swatch.wrong{animation:shake .3s ease-out}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.howto{text-align:center;font-size:.85rem;font-weight:900;opacity:.7;padding:4px 16px 12px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🃏 色のウソ発見器</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🃏 色のウソ発見器</h1>
+      <p>文字の「意味」と「本当の色」がケンカしてる。<br>文字が塗られた色だけを見て、下のスイッチをタップしろ。<br>正解するほど時間が短くなる。1回間違えたら即終了。</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">連続正解</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>連続: <b id="score-num">0</b></span>
+      <span>⏱ <b id="round-time-num">2.2</b>s</span>
+    </div>
+    <div class="timerbar-wrap"><div id="timerbar"></div></div>
+    <div class="wordzone">
+      <div id="wordcard"><span id="wordtext">あか</span></div>
+      <div id="swatchgrid"></div>
+    </div>
+    <div class="howto">👆 文字の「本当の色」と同じスイッチをタッチ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/iro-uso/';
+  var TAP_COOLDOWN_MS = 50;
+  var ROUND_START_MS = 2200;
+  var ROUND_MIN_MS = 800;
+  var ROUND_STEP_MS = 90;
+  var NEXT_ROUND_DELAY_MS = 150;
+
+  var COLORS = [
+    {name:'あか', hex:'#E63946'},
+    {name:'あお', hex:'#1E88E5'},
+    {name:'みどり', hex:'#2E7D32'},
+    {name:'きいろ', hex:'#C98800'}
+  ];
+
+  var running = false;
+  var score = 0;
+  var roundTimeMs = ROUND_START_MS;
+  var roundTimeoutId = null;
+  var roundTickId = null;
+  var roundDeadline = 0;
+  var lastTapAt = 0;
+  var correctHex = '';
+  var roundLocked = false;
+  var swatchEls = [];
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var scoreNumEl = document.getElementById('score-num');
+  var roundTimeNumEl = document.getElementById('round-time-num');
+  var timerbarEl = document.getElementById('timerbar');
+  var wordTextEl = document.getElementById('wordtext');
+  var swatchGridEl = document.getElementById('swatchgrid');
+
+  function titleFor(s){
+    if(s < 3) return 'だいぶ惑わされてます';
+    if(s < 7) return '反射神経そこそこさん';
+    if(s < 12) return '色と文字を見切った人';
+    if(s < 20) return 'ウソ発見マスター';
+    return '伝説の色彩探偵';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * 400);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function buildSwatches(){
+    swatchGridEl.innerHTML = '';
+    swatchEls = [];
+    for(var i = 0; i < COLORS.length; i++){
+      var el = document.createElement('div');
+      el.className = 'swatch';
+      el.style.background = COLORS[i].hex;
+      el.dataset.hex = COLORS[i].hex;
+      el.addEventListener('click', onSwatchTap);
+      el.addEventListener('touchstart', onSwatchTap, {passive:false});
+      swatchGridEl.appendChild(el);
+      swatchEls.push(el);
+    }
+  }
+
+  function renderRound(){
+    roundLocked = false;
+
+    var wordIdx = Math.floor(Math.random() * COLORS.length);
+    var inkIdx = Math.floor(Math.random() * COLORS.length);
+    if(inkIdx === wordIdx){
+      inkIdx = (inkIdx + 1 + Math.floor(Math.random() * (COLORS.length - 1))) % COLORS.length;
+    }
+
+    wordTextEl.textContent = COLORS[wordIdx].name;
+    wordTextEl.style.color = COLORS[inkIdx].hex;
+    correctHex = COLORS[inkIdx].hex;
+
+    wordTextEl.classList.remove('pop');
+    void wordTextEl.offsetWidth;
+    wordTextEl.classList.add('pop');
+
+    roundTimeNumEl.textContent = (roundTimeMs / 1000).toFixed(1);
+    timerbarEl.style.transition = 'none';
+    timerbarEl.style.width = '100%';
+    void timerbarEl.offsetWidth;
+
+    clearTimeout(roundTimeoutId);
+    clearInterval(roundTickId);
+
+    roundDeadline = Date.now() + roundTimeMs;
+    timerbarEl.style.transition = 'width ' + roundTimeMs + 'ms linear';
+    timerbarEl.style.width = '0%';
+
+    roundTickId = setInterval(function(){
+      var remaining = Math.max(0, roundDeadline - Date.now());
+      roundTimeNumEl.textContent = (remaining / 1000).toFixed(1);
+    }, 100);
+
+    roundTimeoutId = setTimeout(function(){
+      if(running && !roundLocked) endGame();
+    }, roundTimeMs);
+  }
+
+  function onSwatchTap(e){
+    if(e) e.preventDefault();
+    if(!running || roundLocked) return;
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+
+    var hex = this.dataset.hex;
+    if(hex === correctHex){
+      roundLocked = true;
+      clearTimeout(roundTimeoutId);
+      clearInterval(roundTickId);
+      score++;
+      scoreNumEl.textContent = String(score);
+      roundTimeMs = Math.max(ROUND_MIN_MS, roundTimeMs - ROUND_STEP_MS);
+      setTimeout(function(){ if(running) renderRound(); }, NEXT_ROUND_DELAY_MS);
+    } else {
+      this.classList.add('wrong');
+      endGame();
+    }
+  }
+
+  function startGame(){
+    clearTimeout(roundTimeoutId);
+    clearInterval(roundTickId);
+
+    running = true;
+    score = 0;
+    roundTimeMs = ROUND_START_MS;
+    lastTapAt = 0;
+
+    scoreNumEl.textContent = '0';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    buildSwatches();
+    renderRound();
+  }
+
+  function endGame(){
+    if(!running) return;
+    running = false;
+    clearTimeout(roundTimeoutId);
+    clearInterval(roundTickId);
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に色のウソを見破った人でした';
+
+    var shareText = '色のウソ発見器で' + score + '連続正解して「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に色のウソを見破った人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+})();
+</script>
+</body>
+</html>
