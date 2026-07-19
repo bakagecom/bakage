@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>10秒お掃除ゲーム | バカゲー製作所</title>
+<meta name="description" content="出てくる汚れを10秒間ひたすらタップして掃除するだけのバカゲー。どんどん汚れが早く動くようになる。">
+<meta property="og:title" content="10秒お掃除ゲーム | バカゲー製作所">
+<meta property="og:description" content="汚れが出たらすぐタップ!10秒間で何ヶ所きれいにできるか?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-souji-10sec.png">
+<meta property="og:url" content="https://bakage.com/games/souji-10sec/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-souji-10sec.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column;overflow-y:auto}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+
+.floorwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 20px}
+.floor{width:100%;max-width:340px;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:8px}
+.cell{background:#fff;border:4px solid var(--ink);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;position:relative;cursor:pointer}
+.cell.dirty{background:#F4E4C1}
+.cell.dirty::after{content:'🌀';filter:drop-shadow(0 2px 0 rgba(0,0,0,.2))}
+.cell.pop{animation:pop .15s ease}
+@keyframes pop{0%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+.howto{text-align:center;font-size:.8rem;opacity:.6;padding:10px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🧹 10秒お掃除ゲーム</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🧹 10秒お掃除ゲーム</h1>
+      <p>マスにあらわれる汚れを、10秒間ひたすらタップして掃除しろ。<br>掃除するたびに汚れの出るスピードが速くなる。何ヶ所きれいにできるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">お掃除できた回数</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>残り: <b id="time-num">10</b>s</span>
+      <span>掃除回数: <b id="score-num">0</b></span>
+    </div>
+    <div class="floorwrap">
+      <div class="floor" id="floor"></div>
+    </div>
+    <div class="howto">汚れが出たマスをタップ</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/souji-10sec/';
+  var DURATION = 10;
+  var CELL_COUNT = 9;
+  var START_WINDOW_MS = 900;
+  var MIN_WINDOW_MS = 350;
+  var WINDOW_STEP_MS = 40;
+
+  var running = false;
+  var score = 0;
+  var timeLeft = DURATION;
+  var gameTimerId = null;
+  var dirtyTimeoutId = null;
+  var currentWindowMs = START_WINDOW_MS;
+  var dirtyCell = -1;
+  var lastTapAt = 0;
+  var cellEls = [];
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var floorEl = document.getElementById('floor');
+  var timeNumEl = document.getElementById('time-num');
+  var scoreNumEl = document.getElementById('score-num');
+
+  function buildFloor(){
+    floorEl.innerHTML = '';
+    cellEls = [];
+    for(var i = 0; i < CELL_COUNT; i++){
+      var d = document.createElement('div');
+      d.className = 'cell';
+      d.setAttribute('role', 'button');
+      d.setAttribute('tabindex', '0');
+      d.dataset.idx = String(i);
+      floorEl.appendChild(d);
+      cellEls.push(d);
+    }
+  }
+
+  function titleFor(s){
+    if(s <= 0) return 'お掃除サボり気味';
+    if(s < 5) return '気づいたら掃除する人';
+    if(s < 10) return 'こまめなお掃除上手';
+    if(s < 15) return '掃除のプロ';
+    if(s < 20) return '潔癖の域';
+    return '伝説の掃除人';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * 400);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function pickNextCell(){
+    if(CELL_COUNT <= 1) return 0;
+    var next;
+    do {
+      next = Math.floor(Math.random() * CELL_COUNT);
+    } while(next === dirtyCell);
+    return next;
+  }
+
+  function clearDirty(){
+    if(dirtyCell >= 0 && cellEls[dirtyCell]){
+      cellEls[dirtyCell].classList.remove('dirty');
+    }
+    dirtyCell = -1;
+  }
+
+  function spawnDirty(){
+    if(!running) return;
+    clearTimeout(dirtyTimeoutId);
+    var next = pickNextCell();
+    clearDirty();
+    dirtyCell = next;
+    cellEls[dirtyCell].classList.add('dirty');
+    dirtyTimeoutId = setTimeout(function(){
+      spawnDirty();
+    }, currentWindowMs);
+  }
+
+  function onCellTap(idx){
+    if(!running) return;
+    if(idx !== dirtyCell) return;
+    var now = Date.now();
+    if(now - lastTapAt < 50) return;
+    lastTapAt = now;
+
+    clearTimeout(dirtyTimeoutId);
+    var cellEl = cellEls[idx];
+    cellEl.classList.remove('dirty');
+    cellEl.classList.add('pop');
+    setTimeout(function(){ cellEl.classList.remove('pop'); }, 150);
+
+    score++;
+    scoreNumEl.textContent = String(score);
+    currentWindowMs = Math.max(MIN_WINDOW_MS, currentWindowMs - WINDOW_STEP_MS);
+    spawnDirty();
+  }
+
+  function startGame(){
+    clearInterval(gameTimerId);
+    clearTimeout(dirtyTimeoutId);
+
+    score = 0;
+    timeLeft = DURATION;
+    currentWindowMs = START_WINDOW_MS;
+    dirtyCell = -1;
+    lastTapAt = 0;
+
+    timeNumEl.textContent = String(DURATION);
+    scoreNumEl.textContent = '0';
+    buildFloor();
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+
+    running = true;
+    spawnDirty();
+
+    gameTimerId = setInterval(function(){
+      timeLeft -= 1;
+      if(timeLeft <= 0){
+        timeNumEl.textContent = '0';
+        endGame();
+        return;
+      }
+      timeNumEl.textContent = String(timeLeft);
+    }, 1000);
+  }
+
+  function endGame(){
+    if(!running) return;
+    running = false;
+    clearInterval(gameTimerId);
+    clearTimeout(dirtyTimeoutId);
+    clearDirty();
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目にキレイ好きな人でした';
+
+    var shareText = '10秒お掃除ゲームで' + score + 'ヶ所きれいにして、「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目にキレイ好きな人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-start').addEventListener('touchstart', function(e){e.preventDefault(); startGame();}, {passive:false});
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  });
+  document.getElementById('btn-retry').addEventListener('touchstart', function(e){
+    e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  }, {passive:false});
+
+  floorEl.addEventListener('click', function(e){
+    var cell = e.target.closest('.cell');
+    if(!cell) return;
+    onCellTap(Number(cell.dataset.idx));
+  });
+  floorEl.addEventListener('touchstart', function(e){
+    var cell = e.target.closest('.cell');
+    if(!cell) return;
+    e.preventDefault();
+    onCellTap(Number(cell.dataset.idx));
+  }, {passive:false});
+  floorEl.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    var cell = e.target.closest('.cell');
+    if(!cell) return;
+    e.preventDefault();
+    onCellTap(Number(cell.dataset.idx));
+  });
+})();
+</script>
+</body>
+</html>
