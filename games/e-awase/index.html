@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>絵合わせ選手権 | バカゲー製作所</title>
+<meta name="description" content="12枚のカードから同じ絵柄のペアを探す30秒タイムアタック。全6ペア見つけられるか?">
+<meta property="og:title" content="絵合わせ選手権 | バカゲー製作所">
+<meta property="og:description" content="カードをめくって同じ絵柄のペアを探すだけ。30秒で全6ペア見つけられるか競うタイムアタック。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-e-awase.png">
+<meta property="og:url" content="https://bakage.com/games/e-awase/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-e-awase.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.hud .status{color:var(--pink)}
+
+.playzone{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 16px 4px}
+#pad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:10px;width:100%;max-width:320px;height:min(70vh,440px)}
+.card-tile{background:var(--gear);border:4px solid var(--ink);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:clamp(1.6rem,8vw,2.2rem);box-shadow:5px 5px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .15s;color:transparent}
+.card-tile:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.card-tile.open{background:#fff;color:var(--ink)}
+.card-tile.matched{background:#E9F7EC;color:var(--ink);opacity:.75}
+.card-tile.wrong{background:var(--pink)}
+.card-tile::before{content:"❓";color:var(--ink);opacity:.55}
+.card-tile.open::before,.card-tile.matched::before{content:""}
+
+.howto{text-align:center;font-size:.8rem;opacity:.65;padding:2px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+.result-detail{font-size:.82rem;opacity:.75;margin-bottom:10px}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🃏 絵合わせ選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🃏 絵合わせ選手権</h1>
+      <p>12枚のカードから同じ絵柄のペアを探せ!<br>2枚めくって絵柄が同じならペア成立。<br>30秒以内に全6ペア見つけられるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p class="result-detail">ペア見つけた(全6ペア中)</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>ペア <b id="pair-num">0</b>/6</span>
+      <span class="status" id="status-text">残り30秒</span>
+    </div>
+    <div class="playzone">
+      <div id="pad"></div>
+    </div>
+    <div class="howto">👀 2枚めくって同じ絵柄ならペア成立!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/e-awase/';
+  var PAIR_COUNT = 6;
+  var CARD_COUNT = PAIR_COUNT * 2;
+  var TAP_COOLDOWN_MS = 50;
+  var TIME_LIMIT_MS = 30000;
+  var RESOLVE_DELAY_MS = 600;
+  var MATCH_FLASH_MS = 300;
+  var TICK_MS = 100;
+  var EMOJIS = ['🍎','🍌','🍇','🍓','🍑','🍉'];
+
+  var running = false;
+  var finishing = false;
+  var resolving = false;
+  var lastTapAt = 0;
+  var matchedPairs = 0;
+  var openIdx = [];
+  var cardValues = [];
+  var cardEls = [];
+  var startTs = 0;
+  var timeLeftMs = TIME_LIMIT_MS;
+  var tickIntervalId = null;
+  var resolveTimeoutId = null;
+  var endTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var padEl = document.getElementById('pad');
+  var pairNumEl = document.getElementById('pair-num');
+  var statusEl = document.getElementById('status-text');
+
+  function titleFor(pairs){
+    if(pairs >= PAIR_COUNT) return 'ペアさがしの神';
+    if(pairs >= 4) return 'ペア上級者';
+    if(pairs >= 2) return 'まずまずのペア力';
+    return 'ペアど忘れ';
+  }
+
+  function rankFor(pairs, fullClear, elapsedMs){
+    var rank = 999983 - pairs * pairs * 20000;
+    if(fullClear){
+      rank -= Math.floor((TIME_LIMIT_MS - elapsedMs) / 5);
+    }
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function clearAllTimers(){
+    clearInterval(tickIntervalId);
+    tickIntervalId = null;
+    clearTimeout(resolveTimeoutId);
+    clearTimeout(endTimeoutId);
+  }
+
+  function shuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function buildBoard(){
+    padEl.innerHTML = '';
+    cardEls = [];
+    var values = [];
+    for(var i = 0; i < PAIR_COUNT; i++){ values.push(EMOJIS[i]); values.push(EMOJIS[i]); }
+    cardValues = shuffle(values);
+    for(var idx = 0; idx < CARD_COUNT; idx++){
+      var el = document.createElement('div');
+      el.className = 'card-tile';
+      el.dataset.idx = String(idx);
+      el.textContent = '';
+      padEl.appendChild(el);
+      cardEls.push(el);
+    }
+  }
+
+  function openCard(idx){
+    cardEls[idx].classList.add('open');
+    cardEls[idx].textContent = cardValues[idx];
+  }
+
+  function closeCard(idx){
+    cardEls[idx].classList.remove('open', 'wrong');
+    cardEls[idx].textContent = '';
+  }
+
+  function onTick(){
+    timeLeftMs -= TICK_MS;
+    if(timeLeftMs <= 0){
+      timeLeftMs = 0;
+      statusEl.textContent = '残り0秒';
+      onTimeout();
+      return;
+    }
+    statusEl.textContent = '残り' + Math.ceil(timeLeftMs / 1000) + '秒';
+  }
+
+  function onTimeout(){
+    finishing = true;
+    running = false;
+    clearInterval(tickIntervalId);
+    tickIntervalId = null;
+    clearTimeout(endTimeoutId);
+    var delay = resolving ? (RESOLVE_DELAY_MS + 50) : 200;
+    endTimeoutId = setTimeout(endGame, delay);
+  }
+
+  function onCardPress(idx){
+    if(!running || finishing || resolving) return;
+    if(cardEls[idx].classList.contains('open') || cardEls[idx].classList.contains('matched')) return;
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+
+    openCard(idx);
+    openIdx.push(idx);
+
+    if(openIdx.length < 2) return;
+
+    resolving = true;
+    var a = openIdx[0], b = openIdx[1];
+    if(cardValues[a] === cardValues[b]){
+      resolveTimeoutId = setTimeout(function(){
+        cardEls[a].classList.add('matched');
+        cardEls[b].classList.add('matched');
+        matchedPairs++;
+        pairNumEl.textContent = String(matchedPairs);
+        openIdx = [];
+        resolving = false;
+        if(matchedPairs >= PAIR_COUNT){
+          finishing = true;
+          running = false;
+          clearAllTimers();
+          statusEl.textContent = 'クリア!';
+          endTimeoutId = setTimeout(endGame, 300);
+        }
+      }, MATCH_FLASH_MS);
+    } else {
+      cardEls[a].classList.add('wrong');
+      cardEls[b].classList.add('wrong');
+      resolveTimeoutId = setTimeout(function(){
+        closeCard(a);
+        closeCard(b);
+        openIdx = [];
+        resolving = false;
+      }, RESOLVE_DELAY_MS);
+    }
+  }
+
+  function onPadTap(e){
+    var el = e.target.closest ? e.target.closest('.card-tile') : null;
+    if(!el || !padEl.contains(el)) return;
+    if(e.cancelable) e.preventDefault();
+    onCardPress(parseInt(el.dataset.idx, 10));
+  }
+
+  function startGame(){
+    clearAllTimers();
+    running = true;
+    finishing = false;
+    resolving = false;
+    openIdx = [];
+    matchedPairs = 0;
+    lastTapAt = 0;
+    timeLeftMs = TIME_LIMIT_MS;
+    startTs = Date.now();
+
+    buildBoard();
+    pairNumEl.textContent = '0';
+    statusEl.textContent = '残り30秒';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    tickIntervalId = setInterval(onTick, TICK_MS);
+  }
+
+  function endGame(){
+    clearAllTimers();
+    document.body.classList.remove('playing');
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var elapsedMs = Date.now() - startTs;
+    var fullClear = matchedPairs >= PAIR_COUNT;
+    var title = titleFor(matchedPairs);
+    var rank = rankFor(matchedPairs, fullClear, elapsedMs);
+
+    document.getElementById('result-count').textContent = String(matchedPairs);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent = 'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に絵合わせが上手い人でした';
+
+    var shareText = '絵合わせ選手権で' + matchedPairs + 'ペア見つけて「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に絵合わせが上手い人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+  padEl.addEventListener('click', onPadTap);
+  padEl.addEventListener('touchstart', onPadTap, {passive:false});
+})();
+</script>
+</body>
+</html>
