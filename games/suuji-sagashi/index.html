@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>数字さがし選手権 | バカゲー製作所</title>
+<meta name="description" content="バラバラに散らばった1〜16の数字を、順番通りにタップできるか競うタイムアタック。1つでも間違えたら即終了。">
+<meta property="og:title" content="数字さがし選手権 | バカゲー製作所">
+<meta property="og:description" content="1〜16の数字を順番にタップするだけ。でも配置はバラバラ。ミス即終了のタイムアタック。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-suuji-sagashi.png">
+<meta property="og:url" content="https://bakage.com/games/suuji-sagashi/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-suuji-sagashi.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.hud .next-hint{color:var(--pink)}
+
+.playzone{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 16px 4px}
+#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:360px;aspect-ratio:1/1}
+.tile{background:#fff;border:3px solid var(--ink);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:clamp(1.1rem,5vw,1.6rem);font-weight:900;box-shadow:4px 4px 0 var(--ink);transition:transform .08s,background .15s,opacity .15s}
+.tile:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.tile.found{background:var(--gear);color:#fff;opacity:.55;box-shadow:none;transform:none}
+.tile.wrong{background:var(--pink)}
+
+.howto{text-align:center;font-size:.8rem;opacity:.65;padding:2px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+.result-detail{font-size:.82rem;opacity:.75;margin-bottom:10px}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🔢 数字さがし選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🔢 数字さがし選手権</h1>
+      <p>バラバラに散らばった1〜16の数字を、順番通りにタップ!<br>違う数字を押したら即終了。<br>制限時間20秒以内に全部見つけられるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p class="result-detail">/ 16マス発見</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>次: <b class="next-hint" id="next-num">1</b></span>
+      <span>経過 <b id="elapsed-num">0.0</b>秒</span>
+    </div>
+    <div class="playzone">
+      <div id="grid"></div>
+    </div>
+    <div class="howto">👆 1から順番にタップしろ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/suuji-sagashi/';
+  var GRID_SIZE = 16;
+  var TIME_LIMIT_MS = 20000;
+  var TICK_MS = 100;
+  var TAP_COOLDOWN_MS = 50;
+  var FINISH_DELAY_MS = 450;
+
+  var running = false;
+  var finishing = false;
+  var nextNum = 1;
+  var foundCount = 0;
+  var startTs = 0;
+  var elapsedMs = 0;
+  var lastTapAt = 0;
+  var tickId = null;
+  var pendingEndTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var gridEl = document.getElementById('grid');
+  var nextNumEl = document.getElementById('next-num');
+  var elapsedNumEl = document.getElementById('elapsed-num');
+
+  function titleFor(found){
+    if(found >= GRID_SIZE) return '数字ハンター';
+    if(found >= 12) return 'あと一歩だった人';
+    if(found >= 8) return '集中力そこそこ';
+    if(found >= 4) return '見つけるの苦手勢';
+    return '数字迷子';
+  }
+
+  function rankFor(found){
+    var rank = 999983 - found * found * 3900;
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function shuffledNumbers(){
+    var arr = [];
+    for(var i = 1; i <= GRID_SIZE; i++) arr.push(i);
+    for(var j = arr.length - 1; j > 0; j--){
+      var k = Math.floor(Math.random() * (j + 1));
+      var tmp = arr[j]; arr[j] = arr[k]; arr[k] = tmp;
+    }
+    return arr;
+  }
+
+  function buildGrid(){
+    gridEl.innerHTML = '';
+    var nums = shuffledNumbers();
+    for(var i = 0; i < nums.length; i++){
+      var tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.dataset.num = String(nums[i]);
+      tile.textContent = String(nums[i]);
+      gridEl.appendChild(tile);
+    }
+  }
+
+  function scheduleEnd(reason){
+    if(!running || finishing) return;
+    finishing = true;
+    clearInterval(tickId);
+    elapsedMs = Date.now() - startTs;
+    clearTimeout(pendingEndTimeoutId);
+    pendingEndTimeoutId = setTimeout(function(){ endGame(reason); }, FINISH_DELAY_MS);
+  }
+
+  function onTileTap(e){
+    if(!running || finishing) return;
+    var el = e.target.closest ? e.target.closest('.tile') : null;
+    if(!el || !gridEl.contains(el)) return;
+    if(e.cancelable) e.preventDefault();
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+
+    if(el.classList.contains('found')) return;
+
+    var num = parseInt(el.dataset.num, 10);
+    if(num === nextNum){
+      el.classList.add('found');
+      nextNum++;
+      foundCount++;
+      nextNumEl.textContent = foundCount >= GRID_SIZE ? '-' : String(nextNum);
+      if(foundCount >= GRID_SIZE){
+        scheduleEnd('clear');
+      }
+    } else {
+      el.classList.add('wrong');
+      scheduleEnd('miss');
+    }
+  }
+
+  function startGame(){
+    clearInterval(tickId);
+    clearTimeout(pendingEndTimeoutId);
+    running = true;
+    finishing = false;
+    nextNum = 1;
+    foundCount = 0;
+    elapsedMs = 0;
+    startTs = Date.now();
+    lastTapAt = 0;
+
+    nextNumEl.textContent = '1';
+    elapsedNumEl.textContent = '0.0';
+    buildGrid();
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    tickId = setInterval(function(){
+      elapsedMs = Date.now() - startTs;
+      elapsedNumEl.textContent = (elapsedMs / 1000).toFixed(1);
+      if(elapsedMs >= TIME_LIMIT_MS){
+        endGame('timeout');
+      }
+    }, TICK_MS);
+  }
+
+  function endGame(reason){
+    if(!running) return;
+    running = false;
+    clearInterval(tickId);
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(foundCount);
+    var rank = rankFor(foundCount);
+    var clearTimeSec = (elapsedMs / 1000).toFixed(2);
+
+    document.getElementById('result-count').textContent = String(foundCount);
+    document.getElementById('result-title').textContent = title;
+
+    var rankLine = 'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に数字さがしが早い人でした';
+    if(reason === 'clear') rankLine = 'クリアタイム ' + clearTimeSec + '秒。' + rankLine;
+    document.getElementById('result-rank').textContent = rankLine;
+
+    var shareText = '数字さがし選手権で' + foundCount + '/16マス発見、「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に数字さがしが早い人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+  gridEl.addEventListener('click', onTileTap);
+  gridEl.addEventListener('touchstart', onTileTap, {passive:false});
+})();
+</script>
+</body>
+</html>
