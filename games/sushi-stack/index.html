@@ -125,14 +125,16 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
   var PERFECT_PX = 14;
   var MISS_PX = 46;
   var PIECE_H = 42;
-  var DROP_ANIM_MS = 250;
+  var BASE_DROP_MS = 250;
+  var MISS_ANIM_MS = 380;
+  var INITIAL_SPEED = 2.8;
 
   var height = 0;
   var running = false;
   var rafId = null;
   var startTime = 0;
   var lastT = 0;
-  var speed = 1.4;
+  var speed = INITIAL_SPEED;
   var amplitude = 90;
   var centerX = 0;
   var currentTargetX = 0;
@@ -184,17 +186,18 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     towerEl.style.transform = 'translateY(0)';
   }
 
-  // 常に「積んだ寿司の頂上」と「これから積む寿司」が一定距離を保つようにカメラ(タワー全体のtranslateY)を追従させる
+  // 最初の寿司(土台、スロット0)は画面最下部からスタートし、タワーが伸びて頂上(スロットheight+1)が
+  // stackTopYより近づいたら、そこから先は「積んだ寿司の頂上」と「これから積む寿司」の距離をstackTopYで一定にキープする
   function updateCamera(){
     var zoneH = towerZone.clientHeight;
-    towerY = stackTopY - zoneH + height * PIECE_H;
+    towerY = Math.max(0, stackTopY - zoneH + (height + 1) * PIECE_H);
     towerEl.style.transform = 'translateY(' + towerY + 'px)';
   }
 
   function startGame(){
     cancelAnimationFrame(rafId);
     height = 0;
-    speed = 1.4;
+    speed = INITIAL_SPEED;
     phaseOffset = 0;
     heightNumEl.textContent = '0';
     resetTower();
@@ -223,13 +226,13 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     return Math.max(margin, Math.min(w - margin, x));
   }
 
-  // 土台(0個目)は実際の1個目より1段分下に置き、以降のスロット計算(height*PIECE_H)と衝突しないようにする
+  // 土台はスロット0(最下段)に置く。実際に積む寿司はスロット1以降(newHeight)になるので衝突しない
   function placeBasePiece(x){
     var el = document.createElement('div');
     el.className = 'piece';
     el.textContent = '🍣';
     el.style.left = x + 'px';
-    el.style.bottom = (-PIECE_H) + 'px';
+    el.style.bottom = '0px';
     towerEl.appendChild(el);
   }
 
@@ -243,7 +246,7 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     var offset = moverX - currentTargetX;
 
     if(Math.abs(offset) > MISS_PX){
-      endGame();
+      animateMiss(moverX);
       return;
     }
 
@@ -253,15 +256,16 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
 
     var drift = Math.abs(offset) <= PERFECT_PX ? 0 : offset * 0.5;
     var landX = clampX(currentTargetX + drift, towerZone.clientWidth);
-    animateDrop(moverX, landX, height);
+    animateDrop(moverX, landX, height + 1); // height+1 = この寿司が入るスロット番号 = 積み終わった後の新しい段数
   }
 
-  function animateDrop(startX, landX, pieceIndex){
+  function animateDrop(startX, landX, newHeight){
     moverEl.style.visibility = 'hidden';
 
     var zoneH = towerZone.clientHeight;
     var startBottom = zoneH + towerY; // 現在のカメラ位置における「moverの高さ(画面最上部)」をタワーのローカル座標に変換
-    var finalBottom = pieceIndex * PIECE_H;
+    var finalBottom = newHeight * PIECE_H;
+    var dropMs = Math.max(110, BASE_DROP_MS * (INITIAL_SPEED / speed)); // その時点のスピードが速いほど落下も速くする
 
     var el = document.createElement('div');
     el.className = 'piece';
@@ -271,22 +275,46 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     towerEl.appendChild(el);
 
     void el.offsetWidth; // force reflow so the transition below actually animates from startBottom
-    el.style.transition = 'left ' + DROP_ANIM_MS + 'ms cubic-bezier(.22,.85,.4,1), bottom ' + DROP_ANIM_MS + 'ms cubic-bezier(.22,.85,.4,1)';
+    el.style.transition = 'left ' + dropMs + 'ms cubic-bezier(.22,.85,.4,1), bottom ' + dropMs + 'ms cubic-bezier(.22,.85,.4,1)';
     el.style.left = landX + 'px';
     el.style.bottom = finalBottom + 'px';
 
     setTimeout(function(){
       el.style.transition = '';
       el.classList.add('landed');
-      finishDrop(landX, pieceIndex);
-    }, DROP_ANIM_MS);
+      finishDrop(landX, newHeight);
+    }, dropMs);
   }
 
-  function finishDrop(landX, pieceIndex){
+  // 外した場合も即ゲームオーバーにはせず、その時点の位置から画面下まで落ちる演出を挟んでから終了処理する
+  function animateMiss(missX){
+    var zoneH = towerZone.clientHeight;
+    var el = document.createElement('div');
+    el.className = 'piece';
+    el.textContent = '🍣';
+    el.style.left = missX + 'px';
+    el.style.top = '0px';
+    el.style.bottom = '';
+    towerZone.appendChild(el); // #tower(カメラ追従)ではなく.towerzone直下に置き、画面基準でそのまま落とす
+
+    moverEl.style.visibility = 'hidden';
+
+    void el.offsetWidth;
+    el.style.transition = 'top ' + MISS_ANIM_MS + 'ms cubic-bezier(.4,0,1,1), transform ' + MISS_ANIM_MS + 'ms ease-in';
+    el.style.transform = 'translate(-50%,0) rotate(' + (Math.random() * 100 - 50).toFixed(0) + 'deg)';
+    el.style.top = (zoneH + 60) + 'px';
+
+    setTimeout(function(){
+      el.remove();
+      endGame();
+    }, MISS_ANIM_MS);
+  }
+
+  function finishDrop(landX, newHeight){
     currentTargetX = landX;
-    height = pieceIndex + 1;
+    height = newHeight;
     heightNumEl.textContent = String(height);
-    speed = Math.min(speed + 0.2, 4.8);
+    speed = Math.min(speed + 0.35, 7.5);
 
     updateCamera(); // #towerのCSS transition(.15s)で積んだ寿司ごとカメラが滑らかに追従する
 
