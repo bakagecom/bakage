@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>押すなボタン | バカゲー製作所</title>
+<meta name="description" content="「押すな」と言われたら押したくなるのが人間。15秒間、安全なタイミングだけを見極めてタップし続けろ。危険なタイミングで押すと台無しになるバカゲー。">
+<meta property="og:title" content="押すなボタン | バカゲー製作所">
+<meta property="og:description" content="押すな、と言われたら押したくなる。安全なタイミングだけタップしろ。15秒でどこまで我慢強く稼げるか?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-oshina-button.png">
+<meta property="og:url" content="https://bakage.com/games/oshina-button/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-oshina-button.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column;overflow-y:auto}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900;font-size:.95rem}
+
+.pushzone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 24px;gap:18px}
+#btn-push{
+  width:220px;height:220px;border-radius:50%;
+  border:6px solid var(--ink);background:#fff;color:var(--ink);
+  font-size:1.3rem;font-weight:900;line-height:1.3;white-space:pre-line;
+  box-shadow:10px 10px 0 var(--ink);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;
+  transition:background .12s,border-color .12s,transform .08s;
+}
+#btn-push:active{transform:translate(4px,4px);box-shadow:6px 6px 0 var(--ink)}
+#btn-push.danger{background:var(--pink);color:#fff;animation:pulse .5s ease-in-out infinite}
+#btn-push.shake{animation:shake .3s ease}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-6px,0)}75%{transform:translate(6px,0)}}
+
+.status-line{font-size:1rem;font-weight:900;min-height:1.4em}
+.status-line.safe{color:var(--blue)}
+.status-line.danger{color:var(--pink)}
+
+.howto{text-align:center;font-size:.8rem;opacity:.6;padding:10px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.sub-line{font-size:.85rem;opacity:.75;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🚫 押すなボタン</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🚫 押すなボタン</h1>
+      <p>目の前にあるのは「押すな」と書かれた謎のボタン。<br>でも安全なタイミングでタップすればポイントになる。<br>ボタンが赤く光って「絶対にダメ」な瞬間だけは、絶対に押すな。<br>15秒間でどこまで稼げるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">ポイント獲得</p>
+      <p class="sub-line" id="result-sub"></p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>スコア: <b id="score-num">0</b></span>
+      <span>⏱ <b id="time-num">15</b>s</span>
+    </div>
+    <div class="pushzone">
+      <button id="btn-push">押すな</button>
+      <div class="status-line" id="status-line"></div>
+    </div>
+    <div class="howto">ボタンの色と文字をよく見てタップしろ</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/oshina-button/';
+  var DURATION = 15;
+  var SAFE_MIN_MS = 900;
+  var SAFE_MAX_MS = 1700;
+  var DANGER_MIN_MS = 500;
+  var DANGER_MAX_MS = 800;
+
+  var SAFE_LABEL = '今なら…\nセーフ';
+  var DANGER_LABEL = '絶対に\n押すな!!';
+
+  var SAFE_LINES = [
+    'よし、正解!', 'その調子!', '冷静な判断!', 'まだまだいける!',
+    'いい読みだ', 'その根性、褒めてやる', 'ナイスタイミング!', '完璧な我慢だ'
+  ];
+  var DANGER_LINES = [
+    'アウト!我慢できなかったな', '危ないところ押しちゃったな',
+    'それは押しちゃダメなやつ', '自制心、どこいった'
+  ];
+
+  var running = false;
+  var safeCount = 0;
+  var penaltyCount = 0;
+  var timeLeft = DURATION;
+  var gameTimerId = null;
+  var phaseTimeoutId = null;
+  var phase = 'safe';
+  var phaseConsumed = false;
+  var lastTapAt = 0;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var btnPush = document.getElementById('btn-push');
+  var statusLine = document.getElementById('status-line');
+  var scoreNumEl = document.getElementById('score-num');
+  var timeNumEl = document.getElementById('time-num');
+
+  function titleFor(net){
+    if(net <= 0) return '我慢できない人';
+    if(net < 2) return '小心者';
+    if(net < 4) return 'そこそこ我慢強い';
+    if(net < 6) return '自制心の鬼';
+    if(net < 9) return '不動心の達人';
+    return '伝説の我慢王';
+  }
+
+  function rankFor(net){
+    var rank = 999983 - Math.round(net * net * 8000);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function updateButtonUI(){
+    if(phase === 'danger'){
+      btnPush.classList.add('danger');
+      btnPush.textContent = DANGER_LABEL;
+    } else {
+      btnPush.classList.remove('danger');
+      btnPush.textContent = SAFE_LABEL;
+    }
+  }
+
+  function scheduleSafe(){
+    if(!running) return;
+    phase = 'safe';
+    phaseConsumed = false;
+    updateButtonUI();
+    var delay = SAFE_MIN_MS + Math.random() * (SAFE_MAX_MS - SAFE_MIN_MS);
+    phaseTimeoutId = setTimeout(enterDanger, delay);
+  }
+
+  function enterDanger(){
+    if(!running) return;
+    phase = 'danger';
+    phaseConsumed = false;
+    updateButtonUI();
+    var delay = DANGER_MIN_MS + Math.random() * (DANGER_MAX_MS - DANGER_MIN_MS);
+    phaseTimeoutId = setTimeout(scheduleSafe, delay);
+  }
+
+  function flashStatus(text, cls){
+    statusLine.textContent = text;
+    statusLine.className = 'status-line ' + cls;
+  }
+
+  function onPush(){
+    if(!running) return;
+    if(phaseConsumed) return;
+    var now = Date.now();
+    if(now - lastTapAt < 50) return;
+    lastTapAt = now;
+    phaseConsumed = true;
+
+    btnPush.classList.remove('shake');
+    void btnPush.offsetWidth;
+    btnPush.classList.add('shake');
+
+    if(phase === 'danger'){
+      penaltyCount++;
+      flashStatus(DANGER_LINES[Math.floor(Math.random() * DANGER_LINES.length)], 'danger');
+    } else {
+      safeCount++;
+      flashStatus(SAFE_LINES[Math.floor(Math.random() * SAFE_LINES.length)], 'safe');
+    }
+    var net = Math.max(0, safeCount - penaltyCount * 2);
+    scoreNumEl.textContent = String(net);
+  }
+
+  function startGame(){
+    clearInterval(gameTimerId);
+    clearTimeout(phaseTimeoutId);
+
+    safeCount = 0;
+    penaltyCount = 0;
+    timeLeft = DURATION;
+    phase = 'safe';
+    phaseConsumed = false;
+    lastTapAt = 0;
+
+    scoreNumEl.textContent = '0';
+    timeNumEl.textContent = String(DURATION);
+    statusLine.textContent = '';
+    statusLine.className = 'status-line';
+    btnPush.classList.remove('shake');
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+
+    running = true;
+    scheduleSafe();
+
+    gameTimerId = setInterval(function(){
+      timeLeft -= 1;
+      if(timeLeft <= 0){
+        timeNumEl.textContent = '0';
+        endGame();
+        return;
+      }
+      timeNumEl.textContent = String(timeLeft);
+    }, 1000);
+  }
+
+  function endGame(){
+    if(!running) return;
+    running = false;
+    clearInterval(gameTimerId);
+    clearTimeout(phaseTimeoutId);
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var net = Math.max(0, safeCount - penaltyCount * 2);
+    var title = titleFor(net);
+    var rank = rankFor(net);
+
+    document.getElementById('result-count').textContent = String(net);
+    document.getElementById('result-sub').textContent =
+      '安全タップ ' + safeCount + '回 / 危険タップ ' + penaltyCount + '回';
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に我慢強い人でした';
+
+    var shareText = '押すなボタンで' + net + 'ポイント稼いで「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に我慢強い人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-start').addEventListener('touchstart', function(e){e.preventDefault(); startGame();}, {passive:false});
+  document.getElementById('btn-retry').addEventListener('click', function(){
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  });
+  document.getElementById('btn-retry').addEventListener('touchstart', function(e){
+    e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+  }, {passive:false});
+
+  btnPush.addEventListener('click', onPush);
+  btnPush.addEventListener('touchstart', function(e){ e.preventDefault(); onPush(); }, {passive:false});
+})();
+</script>
+</body>
+</html>
