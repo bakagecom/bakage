@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>記憶力選手権 | バカゲー製作所</title>
+<meta name="description" content="光る順番を覚えて同じ順にタップするだけ。でも段々速く、段々長くなる。何手先まで覚えられるか競う記憶力チャレンジ。">
+<meta property="og:title" content="記憶力選手権 | バカゲー製作所">
+<meta property="og:description" content="光った順番を覚えてタップし返すだけ。1ミスで即終了、何手先まで記憶できるか?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-kioku-senshuken.png">
+<meta property="og:url" content="https://bakage.com/games/kioku-senshuken/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-kioku-senshuken.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.hud .status{color:var(--pink)}
+
+.playzone{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 16px 4px}
+#pad{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;width:100%;max-width:340px;aspect-ratio:1/1}
+.tile{background:#fff;border:4px solid var(--ink);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:clamp(2rem,10vw,3rem);box-shadow:5px 5px 0 var(--ink);transition:transform .08s,box-shadow .08s,filter .12s;opacity:.88}
+.tile:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.tile[data-color="1"]{background:#FFE8EC}
+.tile[data-color="2"]{background:#E5F2FF}
+.tile[data-color="3"]{background:#E9F7EC}
+.tile[data-color="4"]{background:#FFF6DA}
+.tile.lit{opacity:1;filter:brightness(1.08);transform:scale(1.06);box-shadow:0 0 0 6px var(--ink) inset,5px 5px 0 var(--ink)}
+.tile.wrong{background:var(--pink)}
+
+.howto{text-align:center;font-size:.8rem;opacity:.65;padding:2px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+.result-detail{font-size:.82rem;opacity:.75;margin-bottom:10px}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🧠 記憶力選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🧠 記憶力選手権</h1>
+      <p>4つのパネルが光る順番を覚えて、同じ順にタップ!<br>クリアするごとに1手ずつ長く、少しずつ速くなる。<br>1回でも間違えたら即終了、何手先まで覚えられるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p class="result-detail">手先まで記憶</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>手数 <b id="round-num">1</b></span>
+      <span class="status" id="status-text">見て覚えろ!</span>
+    </div>
+    <div class="playzone">
+      <div id="pad">
+        <div class="tile" data-idx="0" data-color="1">⭐</div>
+        <div class="tile" data-idx="1" data-color="2">⚡</div>
+        <div class="tile" data-idx="2" data-color="3">❤️</div>
+        <div class="tile" data-idx="3" data-color="4">🔷</div>
+      </div>
+    </div>
+    <div class="howto">👀 光った順番を覚えて、同じ順にタップしろ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/kioku-senshuken/';
+  var TILE_COUNT = 4;
+  var TAP_COOLDOWN_MS = 50;
+  var WRONG_DELAY_MS = 450;
+  var GAP_MS = 220;
+  var START_FLASH_MS = 560;
+  var MIN_FLASH_MS = 260;
+  var FLASH_STEP_MS = 18;
+  var ROUND_START_DELAY_MS = 550;
+
+  var running = false;
+  var finishing = false;
+  var playingBack = false;
+  var acceptingInput = false;
+  var sequence = [];
+  var inputIndex = 0;
+  var clearedRounds = 0;
+  var lastTapAt = 0;
+  var playbackTimeoutIds = [];
+  var nextRoundTimeoutId = null;
+  var wrongTimeoutId = null;
+  var tapFlashTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var padEl = document.getElementById('pad');
+  var tiles = Array.prototype.slice.call(padEl.querySelectorAll('.tile'));
+  var roundNumEl = document.getElementById('round-num');
+  var statusEl = document.getElementById('status-text');
+
+  function titleFor(cleared){
+    if(cleared >= 12) return '記憶の鬼';
+    if(cleared >= 8) return '記憶力自慢';
+    if(cleared >= 5) return 'まずまずの記憶力';
+    if(cleared >= 2) return '普通の記憶力';
+    return '一瞬で忘れる人';
+  }
+
+  function rankFor(cleared){
+    var rank = 999983 - cleared * cleared * 2500;
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function flashMsForRound(roundLen){
+    var ms = START_FLASH_MS - (roundLen - 1) * FLASH_STEP_MS;
+    if(ms < MIN_FLASH_MS) ms = MIN_FLASH_MS;
+    return ms;
+  }
+
+  function clearAllTimers(){
+    for(var i = 0; i < playbackTimeoutIds.length; i++) clearTimeout(playbackTimeoutIds[i]);
+    playbackTimeoutIds = [];
+    clearTimeout(nextRoundTimeoutId);
+    clearTimeout(wrongTimeoutId);
+    clearTimeout(tapFlashTimeoutId);
+  }
+
+  function lightTile(idx, on){
+    if(on) tiles[idx].classList.add('lit');
+    else tiles[idx].classList.remove('lit');
+  }
+
+  function playSequence(){
+    playingBack = true;
+    acceptingInput = false;
+    inputIndex = 0;
+    statusEl.textContent = '見て覚えろ!';
+    var flashMs = flashMsForRound(sequence.length);
+    var t = 0;
+    for(var i = 0; i < sequence.length; i++){
+      (function(idx, startAt){
+        playbackTimeoutIds.push(setTimeout(function(){ lightTile(idx, true); }, startAt));
+        playbackTimeoutIds.push(setTimeout(function(){ lightTile(idx, false); }, startAt + flashMs));
+      })(sequence[i], t);
+      t += flashMs + GAP_MS;
+    }
+    playbackTimeoutIds.push(setTimeout(function(){
+      playingBack = false;
+      acceptingInput = true;
+      statusEl.textContent = 'あなたの番!';
+    }, t));
+  }
+
+  function addStepAndPlay(){
+    sequence.push(Math.floor(Math.random() * TILE_COUNT));
+    roundNumEl.textContent = String(sequence.length);
+    playSequence();
+  }
+
+  function onWrongTap(idx){
+    finishing = true;
+    running = false;
+    playingBack = false;
+    acceptingInput = false;
+    clearAllTimers();
+    tiles[idx].classList.add('wrong');
+    statusEl.textContent = '違う!';
+    wrongTimeoutId = setTimeout(function(){ endGame(); }, WRONG_DELAY_MS);
+  }
+
+  function onTilePress(idx){
+    if(!running || finishing || !acceptingInput) return;
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+
+    lightTile(idx, true);
+    clearTimeout(tapFlashTimeoutId);
+    tapFlashTimeoutId = setTimeout(function(){ if(!finishing) lightTile(idx, false); }, 160);
+
+    if(idx !== sequence[inputIndex]){
+      onWrongTap(idx);
+      return;
+    }
+    inputIndex++;
+    if(inputIndex >= sequence.length){
+      clearedRounds = sequence.length;
+      acceptingInput = false;
+      statusEl.textContent = 'クリア!次へ...';
+      nextRoundTimeoutId = setTimeout(addStepAndPlay, ROUND_START_DELAY_MS);
+    }
+  }
+
+  function onPadTap(e){
+    var el = e.target.closest ? e.target.closest('.tile') : null;
+    if(!el || !padEl.contains(el)) return;
+    if(e.cancelable) e.preventDefault();
+    onTilePress(parseInt(el.dataset.idx, 10));
+  }
+
+  function startGame(){
+    clearAllTimers();
+    running = true;
+    finishing = false;
+    playingBack = false;
+    acceptingInput = false;
+    sequence = [];
+    inputIndex = 0;
+    clearedRounds = 0;
+    lastTapAt = 0;
+    for(var i = 0; i < tiles.length; i++) tiles[i].classList.remove('lit', 'wrong');
+
+    roundNumEl.textContent = '1';
+    statusEl.textContent = '見て覚えろ!';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    nextRoundTimeoutId = setTimeout(addStepAndPlay, 400);
+  }
+
+  function endGame(){
+    clearAllTimers();
+    document.body.classList.remove('playing');
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(clearedRounds);
+    var rank = rankFor(clearedRounds);
+
+    document.getElementById('result-count').textContent = String(clearedRounds);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent = 'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に記憶力が良い人でした';
+
+    var shareText = '記憶力選手権で' + clearedRounds + '手先まで記憶して「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に記憶力が良い人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+  padEl.addEventListener('click', onPadTap);
+  padEl.addEventListener('touchstart', onPadTap, {passive:false});
+})();
+</script>
+</body>
+</html>
