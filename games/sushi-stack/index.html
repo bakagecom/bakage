@@ -259,23 +259,17 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
 
     var drift = Math.abs(offset) <= PERFECT_PX ? 0 : offset * 0.5;
     var landX = clampX(currentTargetX + drift, towerZone.clientWidth);
-    animateDrop(moverX, landX, height + 1, vx); // height+1 = この寿司が入るスロット番号 = 積み終わった後の新しい段数
+    animateDrop(moverX, landX, height + 1); // height+1 = この寿司が入るスロット番号 = 積み終わった後の新しい段数
   }
 
-  function animateDrop(startX, landX, newHeight, vx){
+  function animateDrop(startX, landX, newHeight){
     moverEl.style.visibility = 'hidden';
 
     var zoneH = towerZone.clientHeight;
     var startBottom = zoneH + towerY; // 現在のカメラ位置における「moverの高さ(画面最上部)」をタワーのローカル座標に変換
     var finalBottom = newHeight * PIECE_H;
     var dropMs = Math.max(110, BASE_DROP_MS * (INITIAL_SPEED / speed)); // その時点のスピードが速いほど落下も速くする
-    var settleMs = Math.max(90, Math.round(dropMs * 0.35)); // 着地後、行き過ぎた分を短く戻す余韻の時間
     var fallEase = 'cubic-bezier(.22,.85,.4,1)';
-
-    // 横方向の慣性: タップ時点のスライド速度が速いほど着地位置を大きく行き過ぎる。縦(bottom)と全く同じ
-    // タイミング関数・時間を使うことで、落下中ずっと斜めにドリフトしながら落ちるように見せる
-    var overshootPx = Math.min(26, Math.abs(vx) * 35);
-    var overshootX = landX + overshootPx * (vx >= 0 ? 1 : -1);
 
     var el = document.createElement('div');
     el.className = 'piece';
@@ -285,21 +279,17 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     towerEl.appendChild(el);
 
     void el.offsetWidth; // force reflow so the transition below actually animates from startBottom
+    // left・bottomを全く同じタイミング関数・時間で同時に動かすことで、落下中ずっと斜めにドリフトしながら
+    // 着地位置(landX)へ真っ直ぐ向かう(行き過ぎて戻る動きを入れると逆方向に動いたように見えるため廃止)
     el.style.transition = 'left ' + dropMs + 'ms ' + fallEase + ', bottom ' + dropMs + 'ms ' + fallEase;
-    el.style.left = overshootX + 'px';
+    el.style.left = landX + 'px';
     el.style.bottom = finalBottom + 'px';
-
-    setTimeout(function(){
-      // 着地後、行き過ぎた分だけ横に短く戻って収まる(慣性の余韻)
-      el.style.transition = 'left ' + settleMs + 'ms ease-out';
-      el.style.left = landX + 'px';
-    }, dropMs);
 
     setTimeout(function(){
       el.style.transition = '';
       el.classList.add('landed');
       finishDrop(landX, newHeight);
-    }, dropMs + settleMs);
+    }, dropMs);
   }
 
   // 外した場合も即ゲームオーバーにはせず、その時点の位置から画面下まで落ちる演出を挟んでから終了処理する
