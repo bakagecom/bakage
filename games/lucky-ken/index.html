@@ -125,8 +125,8 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
   var DURATION = 20;
   var ITEM_WIDTH = 100;
   var BASE_SPEED = 200;
-  var SPEED_STEP = 15;
-  var MAX_SPEED = 420;
+  var MIN_SPEED = 40;
+  var MAX_SPEED = 4000; // MIN_SPEEDの100倍
   var STOP_FEEDBACK_MS = 700;
 
   var PREFS = [
@@ -292,8 +292,9 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
       bestPref = pref;
     }
     showFeedback(score, pref);
-    var stepVariance = (Math.random() * 2 - 1) * SPEED_STEP * 4.8; // 止めるたびに加速・減速どちらもランダムに起こる(振れ幅を約3倍に拡大)
-    speed = Math.max(BASE_SPEED, Math.min(MAX_SPEED, speed + stepVariance));
+    // 前回の速度からの微調整ではなく、MIN_SPEED〜MAX_SPEED(100倍レンジ)の中から毎回まるごと選び直す。
+    // 対数一様分布にすることで「すごく遅い」「普通」「すごく速い」がまんべんなく出るようにする(単純な一様分布だと大半が高速寄りになってしまう)
+    speed = MIN_SPEED * Math.pow(MAX_SPEED / MIN_SPEED, Math.random());
 
     clearTimeout(resumeTimeoutId);
     resumeTimeoutId = setTimeout(function(){
