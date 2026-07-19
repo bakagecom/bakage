@@ -320,7 +320,7 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     currentTargetX = landX;
     height = newHeight;
     heightNumEl.textContent = String(height);
-    speed = Math.min(speed + 0.35, 7.5);
+    speed = Math.min(speed + 0.35, 750); // 上限を事実上の青天井にし、永遠に続けられないようにする
 
     updateCamera(); // #towerのCSS transition(.15s)で積んだ寿司ごとカメラが滑らかに追従する
 
