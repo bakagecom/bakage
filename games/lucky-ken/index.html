@@ -292,7 +292,8 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
       bestPref = pref;
     }
     showFeedback(score, pref);
-    speed = Math.min(MAX_SPEED, speed + SPEED_STEP);
+    var stepVariance = SPEED_STEP * (0.4 + Math.random() * 1.4); // 止めるたびの加速量にばらつきを持たせる(常に加速はするが量が毎回変わる)
+    speed = Math.min(MAX_SPEED, speed + stepVariance);
 
     clearTimeout(resumeTimeoutId);
     resumeTimeoutId = setTimeout(function(){
