@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>瞬間暗算選手権 | バカゲー製作所</title>
+<meta name="description" content="出題される計算の答えを制限時間内にタップ。ラウンドを重ねるほど時間が短くなる、1回間違えたら終了の暗算サバイバル。">
+<meta property="og:title" content="瞬間暗算選手権 | バカゲー製作所">
+<meta property="og:description" content="計算の答えを制限時間内にタップし続けろ。1回間違えたら終了、何問正解できる?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-sokuzan-senshuken.png">
+<meta property="og:url" content="https://bakage.com/games/sokuzan-senshuken/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-sokuzan-senshuken.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.hud .status{color:var(--pink)}
+.gaugewrap{height:16px;margin:0 20px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+#timebar{height:100%;background:var(--blue);width:100%}
+
+.probzone{flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:22px 16px 10px}
+.probcard{background:#fff;border:4px solid var(--ink);border-radius:14px;padding:22px;box-shadow:6px 6px 0 var(--gear);max-width:380px;width:100%;text-align:center}
+.problabel{font-size:.72rem;font-weight:900;opacity:.6;margin-bottom:8px}
+#prob-text{font-size:2rem;font-weight:900;letter-spacing:.02em}
+
+.choicezone{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 16px 4px}
+#choices{display:flex;gap:12px;width:100%;max-width:420px}
+.choice-btn{flex:1;padding:20px 8px;font-size:1.4rem;font-weight:900;border:4px solid var(--ink);border-radius:14px;background:#fff;box-shadow:5px 5px 0 var(--ink);cursor:pointer;transition:transform .08s,background .15s}
+.choice-btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.choice-btn.correct{background:#E9F7EC}
+.choice-btn.wrong{background:var(--pink)}
+
+.howto{text-align:center;font-size:.8rem;opacity:.65;padding:2px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+.result-detail{font-size:.82rem;opacity:.75;margin-bottom:10px}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🧮 瞬間暗算選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🧮 瞬間暗算選手権</h1>
+      <p>出てくる計算の答えを、3つの選択肢から制限時間内にタップ!<br>ラウンドを重ねるほど時間が短くなる。<br>1回間違えるか時間切れで終了、何問正解できるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p class="result-detail">問連続正解</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>正解 <b id="score-num">0</b>問</span>
+      <span class="status" id="status-text">さあ、答えて!</span>
+    </div>
+    <div class="gaugewrap">
+      <div id="timebar"></div>
+    </div>
+    <div class="probzone">
+      <div class="probcard">
+        <div class="problabel">この計算の答えは?</div>
+        <div id="prob-text">-</div>
+      </div>
+    </div>
+    <div class="choicezone">
+      <div id="choices"></div>
+    </div>
+    <div class="howto">🧮 正しい答えをタップ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/sokuzan-senshuken/';
+  var TAP_COOLDOWN_MS = 50;
+  var TICK_MS = 50;
+  var CORRECT_FLASH_MS = 380;
+  var WRONG_FLASH_MS = 700;
+  var TIME_INITIAL = 2600;
+  var TIME_MIN = 900;
+  var TIME_STEP = 130;
+
+  var running = false;
+  var finishing = false;
+  var answering = false;
+  var round = 1;
+  var score = 0;
+  var currentAnswer = 0;
+  var roundTimeMs = TIME_INITIAL;
+  var remainingMs = TIME_INITIAL;
+  var lastTapAt = 0;
+  var tickId = null;
+  var resultTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var timebarEl = document.getElementById('timebar');
+  var probTextEl = document.getElementById('prob-text');
+  var choicesEl = document.getElementById('choices');
+  var scoreNumEl = document.getElementById('score-num');
+  var statusEl = document.getElementById('status-text');
+
+  function titleFor(s){
+    if(s >= 20) return '暗算の鬼';
+    if(s >= 12) return '脳内電卓';
+    if(s >= 6) return '電卓いらずの腕前';
+    if(s >= 2) return '暗算見習い';
+    return '要・計算ドリル';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - s * s * 700;
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function clearAllTimers(){
+    clearInterval(tickId);
+    tickId = null;
+    clearTimeout(resultTimeoutId);
+    resultTimeoutId = null;
+  }
+
+  function randInt(lo, hi){
+    return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+  }
+
+  function shuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function paramsForRound(r){
+    var timeMs = Math.max(TIME_MIN, TIME_INITIAL - (r - 1) * TIME_STEP);
+    var maxOp = Math.min(9 + Math.floor((r - 1) / 2) * 4, 50);
+    var allowSub = r >= 3;
+    return {timeMs: timeMs, maxOp: maxOp, allowSub: allowSub};
+  }
+
+  function genProblem(r){
+    var p = paramsForRound(r);
+    var useSub = p.allowSub && Math.random() < 0.5;
+    var a, b, op, answer;
+    if(useSub){
+      a = randInt(Math.min(4, p.maxOp), p.maxOp);
+      b = randInt(1, a);
+      op = '-';
+      answer = a - b;
+    } else {
+      a = randInt(1, p.maxOp);
+      b = randInt(1, p.maxOp);
+      op = '+';
+      answer = a + b;
+    }
+    return {a: a, b: b, op: op, answer: answer, timeMs: p.timeMs};
+  }
+
+  function genChoices(answer){
+    var vals = [answer];
+    var guard = 0;
+    while(vals.length < 3 && guard < 60){
+      guard++;
+      var delta = randInt(1, 6);
+      var sign = Math.random() < 0.5 ? -1 : 1;
+      var v = answer + delta * sign;
+      if(v < 0) v = answer + delta;
+      if(vals.indexOf(v) === -1) vals.push(v);
+    }
+    var extra = 7;
+    while(vals.length < 3){
+      var v2 = answer + extra;
+      if(v2 >= 0 && vals.indexOf(v2) === -1) vals.push(v2);
+      extra++;
+    }
+    return shuffle(vals);
+  }
+
+  function renderChoices(vals){
+    choicesEl.innerHTML = '';
+    var frag = document.createDocumentFragment();
+    for(var i = 0; i < vals.length; i++){
+      var b = document.createElement('button');
+      b.className = 'choice-btn';
+      b.textContent = String(vals[i]);
+      b.dataset.value = String(vals[i]);
+      frag.appendChild(b);
+    }
+    choicesEl.appendChild(frag);
+  }
+
+  function tick(){
+    remainingMs -= TICK_MS;
+    if(remainingMs <= 0){
+      timebarEl.style.width = '0%';
+      onTimeout();
+      return;
+    }
+    timebarEl.style.width = Math.max(0, (remainingMs / roundTimeMs) * 100) + '%';
+  }
+
+  function nextRound(){
+    clearAllTimers();
+    var prob = genProblem(round);
+    currentAnswer = prob.answer;
+    probTextEl.textContent = prob.a + ' ' + prob.op + ' ' + prob.b + ' = ?';
+    renderChoices(genChoices(prob.answer));
+
+    roundTimeMs = prob.timeMs;
+    remainingMs = prob.timeMs;
+    timebarEl.style.width = '100%';
+    statusEl.textContent = 'さあ、答えて!';
+    answering = true;
+
+    tickId = setInterval(tick, TICK_MS);
+  }
+
+  function onTimeout(){
+    if(!running || finishing) return;
+    answering = false;
+    finishing = true;
+    running = false;
+    clearAllTimers();
+
+    var correctBtn = choicesEl.querySelector('[data-value="' + currentAnswer + '"]');
+    if(correctBtn) correctBtn.classList.add('correct');
+    statusEl.textContent = '時間切れ...';
+    resultTimeoutId = setTimeout(endGame, WRONG_FLASH_MS);
+  }
+
+  function onChoiceTap(e){
+    if(!running || finishing || !answering) return;
+    var el = e.target.closest ? e.target.closest('.choice-btn') : null;
+    if(!el || !choicesEl.contains(el)) return;
+    if(e.cancelable) e.preventDefault();
+
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+
+    answering = false;
+    clearInterval(tickId);
+    tickId = null;
+
+    var value = parseInt(el.dataset.value, 10);
+    if(value === currentAnswer){
+      el.classList.add('correct');
+      score++;
+      scoreNumEl.textContent = String(score);
+      statusEl.textContent = '正解!';
+      resultTimeoutId = setTimeout(function(){
+        round++;
+        nextRound();
+      }, CORRECT_FLASH_MS);
+    } else {
+      el.classList.add('wrong');
+      var correctBtn = choicesEl.querySelector('[data-value="' + currentAnswer + '"]');
+      if(correctBtn) correctBtn.classList.add('correct');
+      statusEl.textContent = '残念...';
+      finishing = true;
+      running = false;
+      resultTimeoutId = setTimeout(endGame, WRONG_FLASH_MS);
+    }
+  }
+
+  function startGame(){
+    clearAllTimers();
+    running = true;
+    finishing = false;
+    answering = false;
+    round = 1;
+    score = 0;
+    lastTapAt = 0;
+    scoreNumEl.textContent = '0';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    nextRound();
+  }
+
+  function endGame(){
+    clearAllTimers();
+    document.body.classList.remove('playing');
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent = 'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に暗算が速い人でした';
+
+    var shareText = '瞬間暗算選手権で' + score + '問連続正解して「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に暗算が速い人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+  choicesEl.addEventListener('click', onChoiceTap);
+  choicesEl.addEventListener('touchstart', onChoiceTap, {passive:false});
+})();
+</script>
+</body>
+</html>
