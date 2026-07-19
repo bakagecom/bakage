@@ -250,22 +250,29 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
       return;
     }
 
-    // 直前の揺れの進行方向(速度の符号)を引き継ぎ、次の寿司が逆方向に飛び出さないようにする
-    var velSign = Math.cos(speed * lastT / 1000 + phaseOffset) >= 0 ? 1 : -1;
+    // 直前の揺れの進行方向・瞬間速度を引き継ぎ、次の寿司が逆方向に飛び出さないようにする
+    var w0 = towerZone.clientWidth;
+    var amp0 = Math.min(amplitude, w0/2 - 30);
+    var vx = amp0 * (speed / 1000) * Math.cos(speed * lastT / 1000 + phaseOffset); // タップ時点の横方向の瞬間速度(px/ms、符号付き)
+    var velSign = vx >= 0 ? 1 : -1;
     phaseOffset = velSign >= 0 ? 0 : Math.PI;
 
     var drift = Math.abs(offset) <= PERFECT_PX ? 0 : offset * 0.5;
     var landX = clampX(currentTargetX + drift, towerZone.clientWidth);
-    animateDrop(moverX, landX, height + 1); // height+1 = この寿司が入るスロット番号 = 積み終わった後の新しい段数
+    animateDrop(moverX, landX, height + 1, vx); // height+1 = この寿司が入るスロット番号 = 積み終わった後の新しい段数
   }
 
-  function animateDrop(startX, landX, newHeight){
+  function animateDrop(startX, landX, newHeight, vx){
     moverEl.style.visibility = 'hidden';
 
     var zoneH = towerZone.clientHeight;
     var startBottom = zoneH + towerY; // 現在のカメラ位置における「moverの高さ(画面最上部)」をタワーのローカル座標に変換
     var finalBottom = newHeight * PIECE_H;
     var dropMs = Math.max(110, BASE_DROP_MS * (INITIAL_SPEED / speed)); // その時点のスピードが速いほど落下も速くする
+
+    // 横方向の慣性: タップ時点のスライド速度が速いほど着地時に大きくオーバーシュートしてから収まる(back-easeの効きを可変にする)
+    var overshootC = (1 + Math.min(1.3, Math.abs(vx) * 3)).toFixed(2);
+    var horizEase = 'cubic-bezier(.34,' + overshootC + ',.64,1)';
 
     var el = document.createElement('div');
     el.className = 'piece';
@@ -275,7 +282,7 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
     towerEl.appendChild(el);
 
     void el.offsetWidth; // force reflow so the transition below actually animates from startBottom
-    el.style.transition = 'left ' + dropMs + 'ms cubic-bezier(.22,.85,.4,1), bottom ' + dropMs + 'ms cubic-bezier(.22,.85,.4,1)';
+    el.style.transition = 'left ' + dropMs + 'ms ' + horizEase + ', bottom ' + dropMs + 'ms cubic-bezier(.22,.85,.4,1)';
     el.style.left = landX + 'px';
     el.style.bottom = finalBottom + 'px';
 
