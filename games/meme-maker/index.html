@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>今日のミームメーカー | バカゲー製作所</title>
+<meta name="description" content="12秒間タップしまくって謎のミームを量産しろ。まれに「神ミーム」が出て高得点。あなたは何個生成できる?">
+<meta property="og:title" content="今日のミームメーカー | バカゲー製作所">
+<meta property="og:description" content="12秒でミームを量産!まれに出る「神ミーム」を狙え。あなたのミーム賢者度は?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-meme-maker.png">
+<meta property="og:url" content="https://bakage.com/games/meme-maker/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-meme-maker.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.timerbar-wrap{height:14px;margin:0 20px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+#timerbar{height:100%;background:var(--pink);width:100%;transform-origin:left}
+
+.memezone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:10px 20px}
+.meme-card{
+  width:min(78vw,300px);background:#fff;border:5px solid var(--ink);border-radius:14px;
+  padding:14px 10px;box-shadow:8px 8px 0 var(--gear);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.meme-card.legendary{border-color:var(--pink);box-shadow:8px 8px 0 var(--pink)}
+.meme-top{font-size:.95rem;font-weight:900;line-height:1.3}
+.meme-face{font-size:3.2rem;line-height:1}
+.meme-bottom{font-size:.95rem;font-weight:900;line-height:1.3}
+.meme-badge{font-size:.78rem;font-weight:900;color:var(--pink);min-height:1.1em}
+.meme-card.pop{animation:memePop .22s ease-out}
+@keyframes memePop{
+  0%{transform:scale(1)}
+  35%{transform:scale(0.92) rotate(-1deg)}
+  100%{transform:scale(1) rotate(0deg)}
+}
+#gen-btn{
+  width:100%;max-width:280px;padding:16px;font-size:1.15rem;font-weight:900;
+  border:4px solid var(--ink);border-radius:14px;background:var(--pink);color:var(--ink);
+  box-shadow:6px 6px 0 var(--ink);cursor:pointer;animation:breathe .85s ease-in-out infinite;
+}
+#gen-btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.howto{text-align:center;font-size:.85rem;font-weight:900;opacity:.7;padding:4px 16px 12px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.sub-line{font-size:.85rem;opacity:.75;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🎭 今日のミームメーカー</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🎭 今日のミームメーカー</h1>
+      <p>謎のミームが次々生成される機械が目の前に。<br>12秒間タップしまくって量産しろ。<br>まれに出る「神ミーム」を狙え。<br>あなたは何個生成できる?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">ミームスコア</p>
+      <p class="sub-line" id="result-sub"></p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>スコア: <b id="score-num">0</b></span>
+      <span>⏱ <b id="time-num">12</b>s</span>
+    </div>
+    <div class="timerbar-wrap"><div id="timerbar"></div></div>
+    <div class="memezone">
+      <div class="meme-card" id="meme-card">
+        <div class="meme-top" id="meme-top">タップして生成</div>
+        <div class="meme-face" id="meme-face">🎭</div>
+        <div class="meme-bottom" id="meme-bottom">開始まで待機中</div>
+        <div class="meme-badge" id="meme-badge">&nbsp;</div>
+      </div>
+      <button id="gen-btn">生成!</button>
+    </div>
+    <div class="howto">👆 連打してミームを量産しろ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/meme-maker/';
+  var DURATION = 12;
+  var GEN_COOLDOWN_MS = 50;
+  var LEGENDARY_CHANCE = 0.15;
+  var LEGENDARY_BONUS = 3;
+  var NORMAL_BONUS = 1;
+
+  var FACES = ['😐','😂','😭','😱','🤔','😎','😴','🥳','😤','🙃','😇','🫠'];
+  var TOPS = [
+    '月曜の朝の自分', '会議中の生あくび', '深夜3時のテンション', '給料日前の財布',
+    '満腹後の睡魔', '目覚まし3回目', '宅配便を待つ30分', '冷蔵庫を開けた瞬間',
+    'レジで小銭を探す時間', '既読無視して1時間後', '在宅勤務2日目', '締切前日の自分'
+  ];
+  var BOTTOMS = [
+    'それな', '無理すぎて笑った', 'この顔よ', '分かりみが深い',
+    '尊すぎる', '涙が止まらない', '圧倒的感謝', 'これが人生',
+    '完全に詰んだ', '永遠にunsolved', 'わかる人にはわかる', '解散'
+  ];
+
+  var running = false;
+  var score = 0;
+  var normalCount = 0;
+  var legendaryCount = 0;
+  var timeLeft = DURATION;
+  var gameTimerId = null;
+  var lastGenAt = 0;
+  var lastFaceIdx = -1;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var scoreNumEl = document.getElementById('score-num');
+  var timeNumEl = document.getElementById('time-num');
+  var timerbarEl = document.getElementById('timerbar');
+  var memeCard = document.getElementById('meme-card');
+  var memeTop = document.getElementById('meme-top');
+  var memeFace = document.getElementById('meme-face');
+  var memeBottom = document.getElementById('meme-bottom');
+  var memeBadge = document.getElementById('meme-badge');
+  var genBtn = document.getElementById('gen-btn');
+
+  function titleFor(s){
+    if(s < 5) return '寝起きミーム職人';
+    if(s < 15) return '量産型ミーマー';
+    if(s < 30) return 'バズり待ちクリエイター';
+    if(s < 50) return '謎の量産スキル持ち';
+    if(s < 80) return 'ミーム工場長';
+    return '伝説のミーム賢者';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * 25);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function generateMeme(){
+    var faceIdx = Math.floor(Math.random() * FACES.length);
+    if(FACES.length > 1 && faceIdx === lastFaceIdx){
+      faceIdx = (faceIdx + 1) % FACES.length;
+    }
+    lastFaceIdx = faceIdx;
+    var topIdx = Math.floor(Math.random() * TOPS.length);
+    var bottomIdx = Math.floor(Math.random() * BOTTOMS.length);
+    var isLegendary = Math.random() < LEGENDARY_CHANCE;
+
+    memeTop.textContent = TOPS[topIdx];
+    memeFace.textContent = FACES[faceIdx];
+    memeBottom.textContent = BOTTOMS[bottomIdx];
+    memeBadge.textContent = isLegendary ? '✨ 神ミーム認定!' : ' ';
+    memeCard.classList.toggle('legendary', isLegendary);
+
+    memeCard.classList.remove('pop');
+    void memeCard.offsetWidth;
+    memeCard.classList.add('pop');
+
+    if(isLegendary){
+      legendaryCount++;
+      score += LEGENDARY_BONUS;
+    } else {
+      normalCount++;
+      score += NORMAL_BONUS;
+    }
+    scoreNumEl.textContent = String(score);
+  }
+
+  function onGenerate(e){
+    if(e) e.preventDefault();
+    if(!running) return;
+    var now = Date.now();
+    if(now - lastGenAt < GEN_COOLDOWN_MS) return;
+    lastGenAt = now;
+    generateMeme();
+  }
+
+  function startGame(){
+    clearInterval(gameTimerId);
+
+    running = true;
+    score = 0;
+    normalCount = 0;
+    legendaryCount = 0;
+    timeLeft = DURATION;
+    lastGenAt = 0;
+    lastFaceIdx = -1;
+
+    scoreNumEl.textContent = '0';
+    timeNumEl.textContent = String(DURATION);
+    timerbarEl.style.transition = 'none';
+    timerbarEl.style.width = '100%';
+    memeTop.textContent = 'さあ生成しろ';
+    memeFace.textContent = '🎭';
+    memeBottom.textContent = 'タップ待ち';
+    memeBadge.textContent = ' ';
+    memeCard.classList.remove('legendary', 'pop');
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        timerbarEl.style.transition = 'width ' + DURATION + 's linear';
+        timerbarEl.style.width = '0%';
+      });
+    });
+
+    gameTimerId = setInterval(function(){
+      timeLeft -= 1;
+      if(timeLeft <= 0){
+        timeNumEl.textContent = '0';
+        endGame();
+        return;
+      }
+      timeNumEl.textContent = String(timeLeft);
+    }, 1000);
+  }
+
+  function endGame(){
+    if(!running) return;
+    running = false;
+    clearInterval(gameTimerId);
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-sub').textContent =
+      '通常ミーム ' + normalCount + '個 / 神ミーム ' + legendaryCount + '個';
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目のミーム賢者でした';
+
+    var shareText = '今日のミームメーカーでスコア' + score + '(神ミーム' + legendaryCount + '個)を叩き出して「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目のミーム賢者でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+
+  genBtn.addEventListener('click', onGenerate);
+  genBtn.addEventListener('touchstart', onGenerate, {passive:false});
+})();
+</script>
+</body>
+</html>
