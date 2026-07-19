@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>法則発見選手権 | バカゲー製作所</title>
+<meta name="description" content="数字や図形の並びに隠れた法則を見抜いて、次に来るものをタップし続けるバカゲー。正解するほど時間が短くなる。1回間違えたら即終了。">
+<meta property="og:title" content="法則発見選手権 | バカゲー製作所">
+<meta property="og:description" content="数字や図形の法則を一瞬で見抜け!正解するほど時間が短くなる観察力バカゲー。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-housoku-senshuken.png">
+<meta property="og:url" content="https://bakage.com/games/housoku-senshuken/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-housoku-senshuken.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.timerbar-wrap{height:14px;margin:0 20px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+#timerbar{height:100%;background:var(--pink);width:100%;transform-origin:left}
+
+.seqzone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:10px 20px}
+#seqcard{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:22px 16px;box-shadow:6px 6px 0 var(--ink);min-width:250px}
+.seq-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.seq-item{min-width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;border:3px solid var(--ink);border-radius:10px;background:var(--bg)}
+.seq-item.q{background:var(--pink);color:#fff}
+.seq-arrow{font-size:1.1rem;opacity:.5}
+
+#choicegrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;width:min(84vw,340px);transition:opacity .15s}
+#choicegrid.locked{opacity:.4;pointer-events:none}
+.choicebtn{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;border:4px solid var(--ink);border-radius:14px;background:#fff;cursor:pointer;transition:transform .08s;box-shadow:5px 5px 0 var(--ink)}
+.choicebtn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.choicebtn.wrong{animation:shake .3s ease-out;background:var(--pink);color:#fff}
+.choicebtn.correct{background:#8CE99A}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.howto{text-align:center;font-size:.85rem;font-weight:900;opacity:.7;padding:4px 16px 12px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🧩 法則発見選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🧩 法則発見選手権</h1>
+      <p>数字や図形の並びには法則がある。<br>「?」に入るものを3択からタップ。<br>正解するほど考える時間が短くなる。<br>1回間違えたら即終了。</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">連続正解</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>連続: <b id="score-num">0</b></span>
+      <span>⏱ <b id="round-time-num">-</b>s</span>
+    </div>
+    <div class="timerbar-wrap"><div id="timerbar"></div></div>
+    <div class="seqzone">
+      <div id="seqcard">
+        <div class="seq-row" id="seq-row"></div>
+      </div>
+      <div id="choicegrid" class="locked"></div>
+    </div>
+    <div class="howto">🔍 「?」に入るものをタップ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/housoku-senshuken/';
+  var TAP_COOLDOWN_MS = 50;
+  var ROUND_START_MS = 4500;
+  var ROUND_MIN_MS = 1800;
+  var ROUND_STEP_MS = 150;
+  var REVEAL_DELAY_MS = 650;
+  var NEXT_ROUND_DELAY_MS = 220;
+  var RANK_COEF = 300;
+  var SHAPES = ['🔴','🔵','🟡','🟢','🟣','⭐','🔺','⬛'];
+
+  var running = false;
+  var score = 0;
+  var roundTimeMs = ROUND_START_MS;
+  var roundTimeoutId = null;
+  var roundTickId = null;
+  var nextRoundTimeoutId = null;
+  var roundDeadline = 0;
+  var lastTapAt = 0;
+  var correctIndex = -1;
+  var roundLocked = true;
+  var roundToken = 0;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var scoreNumEl = document.getElementById('score-num');
+  var roundTimeNumEl = document.getElementById('round-time-num');
+  var timerbarEl = document.getElementById('timerbar');
+  var seqRowEl = document.getElementById('seq-row');
+  var choiceGridEl = document.getElementById('choicegrid');
+
+  function titleFor(s){
+    if(s < 3) return '法則なんて知らん';
+    if(s < 6) return 'まずまずの観察眼';
+    if(s < 10) return 'なかなかの法則発見者';
+    if(s < 16) return '法則マスター';
+    return '伝説のパターン王';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * RANK_COEF);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function randInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function shuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function uniquePush(list, val){
+    for(var i = 0; i < list.length; i++){
+      if(list[i] === val) return false;
+    }
+    list.push(val);
+    return true;
+  }
+
+  function genArith(){
+    var a = randInt(1, 20);
+    var d = 0;
+    while(d === 0) d = randInt(-5, 5);
+    var terms = [a, a + d, a + 2 * d];
+    var next = a + 3 * d;
+    var pool = [next];
+    var tries = 0;
+    while(pool.length < 3 && tries < 30){
+      tries++;
+      var cand = next + (Math.random() < 0.5 ? 1 : -1) * randInt(1, Math.max(2, Math.abs(d) * 2));
+      uniquePush(pool, cand);
+    }
+    var fallbackTry = 0;
+    while(pool.length < 3){
+      fallbackTry++;
+      uniquePush(pool, next + 1000 + fallbackTry * 37);
+    }
+    return { display: terms.map(String), choices: pool.map(String), correct: String(next) };
+  }
+
+  function genGeo(){
+    var a = randInt(1, 4);
+    var r = Math.random() < 0.5 ? 2 : 3;
+    var terms = [a, a * r, a * r * r];
+    var next = a * r * r * r;
+    var pool = [next];
+    uniquePush(pool, terms[2] + (terms[2] - terms[1]));
+    uniquePush(pool, next + a);
+    var tries = 0;
+    while(pool.length < 3 && tries < 30){
+      tries++;
+      uniquePush(pool, next + randInt(1, 9));
+    }
+    return { display: terms.map(String), choices: pool.map(String), correct: String(next) };
+  }
+
+  function genAltern(){
+    var a = randInt(1, 15);
+    var d1 = 0, d2 = 0;
+    while(d1 === 0) d1 = randInt(-6, 6);
+    while(d2 === 0 || d2 === d1) d2 = randInt(-6, 6);
+    var t1 = a, t2 = a + d1, t3 = t2 + d2;
+    var next = t3 + d1;
+    var pool = [next];
+    uniquePush(pool, t3 + d2);
+    uniquePush(pool, t3 - d1);
+    var tries = 0;
+    while(pool.length < 3 && tries < 30){
+      tries++;
+      uniquePush(pool, next + randInt(1, 8) * (Math.random() < 0.5 ? 1 : -1));
+    }
+    return { display: [t1, t2, t3].map(String), choices: pool.map(String), correct: String(next) };
+  }
+
+  function genShape(){
+    var cycleLen = Math.random() < 0.5 ? 2 : 3;
+    var pool8 = shuffle(SHAPES.slice());
+    var cycle = pool8.slice(0, cycleLen);
+    var display = [cycle[0], cycle[1 % cycleLen], cycle[2 % cycleLen]];
+    var correct = cycle[3 % cycleLen];
+    var distractors = pool8.slice(cycleLen).filter(function(s){ return s !== correct; });
+    var choices = [correct, distractors[0], distractors[1]];
+    return { display: display, choices: choices, correct: correct };
+  }
+
+  function genRound(){
+    var kinds = [genArith, genGeo, genAltern, genShape];
+    var kind = kinds[randInt(0, kinds.length - 1)];
+    return kind();
+  }
+
+  function clearRoundTimers(){
+    clearTimeout(roundTimeoutId);
+    clearInterval(roundTickId);
+    clearTimeout(nextRoundTimeoutId);
+    roundTimeoutId = null;
+    roundTickId = null;
+    nextRoundTimeoutId = null;
+  }
+
+  function startRoundTimer(){
+    roundTimeNumEl.textContent = (roundTimeMs / 1000).toFixed(1);
+    timerbarEl.style.transition = 'none';
+    timerbarEl.style.width = '100%';
+    void timerbarEl.offsetWidth;
+
+    roundDeadline = Date.now() + roundTimeMs;
+    timerbarEl.style.transition = 'width ' + roundTimeMs + 'ms linear';
+    timerbarEl.style.width = '0%';
+
+    roundTickId = setInterval(function(){
+      var remaining = Math.max(0, roundDeadline - Date.now());
+      roundTimeNumEl.textContent = (remaining / 1000).toFixed(1);
+    }, 100);
+
+    roundTimeoutId = setTimeout(function(){
+      if(running && !roundLocked) revealAndEnd(-1);
+    }, roundTimeMs);
+  }
+
+  function renderRound(){
+    var myToken = ++roundToken;
+    roundLocked = true;
+    clearRoundTimers();
+
+    var data = genRound();
+    var choices = shuffle(data.choices.slice());
+    correctIndex = choices.indexOf(data.correct);
+
+    seqRowEl.innerHTML = '';
+    data.display.forEach(function(v, i){
+      if(i > 0){
+        var arrow = document.createElement('span');
+        arrow.className = 'seq-arrow';
+        arrow.textContent = '→';
+        seqRowEl.appendChild(arrow);
+      }
+      var item = document.createElement('div');
+      item.className = 'seq-item';
+      item.textContent = v;
+      seqRowEl.appendChild(item);
+    });
+    var arrowLast = document.createElement('span');
+    arrowLast.className = 'seq-arrow';
+    arrowLast.textContent = '→';
+    seqRowEl.appendChild(arrowLast);
+    var qItem = document.createElement('div');
+    qItem.className = 'seq-item q';
+    qItem.textContent = '?';
+    seqRowEl.appendChild(qItem);
+
+    choiceGridEl.innerHTML = '';
+    choices.forEach(function(v, i){
+      var btn = document.createElement('button');
+      btn.className = 'choicebtn';
+      btn.textContent = v;
+      btn.dataset.idx = String(i);
+      btn.addEventListener('click', onChoiceTap);
+      btn.addEventListener('touchstart', onChoiceTap, {passive:false});
+      choiceGridEl.appendChild(btn);
+    });
+    choiceGridEl.classList.remove('locked');
+
+    roundLocked = false;
+    if(myToken === roundToken) startRoundTimer();
+  }
+
+  function revealAndEnd(tappedIdx){
+    roundLocked = true;
+    clearRoundTimers();
+    choiceGridEl.classList.add('locked');
+    var btns = choiceGridEl.querySelectorAll('.choicebtn');
+    btns.forEach(function(btn){
+      var idx = parseInt(btn.dataset.idx, 10);
+      if(idx === correctIndex) btn.classList.add('correct');
+      if(idx === tappedIdx && idx !== correctIndex) btn.classList.add('wrong');
+    });
+    setTimeout(endGame, REVEAL_DELAY_MS);
+  }
+
+  function onChoiceTap(e){
+    if(e) e.preventDefault();
+    if(!running || roundLocked) return;
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+
+    var idx = parseInt(this.dataset.idx, 10);
+    if(idx === correctIndex){
+      roundLocked = true;
+      clearRoundTimers();
+      this.classList.add('correct');
+      score++;
+      scoreNumEl.textContent = String(score);
+      roundTimeMs = Math.max(ROUND_MIN_MS, roundTimeMs - ROUND_STEP_MS);
+      var myToken = roundToken;
+      nextRoundTimeoutId = setTimeout(function(){
+        nextRoundTimeoutId = null;
+        if(running && myToken === roundToken) renderRound();
+      }, NEXT_ROUND_DELAY_MS);
+    } else {
+      revealAndEnd(idx);
+    }
+  }
+
+  function startGame(){
+    roundToken++;
+    clearRoundTimers();
+
+    running = true;
+    score = 0;
+    roundTimeMs = ROUND_START_MS;
+    lastTapAt = 0;
+    roundLocked = true;
+
+    scoreNumEl.textContent = '0';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    renderRound();
+  }
+
+  function endGame(){
+    if(!running) return;
+    running = false;
+    roundToken++;
+    clearRoundTimers();
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に法則を見抜ける人でした';
+
+    var shareText = '法則発見選手権で' + score + '連続正解して「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に法則を見抜ける人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+})();
+</script>
+</body>
+</html>
