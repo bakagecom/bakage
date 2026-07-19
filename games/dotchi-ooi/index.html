@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>どっちが多い選手権 | バカゲー製作所</title>
+<meta name="description" content="一瞬だけ表示される2つの点の数を見比べて、多い方を直感でタップ。1回間違えたら終了、何問正解できる?">
+<meta property="og:title" content="どっちが多い選手権 | バカゲー製作所">
+<meta property="og:description" content="一瞬だけ表示される点の数を見比べて多い方をタップするだけ。1回間違えたら終了、目分量の限界に挑戦。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-dotchi-ooi.png">
+<meta property="og:url" content="https://bakage.com/games/dotchi-ooi/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-dotchi-ooi.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.hud .status{color:var(--pink)}
+
+.playzone{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 16px 4px}
+#duel{display:flex;gap:12px;width:100%;max-width:420px;height:min(56vh,360px)}
+.zone{flex:1;background:#fff;border:4px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);position:relative;overflow:hidden;transition:background .15s}
+.zone.correct{background:#E9F7EC}
+.zone.wrong{background:var(--pink)}
+.dots{display:none;flex-wrap:wrap;align-items:center;justify-content:center;align-content:center;gap:5px;width:86%;height:86%;margin:7% auto}
+.zone.showing-dots .dots{display:flex}
+.zone.showing-dots .qmark{display:none}
+.qmark{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:2.6rem;opacity:.4}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--ink);flex:0 0 auto}
+.count-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:900;font-size:.85rem;padding:3px 10px;border-radius:8px;display:none}
+
+.howto{text-align:center;font-size:.8rem;opacity:.65;padding:2px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+.result-detail{font-size:.82rem;opacity:.75;margin-bottom:10px}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>👀 どっちが多い選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>👀 どっちが多い選手権</h1>
+      <p>2つの枠に点が一瞬だけ表示される。<br>数が多い方を直感でタップ!<br>1回間違えたら終了、何問連続正解できるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p class="result-detail">問連続正解</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>正解 <b id="score-num">0</b>問</span>
+      <span class="status" id="status-text">よく見て!</span>
+    </div>
+    <div class="playzone">
+      <div id="duel">
+        <div class="zone" id="zone-left" data-side="left">
+          <div class="dots" id="dots-left"></div>
+          <div class="qmark">❓</div>
+          <span class="count-badge" id="count-left"></span>
+        </div>
+        <div class="zone" id="zone-right" data-side="right">
+          <div class="dots" id="dots-right"></div>
+          <div class="qmark">❓</div>
+          <span class="count-badge" id="count-right"></span>
+        </div>
+      </div>
+    </div>
+    <div class="howto">👀 数が多い方をタップ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/dotchi-ooi/';
+  var TAP_COOLDOWN_MS = 50;
+  var CORRECT_FLASH_MS = 380;
+  var WRONG_FLASH_MS = 700;
+
+  var running = false;
+  var finishing = false;
+  var guessing = false;
+  var round = 1;
+  var score = 0;
+  var currentA = 0, currentB = 0;
+  var correctSide = 'left';
+  var lastTapAt = 0;
+  var revealTimeoutId = null;
+  var resultTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var duelEl = document.getElementById('duel');
+  var zoneLeftEl = document.getElementById('zone-left');
+  var zoneRightEl = document.getElementById('zone-right');
+  var dotsLeftEl = document.getElementById('dots-left');
+  var dotsRightEl = document.getElementById('dots-right');
+  var countLeftEl = document.getElementById('count-left');
+  var countRightEl = document.getElementById('count-right');
+  var scoreNumEl = document.getElementById('score-num');
+  var statusEl = document.getElementById('status-text');
+
+  function titleFor(s){
+    if(s >= 15) return '目分量の達人';
+    if(s >= 8) return 'なかなかの目利き';
+    if(s >= 3) return 'まずまずの目分量';
+    return 'どんぶり勘定';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - s * s * 800;
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function clearAllTimers(){
+    clearTimeout(revealTimeoutId);
+    revealTimeoutId = null;
+    clearTimeout(resultTimeoutId);
+    resultTimeoutId = null;
+  }
+
+  function randInt(lo, hi){
+    return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+  }
+
+  function genPair(baseCount, minDiff){
+    var lo = Math.max(3, baseCount - 5), hi = baseCount + 5;
+    var a = randInt(lo, hi);
+    var b = randInt(lo, hi);
+    var tries = 0;
+    while(Math.abs(a - b) < minDiff && tries < 30){
+      b = randInt(lo, hi);
+      tries++;
+    }
+    if(Math.abs(a - b) < minDiff){
+      var up = a + minDiff, down = a - minDiff;
+      if(up <= hi) b = up;
+      else if(down >= 1) b = down;
+      else b = up;
+    }
+    return [Math.max(1, a), Math.max(1, b)];
+  }
+
+  function paramsForRound(r){
+    var flashMs = Math.max(300, 900 - (r - 1) * 35);
+    var baseCount = Math.min(9 + (r - 1) * 2, 34);
+    var minDiff = Math.max(1, 6 - Math.floor((r - 1) / 3));
+    return {flashMs: flashMs, baseCount: baseCount, minDiff: minDiff};
+  }
+
+  function renderDots(container, n){
+    container.innerHTML = '';
+    var frag = document.createDocumentFragment();
+    for(var i = 0; i < n; i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      frag.appendChild(d);
+    }
+    container.appendChild(frag);
+  }
+
+  function nextRound(){
+    var p = paramsForRound(round);
+    var pair = genPair(p.baseCount, p.minDiff);
+    currentA = pair[0]; currentB = pair[1];
+    correctSide = currentA > currentB ? 'left' : 'right';
+    guessing = false;
+
+    zoneLeftEl.className = 'zone';
+    zoneRightEl.className = 'zone';
+    countLeftEl.style.display = 'none';
+    countRightEl.style.display = 'none';
+
+    renderDots(dotsLeftEl, currentA);
+    renderDots(dotsRightEl, currentB);
+
+    zoneLeftEl.classList.add('showing-dots');
+    zoneRightEl.classList.add('showing-dots');
+    statusEl.textContent = 'よく見て!';
+
+    clearTimeout(revealTimeoutId);
+    revealTimeoutId = setTimeout(function(){
+      zoneLeftEl.classList.remove('showing-dots');
+      zoneRightEl.classList.remove('showing-dots');
+      guessing = true;
+      statusEl.textContent = '多い方は?';
+    }, p.flashMs);
+  }
+
+  function revealCounts(){
+    countLeftEl.textContent = String(currentA);
+    countRightEl.textContent = String(currentB);
+    countLeftEl.style.display = 'block';
+    countRightEl.style.display = 'block';
+  }
+
+  function onZoneTap(side){
+    if(!running || finishing || !guessing) return;
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+    guessing = false;
+    clearAllTimers();
+
+    revealCounts();
+    var correctZone = correctSide === 'left' ? zoneLeftEl : zoneRightEl;
+    correctZone.classList.add('correct');
+
+    if(side === correctSide){
+      score++;
+      scoreNumEl.textContent = String(score);
+      statusEl.textContent = '正解!';
+      resultTimeoutId = setTimeout(function(){
+        round++;
+        nextRound();
+      }, CORRECT_FLASH_MS);
+    } else {
+      var wrongZone = side === 'left' ? zoneLeftEl : zoneRightEl;
+      wrongZone.classList.add('wrong');
+      statusEl.textContent = '残念...';
+      finishing = true;
+      running = false;
+      resultTimeoutId = setTimeout(endGame, WRONG_FLASH_MS);
+    }
+  }
+
+  function onDuelTap(e){
+    var el = e.target.closest ? e.target.closest('.zone') : null;
+    if(!el || !duelEl.contains(el)) return;
+    if(e.cancelable) e.preventDefault();
+    onZoneTap(el.dataset.side);
+  }
+
+  function startGame(){
+    clearAllTimers();
+    running = true;
+    finishing = false;
+    guessing = false;
+    round = 1;
+    score = 0;
+    lastTapAt = 0;
+    scoreNumEl.textContent = '0';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    nextRound();
+  }
+
+  function endGame(){
+    clearAllTimers();
+    document.body.classList.remove('playing');
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent = 'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に目分量が正確な人でした';
+
+    var shareText = 'どっちが多い選手権で' + score + '問連続正解して「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に目分量が正確な人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+  duelEl.addEventListener('click', onDuelTap);
+  duelEl.addEventListener('touchstart', onDuelTap, {passive:false});
+})();
+</script>
+</body>
+</html>
