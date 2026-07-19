@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>体内時計グランプリ | バカゲー製作所</title>
+<meta name="description" content="画面にタイマーは出ません。自分の体内時計だけを頼りに、目標の秒数でピタッとタップできるか競うバカゲー。">
+<meta property="og:title" content="体内時計グランプリ | バカゲー製作所">
+<meta property="og:description" content="見えない時計を体感だけで当てろ!5ラウンドの平均精度で称号が決まる体内時計バカゲー。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-tainai-dokei.png">
+<meta property="og:url" content="https://bakage.com/games/tainai-dokei/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-tainai-dokei.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.roundbar-wrap{height:14px;margin:0 20px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden;display:flex;gap:3px;padding:2px}
+.roundbar-wrap i{flex:1;background:#eee;border-radius:3px}
+.roundbar-wrap i.done{background:var(--pink)}
+
+.playzone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:10px 20px}
+#targetcard{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:22px 30px;box-shadow:6px 6px 0 var(--ink);text-align:center}
+#targetcard .label{font-size:.85rem;font-weight:900;opacity:.65;margin-bottom:6px}
+#targetnum{font-size:2.6rem;font-weight:900}
+#feedback{min-height:1.4em;font-size:1.1rem;font-weight:900;color:var(--pink)}
+
+#btn-action{width:min(70vw,260px);height:min(70vw,260px);border-radius:50%;border:5px solid var(--ink);background:var(--pink);color:var(--ink);font-size:1.3rem;font-weight:900;box-shadow:8px 8px 0 var(--ink);cursor:pointer;transition:transform .08s}
+#btn-action:active{transform:translate(4px,4px);box-shadow:4px 4px 0 var(--ink)}
+#btn-action.waiting{background:#fff}
+
+.howto{text-align:center;font-size:.85rem;font-weight:900;opacity:.7;padding:4px 16px 12px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+.result-detail{font-size:.82rem;opacity:.75;margin-bottom:10px}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>⏱ 体内時計グランプリ</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>⏱ 体内時計グランプリ</h1>
+      <p>画面にタイマーは出ません。<br>目標の秒数を体感だけで数えて、ピタッとタップしろ。<br>5ラウンドの合計精度で称号が決まる。</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p class="result-detail">平均精度スコア(100点満点)</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>ラウンド <b id="round-num">1</b>/<span id="round-total">5</span></span>
+      <span>平均 <b id="avg-num">0</b>点</span>
+    </div>
+    <div class="roundbar-wrap" id="roundbar"></div>
+    <div class="playzone">
+      <div id="targetcard">
+        <div class="label">目標タイム</div>
+        <div id="targetnum">3.0秒</div>
+      </div>
+      <div id="feedback"></div>
+      <button id="btn-action">スタート</button>
+    </div>
+    <div class="howto">👆 タップで計測開始、目標秒数が来たと思ったらもう一度タップ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/tainai-dokei/';
+  var TAP_COOLDOWN_MS = 50;
+  var TOTAL_ROUNDS = 5;
+  var TARGET_MIN_MS = 2000;
+  var TARGET_MAX_MS = 4500;
+  var AUTO_TIMEOUT_SLACK_MS = 5000;
+  var NEXT_ROUND_DELAY_MS = 1100;
+
+  var running = false;
+  var round = 0;
+  var scores = [];
+  var state = 'idle';
+  var targetMs = 0;
+  var startTs = 0;
+  var lastTapAt = 0;
+  var autoTimeoutId = null;
+  var advanceTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var roundNumEl = document.getElementById('round-num');
+  var avgNumEl = document.getElementById('avg-num');
+  var roundbarEl = document.getElementById('roundbar');
+  var targetNumEl = document.getElementById('targetnum');
+  var feedbackEl = document.getElementById('feedback');
+  var btnAction = document.getElementById('btn-action');
+
+  function titleFor(avg){
+    if(avg < 20) return 'だいぶ気まぐれな時計';
+    if(avg < 40) return 'そこそこ体内時計';
+    if(avg < 65) return 'なかなかの正確さ';
+    if(avg < 88) return '体内時計マスター';
+    return '人間メトロノーム';
+  }
+
+  function rankFor(avg){
+    var rank = 999983 - Math.round(avg * avg * 90);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function buildRoundbar(){
+    roundbarEl.innerHTML = '';
+    for(var i = 0; i < TOTAL_ROUNDS; i++){
+      var el = document.createElement('i');
+      roundbarEl.appendChild(el);
+    }
+  }
+
+  function markRoundbar(count){
+    var items = roundbarEl.children;
+    for(var i = 0; i < items.length; i++){
+      if(i < count) items[i].classList.add('done');
+      else items[i].classList.remove('done');
+    }
+  }
+
+  function currentAvg(){
+    if(scores.length === 0) return 0;
+    var sum = 0;
+    for(var i = 0; i < scores.length; i++) sum += scores[i];
+    return sum / scores.length;
+  }
+
+  function startRound(){
+    if(!running) return;
+    state = 'idle';
+    targetMs = TARGET_MIN_MS + Math.floor(Math.random() * (TARGET_MAX_MS - TARGET_MIN_MS));
+    roundNumEl.textContent = String(round + 1);
+    targetNumEl.textContent = (targetMs / 1000).toFixed(1) + '秒';
+    feedbackEl.textContent = '';
+    btnAction.textContent = 'スタート';
+    btnAction.classList.remove('waiting');
+    markRoundbar(round);
+  }
+
+  function onAction(e){
+    if(e) e.preventDefault();
+    if(!running) return;
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+
+    if(state === 'idle'){
+      state = 'timing';
+      startTs = now;
+      btnAction.textContent = 'コレだ!';
+      btnAction.classList.add('waiting');
+      clearTimeout(autoTimeoutId);
+      autoTimeoutId = setTimeout(function(){
+        if(running && state === 'timing') finishRound(targetMs + AUTO_TIMEOUT_SLACK_MS);
+      }, targetMs + AUTO_TIMEOUT_SLACK_MS);
+    } else if(state === 'timing'){
+      var elapsed = now - startTs;
+      finishRound(elapsed);
+    }
+  }
+
+  function finishRound(elapsedMs){
+    if(state !== 'timing') return;
+    state = 'shown';
+    clearTimeout(autoTimeoutId);
+
+    var errorMs = Math.abs(elapsedMs - targetMs);
+    var score = Math.max(0, Math.round(100 - errorMs / 20));
+    scores.push(score);
+    round++;
+
+    var diffSec = (errorMs / 1000).toFixed(2);
+    feedbackEl.textContent = 'ズレ ' + diffSec + '秒 (+' + score + '点)';
+    avgNumEl.textContent = String(Math.round(currentAvg()));
+    markRoundbar(round);
+
+    clearTimeout(advanceTimeoutId);
+    if(round >= TOTAL_ROUNDS){
+      advanceTimeoutId = setTimeout(function(){ if(running) endGame(); }, NEXT_ROUND_DELAY_MS);
+    } else {
+      advanceTimeoutId = setTimeout(function(){ if(running) startRound(); }, NEXT_ROUND_DELAY_MS);
+    }
+  }
+
+  function startGame(){
+    clearTimeout(autoTimeoutId);
+    clearTimeout(advanceTimeoutId);
+
+    running = true;
+    round = 0;
+    scores = [];
+    state = 'idle';
+    lastTapAt = 0;
+
+    avgNumEl.textContent = '0';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    buildRoundbar();
+    startRound();
+  }
+
+  function endGame(){
+    if(!running) return;
+    running = false;
+    clearTimeout(autoTimeoutId);
+    clearTimeout(advanceTimeoutId);
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var avg = Math.round(currentAvg());
+    var title = titleFor(avg);
+    var rank = rankFor(avg);
+
+    document.getElementById('result-count').textContent = String(avg);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に体内時計が正確な人でした';
+
+    var shareText = '体内時計グランプリで平均' + avg + '点、「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に体内時計が正確な人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+  btnAction.addEventListener('click', onAction);
+  btnAction.addEventListener('touchstart', onAction, {passive:false});
+})();
+</script>
+</body>
+</html>
