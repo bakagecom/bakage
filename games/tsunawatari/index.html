@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>綱渡り選手権 | バカゲー製作所</title>
+<meta name="description" content="指で綱渡り師をあやつって、ゆらゆら揺れる綱の上をキープし続けろ。指を離しても綱からはみ出しても即落下。何秒生き残れるか?">
+<meta property="og:title" content="綱渡り選手権 | バカゲー製作所">
+<meta property="og:description" content="指で触れて綱渡り師をコントロール。ゆらゆら揺れる綱の上をキープし続けろ、はみ出したら即落下!何秒生存できる?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-tsunawatari.png">
+<meta property="og:url" content="https://bakage.com/games/tsunawatari/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-tsunawatari.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.hud .status{color:var(--pink)}
+
+.trackzone{flex:1;position:relative;padding:0 12px 4px}
+#track{width:100%;height:100%;display:block;touch-action:none;border:4px solid var(--ink);border-radius:14px;background:#fff}
+
+.howto{text-align:center;font-size:.8rem;opacity:.65;padding:2px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+.result-detail{font-size:.82rem;opacity:.75;margin-bottom:10px}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🎪 綱渡り選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🎪 綱渡り選手権</h1>
+      <p>指で綱渡り師をあやつって、ゆらゆら揺れる綱の上(白い枠の中)をキープし続けろ。<br>時間が経つほど揺れが激しく、綱も細くなる。<br>綱からはみ出すか指を離したら即落下、何秒生き残れるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0.0</div>
+      <p class="result-detail">秒生存</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>生存 <b id="score-num">0.0</b>秒</span>
+      <span class="status" id="status-text">指で触れてスタート!</span>
+    </div>
+    <div class="trackzone">
+      <canvas id="track"></canvas>
+    </div>
+    <div class="howto">🎪 指で触れたまま上下に動かして枠の中をキープ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/tsunawatari/';
+  var FALL_FLASH_MS = 500;
+
+  var AMP_MAX = 90;
+  var AMP_RAMP_MS = 6000;
+  var TOL_START = 62;
+  var TOL_FLOOR = 24;
+  var TOL_RAMP_MS = 15000;
+  var PERIOD_START = 2600;
+  var PERIOD_FLOOR = 1200;
+  var PERIOD_RAMP_MS = 20000;
+  var RANK_COEF = 12;
+
+  var running = false;
+  var finishing = false;
+  var dragging = false;
+  var startTime = null;
+  var playerY = 0;
+  var midY = 0;
+  var rafId = null;
+  var resultTimeoutId = null;
+  var lastScoreDs = 0;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var canvas = document.getElementById('track');
+  var ctx = canvas.getContext('2d');
+  var scoreNumEl = document.getElementById('score-num');
+  var statusEl = document.getElementById('status-text');
+
+  function titleFor(ds){
+    if(ds >= 300) return '伝説の綱渡り師';
+    if(ds >= 150) return '熟練の綱渡り師';
+    if(ds >= 70) return 'まずまずの綱渡り師';
+    if(ds >= 20) return '綱渡り見習い';
+    return '要・平衡感覚トレーニング';
+  }
+
+  function rankFor(ds){
+    var rank = 999983 - ds * ds * RANK_COEF;
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function ampAt(t){ return Math.min(AMP_MAX, (t / AMP_RAMP_MS) * AMP_MAX); }
+  function tolAt(t){ return Math.max(TOL_FLOOR, TOL_START - (t / TOL_RAMP_MS) * (TOL_START - TOL_FLOOR)); }
+  function periodAt(t){ return Math.max(PERIOD_FLOOR, PERIOD_START - (t / PERIOD_RAMP_MS) * (PERIOD_START - PERIOD_FLOOR)); }
+  function centerYAt(t){ return midY + ampAt(t) * Math.sin((2 * Math.PI * t) / periodAt(t)); }
+
+  function clearAllTimers(){
+    if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+    clearTimeout(resultTimeoutId);
+    resultTimeoutId = null;
+  }
+
+  function sizeCanvas(){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var oldMidY = midY;
+    midY = rect.height / 2;
+    if(!dragging){
+      playerY = midY;
+    } else {
+      playerY += (midY - oldMidY);
+    }
+    return {w: rect.width, h: rect.height};
+  }
+
+  function draw(size, t){
+    var w = size.w, h = size.h;
+    ctx.clearRect(0, 0, w, h);
+
+    var cy = startTime === null ? midY : centerYAt(t);
+    var tol = startTime === null ? TOL_START : tolAt(t);
+
+    ctx.fillStyle = '#FFF6D6';
+    var bandTop = Math.max(0, cy - tol);
+    var bandBottom = Math.min(h, cy + tol);
+    ctx.fillRect(0, bandTop, w, Math.max(0, bandBottom - bandTop));
+    ctx.strokeStyle = '#181820';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, cy - tol); ctx.lineTo(w, cy - tol);
+    ctx.moveTo(0, cy + tol); ctx.lineTo(w, cy + tol);
+    ctx.stroke();
+    ctx.strokeStyle = '#E8B400';
+    ctx.setLineDash([8, 6]);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var mx = w / 2;
+    var my = playerY;
+    ctx.beginPath();
+    ctx.arc(mx, my, 20, 0, Math.PI * 2);
+    ctx.fillStyle = dragging ? '#FF5C78' : '#0076CE';
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#181820';
+    ctx.stroke();
+    ctx.font = '22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🚶', mx, my - 1);
+  }
+
+  function loop(ts){
+    var size = {w: canvas.width / (window.devicePixelRatio || 1), h: canvas.height / (window.devicePixelRatio || 1)};
+    var t = startTime === null ? 0 : ts - startTime;
+
+    draw(size, t);
+
+    if(startTime !== null){
+      var ds = Math.floor(t / 100);
+      if(ds !== lastScoreDs){
+        lastScoreDs = ds;
+        scoreNumEl.textContent = (ds / 10).toFixed(1);
+      }
+      var cy = centerYAt(t);
+      var tol = tolAt(t);
+      if(Math.abs(playerY - cy) > tol){
+        fail('綱から落ちた!');
+        return;
+      }
+    }
+
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function fail(reason){
+    if(!running || finishing) return;
+    finishing = true;
+    running = false;
+    dragging = false;
+    if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+    statusEl.textContent = reason;
+    resultTimeoutId = setTimeout(endGame, FALL_FLASH_MS);
+  }
+
+  function pointerYIn(e){
+    var rect = canvas.getBoundingClientRect();
+    var y = e.clientY - rect.top;
+    if(y < 0) y = 0;
+    if(y > rect.height) y = rect.height;
+    return y;
+  }
+
+  function onPointerDown(e){
+    if(!running || finishing) return;
+    if(e.cancelable) e.preventDefault();
+    if(canvas.setPointerCapture){
+      try { canvas.setPointerCapture(e.pointerId); } catch(err){}
+    }
+    dragging = true;
+    playerY = pointerYIn(e);
+    if(startTime === null){
+      startTime = performance.now();
+      statusEl.textContent = 'そのままキープ!';
+    }
+  }
+
+  function onPointerMove(e){
+    if(!running || finishing || !dragging) return;
+    if(e.cancelable) e.preventDefault();
+    playerY = pointerYIn(e);
+  }
+
+  function onPointerUp(e){
+    if(!running || finishing) return;
+    if(!dragging) return;
+    dragging = false;
+    if(startTime === null) return;
+    fail('指が離れた!');
+  }
+
+  function startGame(){
+    clearAllTimers();
+    running = true;
+    finishing = false;
+    dragging = false;
+    startTime = null;
+    lastScoreDs = 0;
+    scoreNumEl.textContent = '0.0';
+    statusEl.textContent = '指で触れてスタート!';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    var size = sizeCanvas();
+    playerY = midY;
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function endGame(){
+    clearAllTimers();
+    document.body.classList.remove('playing');
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var ds = lastScoreDs;
+    var title = titleFor(ds);
+    var rank = rankFor(ds);
+    var seconds = (ds / 10).toFixed(1);
+
+    document.getElementById('result-count').textContent = seconds;
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent = 'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目の綱渡り師でした';
+
+    var shareText = '綱渡り選手権で' + seconds + '秒生存して「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目の綱渡り師でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+
+  canvas.addEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('pointermove', onPointerMove);
+  canvas.addEventListener('pointerup', onPointerUp);
+  canvas.addEventListener('pointercancel', onPointerUp);
+
+  window.addEventListener('resize', function(){
+    if(running) sizeCanvas();
+  });
+})();
+</script>
+</body>
+</html>
