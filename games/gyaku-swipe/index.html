@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>逆スワイプ選手権 | バカゲー製作所</title>
+<meta name="description" content="矢印と逆方向にスワイプし続けるバカゲー。正解するほど制限時間が短くなる。同じ方向にスワイプしたら即終了。">
+<meta property="og:title" content="逆スワイプ選手権 | バカゲー製作所">
+<meta property="og:description" content="矢印が出たら逆方向にスワイプ!正解するほどテンポが速くなる反射神経バカゲー。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-gyaku-swipe.png">
+<meta property="og:url" content="https://bakage.com/games/gyaku-swipe/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-gyaku-swipe.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+
+.timebar-wrap{position:relative;height:14px;margin:0 20px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+#timebar{position:absolute;top:0;left:0;height:100%;width:100%;background:var(--blue);pointer-events:none}
+
+#swipe-status{text-align:center;font-weight:900;font-size:1rem;min-height:1.4em;margin-top:10px;pointer-events:none}
+
+.swipezone{flex:1;margin:14px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:#fff;border:4px solid var(--ink);border-radius:20px;box-shadow:8px 8px 0 var(--ink);touch-action:none}
+.swipezone.hit{background:#8CE99A}
+.swipezone.wrong{background:var(--pink);animation:shake .3s ease-out}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#arrow-icon{font-size:5.2rem;font-weight:900;line-height:1;pointer-events:none}
+.swipe-label{font-weight:900;font-size:1.02rem;pointer-events:none}
+
+.howto{text-align:center;font-size:.85rem;font-weight:900;opacity:.7;padding:4px 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🔀 逆スワイプ選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🔀 逆スワイプ選手権</h1>
+      <p>矢印が出たら、<b>逆方向</b>にスワイプ。<br>正解するほど制限時間が短くなる。<br>同じ方向にスワイプ、または時間切れで即終了。</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">連続成功</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>連続: <b id="score-num">0</b></span>
+      <span>⏱ <b id="time-num">-</b> ms</span>
+    </div>
+    <div class="timebar-wrap" id="timebar-wrap">
+      <div id="timebar"></div>
+    </div>
+    <div id="swipe-status"></div>
+    <div class="swipezone" id="swipezone">
+      <div id="arrow-icon">↑</div>
+      <div class="swipe-label">この逆にスワイプ!</div>
+    </div>
+    <div class="howto">👆 矢印と反対方向にスワイプ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/gyaku-swipe/';
+  var MIN_SWIPE_PX = 35;
+  var TIME_START_MS = 1500;
+  var TIME_MIN_MS = 550;
+  var TIME_STEP_MS = 45;
+  var NEXT_ROUND_DELAY_MS = 150;
+  var REVEAL_DELAY_MS = 550;
+  var RANK_COEF = 150;
+
+  var ARROWS = { up: '↑', down: '↓', left: '←', right: '→' };
+  var OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
+  var DIRS = ['up', 'down', 'left', 'right'];
+
+  var running = false;
+  var score = 0;
+  var timeMs = TIME_START_MS;
+  var roundTimeoutId = null;
+  var nextRoundTimeoutId = null;
+  var roundLocked = true;
+  var roundToken = 0;
+  var lastDirIndex = -1;
+  var expectedDir = null;
+  var activePointerId = null;
+  var startX = 0, startY = 0;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var scoreNumEl = document.getElementById('score-num');
+  var timeNumEl = document.getElementById('time-num');
+  var timebarEl = document.getElementById('timebar');
+  var swipeStatusEl = document.getElementById('swipe-status');
+  var swipezoneEl = document.getElementById('swipezone');
+  var arrowIconEl = document.getElementById('arrow-icon');
+
+  function titleFor(s){
+    if(s < 3) return '反射神経ゼロの新人';
+    if(s < 6) return 'まずまずの逆張り力';
+    if(s < 10) return 'なかなかの逆張り力';
+    if(s < 16) return '逆スワイプマスター';
+    return '伝説の天邪鬼';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * RANK_COEF);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function clearRoundTimers(){
+    clearTimeout(roundTimeoutId);
+    clearTimeout(nextRoundTimeoutId);
+    roundTimeoutId = null;
+    nextRoundTimeoutId = null;
+  }
+
+  function pickDir(){
+    var idx;
+    do {
+      idx = Math.floor(Math.random() * DIRS.length);
+    } while (idx === lastDirIndex);
+    lastDirIndex = idx;
+    return DIRS[idx];
+  }
+
+  function renderRound(){
+    var myToken = ++roundToken;
+    clearRoundTimers();
+    roundLocked = false;
+    activePointerId = null;
+
+    var shownDir = pickDir();
+    expectedDir = OPPOSITE[shownDir];
+    arrowIconEl.textContent = ARROWS[shownDir];
+    timeNumEl.textContent = String(timeMs);
+    swipeStatusEl.textContent = '';
+    swipezoneEl.classList.remove('hit', 'wrong');
+
+    timebarEl.style.transition = 'none';
+    timebarEl.style.width = '100%';
+    void timebarEl.offsetWidth;
+    timebarEl.style.transition = 'width ' + timeMs + 'ms linear';
+    timebarEl.style.width = '0%';
+
+    roundTimeoutId = setTimeout(function(){
+      roundTimeoutId = null;
+      if(myToken === roundToken && running && !roundLocked) missRound('おそい!');
+    }, timeMs);
+  }
+
+  function missRound(msg){
+    roundLocked = true;
+    clearRoundTimers();
+    swipeStatusEl.textContent = msg;
+    swipezoneEl.classList.add('wrong');
+    setTimeout(endGame, REVEAL_DELAY_MS);
+  }
+
+  function hitRound(){
+    roundLocked = true;
+    clearRoundTimers();
+    swipeStatusEl.textContent = 'ナイス逆張り!';
+    swipezoneEl.classList.add('hit');
+    score++;
+    scoreNumEl.textContent = String(score);
+    timeMs = Math.max(TIME_MIN_MS, timeMs - TIME_STEP_MS);
+    var myToken = roundToken;
+    nextRoundTimeoutId = setTimeout(function(){
+      nextRoundTimeoutId = null;
+      if(running && myToken === roundToken) renderRound();
+    }, NEXT_ROUND_DELAY_MS);
+  }
+
+  function judgeSwipe(dx, dy){
+    var dist = Math.hypot(dx, dy);
+    if(dist < MIN_SWIPE_PX) return;
+    if(!running || roundLocked) return;
+
+    var dir;
+    if(Math.abs(dx) > Math.abs(dy)){
+      dir = dx > 0 ? 'right' : 'left';
+    } else {
+      dir = dy > 0 ? 'down' : 'up';
+    }
+
+    if(dir === expectedDir){
+      hitRound();
+    } else {
+      missRound('逆だよ!');
+    }
+  }
+
+  function onPointerDown(e){
+    if(!running || roundLocked) return;
+    if(activePointerId !== null) return;
+    activePointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    if(swipezoneEl.setPointerCapture){
+      try { swipezoneEl.setPointerCapture(e.pointerId); } catch(err){}
+    }
+  }
+
+  function onPointerUp(e){
+    if(activePointerId !== e.pointerId) return;
+    var dx = e.clientX - startX;
+    var dy = e.clientY - startY;
+    activePointerId = null;
+    judgeSwipe(dx, dy);
+  }
+
+  function onPointerCancel(e){
+    if(activePointerId === e.pointerId) activePointerId = null;
+  }
+
+  function startGame(){
+    roundToken++;
+    clearRoundTimers();
+
+    running = true;
+    score = 0;
+    timeMs = TIME_START_MS;
+    lastDirIndex = -1;
+    roundLocked = true;
+    activePointerId = null;
+
+    scoreNumEl.textContent = '0';
+    swipezoneEl.classList.remove('hit', 'wrong');
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    renderRound();
+  }
+
+  function endGame(){
+    if(!running) return;
+    running = false;
+    roundToken++;
+    clearRoundTimers();
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に逆張りが上手い人でした';
+
+    var shareText = '逆スワイプ選手権で' + score + '連続成功して「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に逆張りが上手い人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+
+  swipezoneEl.addEventListener('pointerdown', onPointerDown);
+  swipezoneEl.addEventListener('pointerup', onPointerUp);
+  swipezoneEl.addEventListener('pointercancel', onPointerCancel);
+})();
+</script>
+</body>
+</html>
