@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>輪ゴム限界選手権 | バカゲー製作所</title>
+<meta name="description" content="輪ゴムを押して伸ばして、切れる寸前で離せ。3本の合計記録を競う、指一本の限界チャレンジ。">
+<meta property="og:title" content="輪ゴム限界選手権 | バカゲー製作所">
+<meta property="og:description" content="押して伸ばして、切れる寸前で離せ。あなたは輪ゴムの悲鳴を聞けるか?">
+<meta property="og:image" content="https://bakage.com/assets/ogp-wagomu-genkai.png">
+<meta property="og:url" content="https://bakage.com/games/wagomu-genkai/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-wagomu-genkai.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}
+gtag('js',new Date());gtag('config','G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--ink:#181820;--pink:#FF5C78;--blue:#0076CE;--green:#16A36A}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none}
+a{color:var(--ink)}button{font:inherit}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:14px;min-height:0}
+.panel{width:100%;max-width:430px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:24px 20px;box-shadow:8px 8px 0 var(--ink);max-height:100%;overflow-y:auto}
+.card h1{font-size:1.55rem;margin-bottom:10px}.card p{font-size:.9rem;line-height:1.65;margin-bottom:16px}
+.btn{width:100%;padding:16px;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);font-size:1.05rem;font-weight:900;cursor:pointer}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}.btn.secondary{background:#fff;margin-top:12px}.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+#screen-play{position:absolute;inset:0;display:none;flex-direction:column}#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;font-size:.92rem;font-weight:900}
+.playzone{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 18px 12px;gap:12px}
+.machine{width:min(100%,390px);height:min(45vh,330px);min-height:235px;background:#fff;border:4px solid var(--ink);border-radius:18px;box-shadow:7px 7px 0 var(--ink);position:relative;overflow:hidden}
+.ruler{position:absolute;left:18px;right:18px;top:14px;height:29px;border-bottom:3px solid var(--ink);display:flex;justify-content:space-between;font-size:.68rem;font-weight:900}
+.ruler span:after{content:"";display:block;width:2px;height:8px;background:var(--ink);margin:3px auto 0}
+.anchor{position:absolute;top:46%;width:28px;height:58px;background:var(--ink);border-radius:6px;transform:translateY(-50%)}.anchor.left{left:20px}.anchor.right{right:20px}
+#rubber{position:absolute;left:43px;right:43px;top:46%;height:52px;transform:translateY(-50%);border:9px solid var(--pink);border-radius:50%;transition:border-color .08s;will-change:transform}
+#rubber.tense{animation:tremble .08s linear infinite;border-color:#E83B57}#rubber.snap{animation:none;border-color:transparent}
+#rubber.snap:before,#rubber.snap:after{content:"";position:absolute;top:16px;width:48%;height:9px;background:var(--pink);border-radius:8px}#rubber.snap:before{left:-2%;transform:rotate(-16deg)}#rubber.snap:after{right:-2%;transform:rotate(16deg)}
+@keyframes tremble{0%,100%{margin-top:-2px}50%{margin-top:2px}}
+.readout{position:absolute;left:0;right:0;bottom:24px;text-align:center}.length{font-size:2.25rem;font-weight:900;color:var(--pink)}.warning{height:1.4em;font-weight:900;font-size:.88rem;margin-top:2px}
+#hold-btn{width:min(100%,390px);padding:15px;border:4px solid var(--ink);border-radius:14px;background:var(--green);color:#fff;box-shadow:6px 6px 0 var(--ink);font-size:1.05rem;font-weight:900;touch-action:none;cursor:pointer}
+#hold-btn.holding{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink);background:var(--pink)}
+.howto{font-size:.76rem;opacity:.65;font-weight:700}.toast{height:1.4em;font-size:.9rem;font-weight:900;color:var(--blue)}
+.score{font-size:2.7rem;font-weight:900;color:var(--pink);line-height:1.15}.score small{font-size:1rem;color:var(--ink)}
+.attempts{display:flex;justify-content:center;gap:7px;margin:8px 0 4px}.attempt{background:var(--bg);border:2px solid var(--ink);border-radius:7px;padding:4px 8px;font-size:.76rem;font-weight:900}
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 13px;font-weight:900;margin:10px 0}.rank-line{font-size:.9rem;margin-bottom:3px}
+footer{text-align:center;padding:8px;font-size:.7rem;opacity:.6}
+@media(max-height:620px){.topbar{padding:8px 14px}.machine{height:250px;min-height:200px}.card{padding:18px}.playzone{gap:8px}footer{display:none}}
+</style>
+</head>
+<body>
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>〰️ 輪ゴム限界選手権</span></div>
+<div class="stage">
+  <div class="panel">
+    <div class="card" id="screen-start">
+      <h1>〰️ 輪ゴム限界選手権</h1>
+      <p>ボタンを押している間、輪ゴムがどんどん伸びる。<br>指を離せば記録確定。でも欲張ると、切れる。<br><b>支給された輪ゴムは3本。</b>合計何cm伸ばせるか?</p>
+      <button class="btn" id="start-btn">挑戦する</button>
+    </div>
+    <div class="card" id="screen-result" hidden>
+      <h1>測定結果</h1>
+      <div class="score"><span id="total-score">0.0</span><small> cm</small></div>
+      <div class="attempts" id="attempt-list"></div>
+      <div class="title-badge" id="result-title"></div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="share-btn">Xでシェアする</button>
+      <button class="btn secondary" id="retry-btn">新品の輪ゴムでもう一度</button>
+    </div>
+  </div>
+  <div id="screen-play">
+    <div class="hud"><span>輪ゴム <b id="round-num">1</b> / 3</span><span>合計 <b id="hud-total">0.0</b> cm</span></div>
+    <div class="playzone">
+      <div class="machine">
+        <div class="ruler"><span>0</span><span>10</span><span>20</span><span>30</span><span>40</span></div>
+        <div class="anchor left"></div><div class="anchor right"></div>
+        <div id="rubber"></div>
+        <div class="readout"><div class="length"><span id="length-num">0.0</span> cm</div><div class="warning" id="warning"></div></div>
+      </div>
+      <div class="toast" id="toast"></div>
+      <button id="hold-btn">長押しして伸ばす</button>
+      <div class="howto">押し続ける → 限界の直前で離す（Spaceキーでも可）</div>
+    </div>
+  </div>
+</div>
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+<script>
+(function(){
+  var GAME_URL='https://bakage.com/games/wagomu-genkai/';
+  var ROUNDS=3,MAX_CM=40,GROWTH_PER_SEC=12.5;
+  var running=false,holding=false,round=1,current=0,total=0,breakAt=0,lastTime=0,raf=0,results=[],activePointerId=null;
+  var startScreen=document.getElementById('screen-start'),resultScreen=document.getElementById('screen-result'),playScreen=document.getElementById('screen-play');
+  var rubber=document.getElementById('rubber'),holdBtn=document.getElementById('hold-btn'),lengthNum=document.getElementById('length-num'),warning=document.getElementById('warning'),toast=document.getElementById('toast');
+  function titleFor(score){if(score>=103)return'輪ゴムと会話できる者';if(score>=86)return'限界ギリギリ職人';if(score>=65)return'勇気ある伸ばし屋';if(score>=40)return'安全第一の人';if(score>0)return'輪ゴム初心者';return'全切れ伝説'}
+  function rankFor(score){return Math.max(2,999983-Math.round(score*score*71))}
+  function draw(){var ratio=Math.min(current/MAX_CM,1);lengthNum.textContent=current.toFixed(1);rubber.style.transform='translateY(-50%) scaleY('+(1-Math.min(.48,ratio*.42))+')';var danger=current/breakAt;if(danger>.82){rubber.classList.add('tense');warning.textContent=danger>.94?'輪ゴム「もう無理!!」':'ミシ…ミシ…';warning.style.color='var(--pink)'}else{rubber.classList.remove('tense');warning.textContent=current>8?'まだいける…たぶん':'余裕';warning.style.color='var(--green)'}}
+  function tick(now){if(!holding)return;if(!lastTime)lastTime=now;current+=GROWTH_PER_SEC*(now-lastTime)/1000;lastTime=now;if(current>=breakAt){current=breakAt;snap();return}draw();raf=requestAnimationFrame(tick)}
+  function press(e){if(e&&e.cancelable)e.preventDefault();if(!running||holding)return;if(e&&e.pointerId!==undefined)activePointerId=e.pointerId;holding=true;lastTime=0;holdBtn.classList.add('holding');holdBtn.textContent='離せば記録確定!';toast.textContent='';raf=requestAnimationFrame(tick)}
+  function release(e){if(e&&e.pointerId!==undefined&&activePointerId!==null&&e.pointerId!==activePointerId)return;if(e&&e.cancelable)e.preventDefault();if(!running||!holding)return;holding=false;activePointerId=null;cancelAnimationFrame(raf);holdBtn.classList.remove('holding');holdBtn.textContent='長押しして伸ばす';total+=current;results.push(current);toast.textContent=current.toFixed(1)+' cmで確保!';nextRound(false)}
+  function snap(){holding=false;activePointerId=null;cancelAnimationFrame(raf);rubber.classList.remove('tense');rubber.classList.add('snap');holdBtn.classList.remove('holding');holdBtn.textContent='切れた…';warning.textContent='ブチン!!';results.push(0);if(navigator.vibrate)navigator.vibrate([80,40,100]);nextRound(true)}
+  function nextRound(broken){running=false;document.getElementById('hud-total').textContent=total.toFixed(1);setTimeout(function(){if(round>=ROUNDS){finish();return}round++;setupRound();toast.textContent=broken?'新品に交換しました':'次の輪ゴム、どうぞ'},700)}
+  function setupRound(){running=true;holding=false;current=0;breakAt=28+Math.random()*10;lastTime=0;rubber.className='';rubber.style.transform='translateY(-50%) scaleY(1)';holdBtn.className='';holdBtn.textContent='長押しして伸ばす';lengthNum.textContent='0.0';warning.textContent='余裕';warning.style.color='var(--green)';document.getElementById('round-num').textContent=round}
+  function start(){round=1;total=0;results=[];startScreen.hidden=true;resultScreen.hidden=true;playScreen.classList.add('active');document.getElementById('hud-total').textContent='0.0';toast.textContent='';setupRound()}
+  function finish(){running=false;playScreen.classList.remove('active');resultScreen.hidden=false;document.getElementById('total-score').textContent=total.toFixed(1);document.getElementById('result-title').textContent=titleFor(total);document.getElementById('result-rank').textContent='全国推定 '+rankFor(total).toLocaleString('ja-JP')+' 位';document.getElementById('attempt-list').innerHTML=results.map(function(n,i){return'<span class="attempt">'+(i+1)+'本目 '+(n?n.toFixed(1)+'cm':'切れた')+'</span>'}).join('')}
+  function share(){var text='輪ゴム限界選手権で合計 '+total.toFixed(1)+'cm！\n称号「'+titleFor(total)+'」\n\n#バカゲー製作所 #輪ゴム限界選手権';window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+'&url='+encodeURIComponent(GAME_URL),'_blank','noopener')}
+  holdBtn.addEventListener('pointerdown',press);window.addEventListener('pointerup',release);window.addEventListener('pointercancel',release);
+  window.addEventListener('keydown',function(e){if(e.code==='Space'&&!e.repeat)press(e)});window.addEventListener('keyup',function(e){if(e.code==='Space')release(e)});
+  document.getElementById('start-btn').addEventListener('click',start);document.getElementById('retry-btn').addEventListener('click',start);document.getElementById('share-btn').addEventListener('click',share);
+})();
+</script>
+</body>
+</html>
