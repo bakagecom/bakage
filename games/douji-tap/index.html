@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>同時タップ選手権 | バカゲー製作所</title>
+<meta name="description" content="合図が出た瞬間、左手と右手で同時にタップ。ズレたら即終了。息を合わせるほど許容タイミングが狭くなる二刀流バカゲー。">
+<meta property="og:title" content="同時タップ選手権 | バカゲー製作所">
+<meta property="og:description" content="合図と同時に両手タップ。ズレたら即終了、フライングも即終了。息の合い方を試すバカゲー。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-douji-tap.png">
+<meta property="og:url" content="https://bakage.com/games/douji-tap/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-douji-tap.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFC9C9;--gear:#FF6B6B;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+
+.mainzone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:0 16px}
+.signal{width:min(50vw,26vh,190px);height:min(50vw,26vh,190px);border-radius:50%;background:#fff;border:6px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;text-align:center;box-shadow:8px 8px 0 var(--gear);transition:background .1s,color .1s;flex-shrink:0}
+.signal.go{background:var(--pink);color:#fff;animation:goPulse .35s ease-in-out infinite}
+@keyframes goPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+.taprow{display:flex;justify-content:space-between;width:100%;gap:16px}
+.tapbtn{
+  flex:1;height:min(24vh,130px);border-radius:20px;background:#fff;border:5px solid var(--ink);
+  box-shadow:6px 6px 0 var(--ink);font-size:1.4rem;font-weight:900;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:background .08s,transform .08s;
+}
+.tapbtn span{font-size:.75rem;font-weight:700}
+.tapbtn.tapped{background:var(--gear);transform:translate(2px,2px);box-shadow:4px 4px 0 var(--ink)}
+
+.howto{text-align:center;font-size:.78rem;opacity:.65;padding:0 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.reason-line{font-size:.85rem;opacity:.75;margin-bottom:4px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🤝 同時タップ選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🤝 同時タップ選手権</h1>
+      <p>中央の合図が「今だ!!」に変わった瞬間、左右のボタンを両手で同時にタップ。<br>合図の前にタップしたら即失格。<br>タップの時間差が大きすぎてもアウト。<br>成功するほど許容タイミングがどんどん狭くなる、二刀流の限界チャレンジ。</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">回、息を合わせられた</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="reason-line" id="result-reason"></p>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>成功数: <b id="score-num">0</b></span>
+      <span>両手集中</span>
+    </div>
+    <div class="mainzone">
+      <div class="signal" id="signal">まって…</div>
+      <div class="taprow">
+        <button class="tapbtn" id="btn-left">👈<span>左手</span></button>
+        <button class="tapbtn" id="btn-right">👉<span>右手</span></button>
+      </div>
+    </div>
+    <div class="howto">合図が「今だ!!」に変わった瞬間、両手同時にタップ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/douji-tap/';
+  var TAP_COOLDOWN_MS = 50;
+
+  var DELAY_MIN = 900;
+  var DELAY_MAX = 2200;
+
+  var TOLERANCE_START = 260;
+  var TOLERANCE_FLOOR = 90;
+  var TOLERANCE_STEP = 18;
+
+  var OVERALL_START = 1400;
+  var OVERALL_FLOOR = 550;
+  var OVERALL_STEP = 60;
+
+  var SUCCESS_PAUSE_MS = 280;
+  var RANK_COEF = 300;
+
+  var running = false;
+  var score = 0;
+  var state = 'idle'; // 'waiting' | 'go' | 'pause'
+  var tolerance = TOLERANCE_START;
+  var overall = OVERALL_START;
+  var leftTapAt = null;
+  var rightTapAt = null;
+  var lastLeftTapAt = 0;
+  var lastRightTapAt = 0;
+  var genToken = 0;
+
+  var waitTimeoutId = null;
+  var overallTimeoutId = null;
+  var successTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var signalEl = document.getElementById('signal');
+  var scoreNumEl = document.getElementById('score-num');
+  var btnLeft = document.getElementById('btn-left');
+  var btnRight = document.getElementById('btn-right');
+
+  function titleFor(s){
+    if(s < 3) return '息が全然合ってない';
+    if(s < 6) return 'まだ練習中';
+    if(s < 10) return 'いい感じにシンクロ';
+    if(s < 16) return '阿吽の呼吸';
+    return '伝説の同時押し職人';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * RANK_COEF);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function randInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function clearAllTimers(){
+    clearTimeout(waitTimeoutId);
+    clearTimeout(overallTimeoutId);
+    clearTimeout(successTimeoutId);
+    waitTimeoutId = null;
+    overallTimeoutId = null;
+    successTimeoutId = null;
+  }
+
+  function resetButtonsVisual(){
+    btnLeft.classList.remove('tapped');
+    btnRight.classList.remove('tapped');
+  }
+
+  function scheduleRound(){
+    if(!running) return;
+    state = 'waiting';
+    leftTapAt = null;
+    rightTapAt = null;
+    resetButtonsVisual();
+    signalEl.classList.remove('go');
+    signalEl.textContent = 'まって…';
+
+    var delay = randInt(DELAY_MIN, DELAY_MAX);
+    var myGen = genToken;
+    waitTimeoutId = setTimeout(function(){
+      if(!running || myGen !== genToken) return;
+      goSignal();
+    }, delay);
+  }
+
+  function goSignal(){
+    state = 'go';
+    signalEl.classList.add('go');
+    signalEl.textContent = '今だ!!';
+
+    var myGen = genToken;
+    overallTimeoutId = setTimeout(function(){
+      if(!running || myGen !== genToken) return;
+      if(leftTapAt === null && rightTapAt === null){
+        endGame('timeout-both');
+      } else if(leftTapAt === null){
+        endGame('timeout-left');
+      } else {
+        endGame('timeout-right');
+      }
+    }, overall);
+  }
+
+  function onRoundSuccess(){
+    score++;
+    scoreNumEl.textContent = String(score);
+    tolerance = Math.max(TOLERANCE_FLOOR, tolerance - TOLERANCE_STEP);
+    overall = Math.max(OVERALL_FLOOR, overall - OVERALL_STEP);
+    state = 'pause';
+    signalEl.classList.remove('go');
+    signalEl.textContent = 'ぴったり!';
+
+    var myGen = genToken;
+    successTimeoutId = setTimeout(function(){
+      if(!running || myGen !== genToken) return;
+      scheduleRound();
+    }, SUCCESS_PAUSE_MS);
+  }
+
+  function makeTapHandler(side){
+    return function(e){
+      if(e) e.preventDefault();
+      if(!running) return;
+      var now = Date.now();
+      if(side === 'left'){
+        if(now - lastLeftTapAt < TAP_COOLDOWN_MS) return;
+        lastLeftTapAt = now;
+      } else {
+        if(now - lastRightTapAt < TAP_COOLDOWN_MS) return;
+        lastRightTapAt = now;
+      }
+
+      if(state === 'waiting'){
+        endGame('early');
+        return;
+      }
+      if(state !== 'go') return;
+
+      if(side === 'left'){
+        if(leftTapAt === null){ leftTapAt = now; btnLeft.classList.add('tapped'); }
+      } else {
+        if(rightTapAt === null){ rightTapAt = now; btnRight.classList.add('tapped'); }
+      }
+
+      if(leftTapAt !== null && rightTapAt !== null){
+        clearTimeout(overallTimeoutId);
+        var diff = Math.abs(leftTapAt - rightTapAt);
+        if(diff <= tolerance){
+          onRoundSuccess();
+        } else {
+          endGame('gap');
+        }
+      }
+    };
+  }
+
+  function startGame(){
+    genToken++;
+    clearAllTimers();
+
+    running = true;
+    score = 0;
+    tolerance = TOLERANCE_START;
+    overall = OVERALL_START;
+    lastLeftTapAt = 0;
+    lastRightTapAt = 0;
+    scoreNumEl.textContent = '0';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    scheduleRound();
+  }
+
+  function endGame(reason){
+    if(!running) return;
+    running = false;
+    genToken++;
+    clearAllTimers();
+    resetButtonsVisual();
+    signalEl.classList.remove('go');
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    var reasonText;
+    if(reason === 'early') reasonText = '合図の前にタップしてフライング…';
+    else if(reason === 'gap') reasonText = '両手のタイミングがズレた…';
+    else if(reason === 'timeout-left') reasonText = '右手だけ先に反応、左手が置いていかれた…';
+    else if(reason === 'timeout-right') reasonText = '左手だけ先に反応、右手が置いていかれた…';
+    else reasonText = '両手とも反応できなかった…';
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-reason').textContent = reasonText;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に息が合っていた人でした';
+
+    var shareText = '同時タップ選手権で' + score + '回息を合わせて「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に息が合っていた人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStartEl = document.getElementById('btn-start');
+  var btnRetryEl = document.getElementById('btn-retry');
+  var onLeftTap = makeTapHandler('left');
+  var onRightTap = makeTapHandler('right');
+
+  btnStartEl.addEventListener('click', onStart);
+  btnStartEl.addEventListener('touchstart', onStart, {passive:false});
+  btnRetryEl.addEventListener('click', onRetry);
+  btnRetryEl.addEventListener('touchstart', onRetry, {passive:false});
+  btnLeft.addEventListener('click', onLeftTap);
+  btnLeft.addEventListener('touchstart', onLeftTap, {passive:false});
+  btnRight.addEventListener('click', onRightTap);
+  btnRight.addEventListener('touchstart', onRightTap, {passive:false});
+})();
+</script>
+</body>
+</html>
