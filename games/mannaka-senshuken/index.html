@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ど真ん中選手権 | バカゲー製作所</title>
+<meta name="description" content="画面に浮かぶ円の「ど真ん中」を目分量でタップするだけ。近いほどセーフ、外れたら即終了。当てるほど許容範囲も考える時間も縮んでいく空間感覚バカゲー。">
+<meta property="og:title" content="ど真ん中選手権 | バカゲー製作所">
+<meta property="og:description" content="円のど真ん中を目分量でタップ。ズレたら即終了、当てるほど許容範囲が狭くなる空間感覚チャレンジ。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-mannaka-senshuken.png">
+<meta property="og:url" content="https://bakage.com/games/mannaka-senshuken/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-mannaka-senshuken.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFC9C9;--gear:#FF6B6B;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900;font-size:.85rem}
+
+.mainzone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0 16px;min-height:0}
+.court{position:relative;width:min(80vw,60vh,340px);height:min(80vw,60vh,340px);background:#fff;border:5px solid var(--ink);border-radius:20px;box-shadow:8px 8px 0 var(--gear);overflow:hidden;flex-shrink:0}
+.target{position:absolute;border:5px solid var(--ink);border-radius:50%;background:rgba(24,24,32,.04);pointer-events:none}
+.marker{position:absolute;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;display:none}
+.marker.tap{background:var(--pink);border:2px solid var(--ink)}
+.marker.center{background:var(--blue);border:2px solid var(--ink)}
+
+.feedback-line{font-size:.85rem;font-weight:700;min-height:1.3em}
+.howto{text-align:center;font-size:.78rem;opacity:.65;padding:0 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.reason-line{font-size:.85rem;opacity:.75;margin-bottom:4px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🎯 ど真ん中選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🎯 ど真ん中選手権</h1>
+      <p>画面に浮かぶ円の「ど真ん中」を目分量でタップ。<br>中心に近いほどセーフ、大きくズレたら即終了。<br>当てるほど許容範囲も、考える時間もどんどん狭くなる空間感覚の限界チャレンジ。</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">回、ど真ん中を当てられた</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="reason-line" id="result-reason"></p>
+      <p class="reason-line" id="result-avg"></p>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>成功数: <b id="score-num">0</b></span>
+      <span>目分量集中</span>
+    </div>
+    <div class="mainzone">
+      <div class="court" id="court">
+        <div class="target" id="target"></div>
+        <div class="marker tap" id="marker-tap"></div>
+        <div class="marker center" id="marker-center"></div>
+      </div>
+      <div class="feedback-line" id="feedback-line">&nbsp;</div>
+    </div>
+    <div class="howto">円のど真ん中だと思う場所をタップ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/mannaka-senshuken/';
+  var TAP_COOLDOWN_MS = 50;
+
+  var TIME_START = 2600;
+  var TIME_FLOOR = 1100;
+  var TIME_STEP = 140;
+
+  var TOL_RATIO_START = 0.34;
+  var TOL_RATIO_FLOOR = 0.11;
+  var TOL_RATIO_STEP = 0.022;
+
+  var SUCCESS_PAUSE_MS = 400;
+  var RANK_COEF = 300;
+
+  var running = false;
+  var score = 0;
+  var state = 'idle'; // 'ready' | 'settling'
+  var tolRatio = TOL_RATIO_START;
+  var timeLimit = TIME_START;
+  var lastTapAt = 0;
+  var genToken = 0;
+  var deviations = [];
+
+  var roundTimeoutId = null;
+  var successTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var courtEl = document.getElementById('court');
+  var targetEl = document.getElementById('target');
+  var markerTapEl = document.getElementById('marker-tap');
+  var markerCenterEl = document.getElementById('marker-center');
+  var feedbackEl = document.getElementById('feedback-line');
+  var scoreNumEl = document.getElementById('score-num');
+
+  var curCx = 0, curCy = 0, curRadius = 0;
+
+  function titleFor(s){
+    if(s < 3) return 'まだ目分量が甘い';
+    if(s < 6) return 'センスが光ってきた';
+    if(s < 10) return '目分量の達人';
+    if(s < 16) return '人間コンパス';
+    return '伝説のど真ん中職人';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * RANK_COEF);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function randRange(min, max){
+    return Math.random() * (max - min) + min;
+  }
+
+  function clearAllTimers(){
+    clearTimeout(roundTimeoutId);
+    clearTimeout(successTimeoutId);
+    roundTimeoutId = null;
+    successTimeoutId = null;
+  }
+
+  function hideMarkers(){
+    markerTapEl.style.display = 'none';
+    markerCenterEl.style.display = 'none';
+  }
+
+  function scheduleRound(){
+    if(!running) return;
+    state = 'ready';
+    hideMarkers();
+    feedbackEl.textContent = ' ';
+
+    var courtW = courtEl.clientWidth;
+    var courtH = courtEl.clientHeight;
+    var minSide = Math.min(courtW, courtH);
+    var diameter = randRange(minSide * 0.30, minSide * 0.54);
+    var left = randRange(0, courtW - diameter);
+    var top = randRange(0, courtH - diameter);
+
+    targetEl.style.width = diameter + 'px';
+    targetEl.style.height = diameter + 'px';
+    targetEl.style.left = left + 'px';
+    targetEl.style.top = top + 'px';
+
+    curCx = left + diameter / 2;
+    curCy = top + diameter / 2;
+    curRadius = diameter / 2;
+
+    var myGen = genToken;
+    roundTimeoutId = setTimeout(function(){
+      if(!running || myGen !== genToken) return;
+      endGame('timeout');
+    }, timeLimit);
+  }
+
+  function onRoundSuccess(pct){
+    score++;
+    scoreNumEl.textContent = String(score);
+    deviations.push(pct);
+    tolRatio = Math.max(TOL_RATIO_FLOOR, tolRatio - TOL_RATIO_STEP);
+    timeLimit = Math.max(TIME_FLOOR, timeLimit - TIME_STEP);
+    state = 'settling';
+    feedbackEl.textContent = 'ぴったり! ズレ ' + pct + '%';
+
+    var myGen = genToken;
+    successTimeoutId = setTimeout(function(){
+      if(!running || myGen !== genToken) return;
+      scheduleRound();
+    }, SUCCESS_PAUSE_MS);
+  }
+
+  function onCourtTap(e){
+    if(e) e.preventDefault();
+    if(!running) return;
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+
+    if(state !== 'ready') return;
+
+    var point = (e && e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : e;
+    var rect = courtEl.getBoundingClientRect();
+    var tapX = point.clientX - rect.left;
+    var tapY = point.clientY - rect.top;
+
+    var dist = Math.hypot(tapX - curCx, tapY - curCy);
+    var pct = Math.round((dist / curRadius) * 100);
+    var tolerancePx = tolRatio * curRadius;
+
+    markerTapEl.style.left = tapX + 'px';
+    markerTapEl.style.top = tapY + 'px';
+    markerTapEl.style.display = 'block';
+    markerCenterEl.style.left = curCx + 'px';
+    markerCenterEl.style.top = curCy + 'px';
+    markerCenterEl.style.display = 'block';
+
+    clearTimeout(roundTimeoutId);
+    state = 'settling';
+
+    if(dist <= tolerancePx){
+      onRoundSuccess(pct);
+    } else {
+      endGame('miss', pct);
+    }
+  }
+
+  function startGame(){
+    genToken++;
+    clearAllTimers();
+
+    running = true;
+    score = 0;
+    tolRatio = TOL_RATIO_START;
+    timeLimit = TIME_START;
+    lastTapAt = 0;
+    deviations = [];
+    scoreNumEl.textContent = '0';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    scheduleRound();
+  }
+
+  function endGame(reason, missPct){
+    if(!running) return;
+    running = false;
+    genToken++;
+    clearAllTimers();
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    var reasonText;
+    if(reason === 'timeout') reasonText = '考えすぎてタイムアウト…';
+    else reasonText = 'ズレが大きすぎた(誤差 ' + missPct + '%)…';
+
+    var avgText;
+    if(deviations.length > 0){
+      var sum = 0;
+      for(var i = 0; i < deviations.length; i++) sum += deviations[i];
+      var avg = Math.round(sum / deviations.length);
+      avgText = '平均ズレ: ' + avg + '%';
+    } else {
+      avgText = '平均ズレ: --';
+    }
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-reason').textContent = reasonText;
+    document.getElementById('result-avg').textContent = avgText;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目に目分量が正確な人でした';
+
+    var shareText = 'ど真ん中選手権で' + score + '回連続でセンターを当てて「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目に目分量が正確な人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStartEl = document.getElementById('btn-start');
+  var btnRetryEl = document.getElementById('btn-retry');
+
+  btnStartEl.addEventListener('click', onStart);
+  btnStartEl.addEventListener('touchstart', onStart, {passive:false});
+  btnRetryEl.addEventListener('click', onRetry);
+  btnRetryEl.addEventListener('touchstart', onRetry, {passive:false});
+  courtEl.addEventListener('click', onCourtTap);
+  courtEl.addEventListener('touchstart', onCourtTap, {passive:false});
+})();
+</script>
+</body>
+</html>
