@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>しりとり早押し選手権 | バカゲー製作所</title>
+<meta name="description" content="お題の言葉に続く「しりとり」を4択から早押しで選べ。正解するほど時間が短くなる語彙力バカゲー。1回間違えたら即終了。">
+<meta property="og:title" content="しりとり早押し選手権 | バカゲー製作所">
+<meta property="og:description" content="お題の言葉に続く「しりとり」を4択から早押しで選べ。正解するほど時間が短くなる語彙力バカゲー。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-shiritori-hayaoshi.png">
+<meta property="og:url" content="https://bakage.com/games/shiritori-hayaoshi/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-shiritori-hayaoshi.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#8CE99A;--gear:#37B24D;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.timerbar-wrap{height:14px;margin:0 20px;border:3px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+#timerbar{height:100%;background:var(--pink);width:100%;transform-origin:left}
+
+.shiritorizone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:10px 20px}
+.word-card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:18px 22px;box-shadow:6px 6px 0 var(--ink);width:min(88vw,360px)}
+.word-label{font-size:.75rem;font-weight:900;opacity:.6;margin-bottom:8px}
+.word-text{font-size:2rem;font-weight:900;letter-spacing:.05em}
+.hint-text{font-size:.9rem;font-weight:900;margin-top:6px}
+.hint-text b{color:var(--pink);font-size:1.15rem}
+
+#choicelist{display:flex;flex-direction:column;gap:10px;width:min(88vw,360px);transition:opacity .15s}
+#choicelist.locked{opacity:.4;pointer-events:none}
+.choicebtn{display:flex;align-items:center;justify-content:center;padding:14px 10px;border:4px solid var(--ink);border-radius:14px;background:#fff;cursor:pointer;transition:transform .08s;box-shadow:5px 5px 0 var(--ink);font-size:1.15rem;font-weight:900}
+.choicebtn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.choicebtn.wrong{animation:shake .3s ease-out;background:var(--pink)}
+.choicebtn.correct{background:#8CE99A}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.howto{text-align:center;font-size:.85rem;font-weight:900;opacity:.7;padding:4px 16px 12px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🔤 しりとり早押し選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🔤 しりとり早押し選手権</h1>
+      <p>出てきた言葉に「しりとり」で続けられる言葉を4択から早押しでタップ。<br>違う音で始まる言葉を選んだら即終了。<br>正解するほど考える時間が短くなる。</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">連続正解</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>連続: <b id="score-num">0</b></span>
+      <span>⏱ <b id="round-time-num">-</b>s</span>
+    </div>
+    <div class="timerbar-wrap"><div id="timerbar"></div></div>
+    <div class="shiritorizone">
+      <div class="word-card">
+        <div class="word-label">お題の言葉</div>
+        <div class="word-text" id="current-word">-</div>
+        <div class="hint-text" id="hint-text">「<b id="hint-kana">-</b>」から始まる言葉は?</div>
+      </div>
+      <div id="choicelist" class="locked"></div>
+    </div>
+    <div class="howto">🔤 しりとりで続く言葉をタップ!違う音を選んだら終了</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/shiritori-hayaoshi/';
+  var TAP_COOLDOWN_MS = 50;
+  var ROUND_START_MS = 5500;
+  var ROUND_MIN_MS = 2400;
+  var ROUND_STEP_MS = 160;
+  var REVEAL_DELAY_MS = 650;
+  var NEXT_ROUND_DELAY_MS = 220;
+  var RANK_COEF = 300;
+
+  var WORDS = [
+    "すいか","かめ","めだか","かさ","さかな","なす","すずめ","めがね","ねこ","こおり",
+    "りす","りんご","ごま","まくら","らっぱ","ぱんだ","だいち","ちきゅう","うちわ","わに",
+    "にわとり","りゆう","うま","まめ","めだま","まと","とかげ","げた","たいこ","こま",
+    "まゆげ","げんき","きつね","ねずみ","みかづき","きく","くも","もり","りか","かに",
+    "にく","くり","りく","くじら","らくだ","だんご","ごりら","らっか","かい","いす",
+    "すな","なみだ","にじ","やぎ","くうき","きり","じゃがいも","ぎゅうにゅう","もぐら"
+  ];
+
+  var running = false;
+  var score = 0;
+  var roundTimeMs = ROUND_START_MS;
+  var roundTimeoutId = null;
+  var roundTickId = null;
+  var nextRoundTimeoutId = null;
+  var roundDeadline = 0;
+  var lastTapAt = 0;
+  var correctIndex = -1;
+  var roundLocked = true;
+  var roundToken = 0;
+  var prevWord = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var scoreNumEl = document.getElementById('score-num');
+  var roundTimeNumEl = document.getElementById('round-time-num');
+  var timerbarEl = document.getElementById('timerbar');
+  var currentWordEl = document.getElementById('current-word');
+  var hintKanaEl = document.getElementById('hint-kana');
+  var choiceListEl = document.getElementById('choicelist');
+
+  function titleFor(s){
+    if(s < 3) return 'しりとり迷子';
+    if(s < 6) return 'まずまずの語彙力';
+    if(s < 10) return 'しりとり巧者';
+    if(s < 16) return '辞書級の語彙力';
+    return '伝説のしりとり王';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * RANK_COEF);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function randInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function shuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function genRound(){
+    var w, tries = 0;
+    do {
+      w = WORDS[randInt(0, WORDS.length - 1)];
+      tries++;
+    } while (w === prevWord && tries < 10);
+    prevWord = w;
+
+    var last = w.charAt(w.length - 1);
+    var contPool = WORDS.filter(function(x){ return x !== w && x.charAt(0) === last; });
+    if(contPool.length === 0) contPool = WORDS.filter(function(x){ return x !== w; });
+    var correct = contPool[randInt(0, contPool.length - 1)];
+
+    var wrongPool = shuffle(WORDS.filter(function(x){
+      return x !== w && x !== correct && x.charAt(0) !== last;
+    }));
+    var wrongs = wrongPool.slice(0, 3);
+
+    return { word: w, last: last, correct: correct, wrongs: wrongs };
+  }
+
+  function clearRoundTimers(){
+    clearTimeout(roundTimeoutId);
+    clearInterval(roundTickId);
+    clearTimeout(nextRoundTimeoutId);
+    roundTimeoutId = null;
+    roundTickId = null;
+    nextRoundTimeoutId = null;
+  }
+
+  function startRoundTimer(){
+    roundTimeNumEl.textContent = (roundTimeMs / 1000).toFixed(1);
+    timerbarEl.style.transition = 'none';
+    timerbarEl.style.width = '100%';
+    void timerbarEl.offsetWidth;
+
+    roundDeadline = Date.now() + roundTimeMs;
+    timerbarEl.style.transition = 'width ' + roundTimeMs + 'ms linear';
+    timerbarEl.style.width = '0%';
+
+    roundTickId = setInterval(function(){
+      var remaining = Math.max(0, roundDeadline - Date.now());
+      roundTimeNumEl.textContent = (remaining / 1000).toFixed(1);
+    }, 100);
+
+    roundTimeoutId = setTimeout(function(){
+      if(running && !roundLocked) revealAndEnd(-1);
+    }, roundTimeMs);
+  }
+
+  function renderRound(){
+    var myToken = ++roundToken;
+    roundLocked = true;
+    clearRoundTimers();
+
+    var data = genRound();
+    var choiceData = shuffle([
+      { text: data.correct, correct: true },
+      { text: data.wrongs[0], correct: false },
+      { text: data.wrongs[1], correct: false },
+      { text: data.wrongs[2], correct: false }
+    ]);
+    correctIndex = -1;
+    for(var i = 0; i < choiceData.length; i++){
+      if(choiceData[i].correct) correctIndex = i;
+    }
+
+    currentWordEl.textContent = data.word;
+    hintKanaEl.textContent = data.last;
+
+    choiceListEl.innerHTML = '';
+    choiceData.forEach(function(c, i){
+      var btn = document.createElement('button');
+      btn.className = 'choicebtn';
+      btn.dataset.idx = String(i);
+      btn.textContent = c.text;
+      btn.addEventListener('click', onChoiceTap);
+      btn.addEventListener('touchstart', onChoiceTap, {passive:false});
+      choiceListEl.appendChild(btn);
+    });
+    choiceListEl.classList.remove('locked');
+
+    roundLocked = false;
+    if(myToken === roundToken) startRoundTimer();
+  }
+
+  function revealAndEnd(tappedIdx){
+    roundLocked = true;
+    clearRoundTimers();
+    choiceListEl.classList.add('locked');
+    var btns = choiceListEl.querySelectorAll('.choicebtn');
+    btns.forEach(function(btn){
+      var idx = parseInt(btn.dataset.idx, 10);
+      if(idx === correctIndex) btn.classList.add('correct');
+      if(idx === tappedIdx && idx !== correctIndex) btn.classList.add('wrong');
+    });
+    setTimeout(endGame, REVEAL_DELAY_MS);
+  }
+
+  function onChoiceTap(e){
+    if(e) e.preventDefault();
+    if(!running || roundLocked) return;
+    var now = Date.now();
+    if(now - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = now;
+
+    var idx = parseInt(this.dataset.idx, 10);
+    if(idx === correctIndex){
+      roundLocked = true;
+      clearRoundTimers();
+      this.classList.add('correct');
+      score++;
+      scoreNumEl.textContent = String(score);
+      roundTimeMs = Math.max(ROUND_MIN_MS, roundTimeMs - ROUND_STEP_MS);
+      var myToken = roundToken;
+      nextRoundTimeoutId = setTimeout(function(){
+        nextRoundTimeoutId = null;
+        if(running && myToken === roundToken) renderRound();
+      }, NEXT_ROUND_DELAY_MS);
+    } else {
+      revealAndEnd(idx);
+    }
+  }
+
+  function startGame(){
+    roundToken++;
+    clearRoundTimers();
+
+    running = true;
+    score = 0;
+    roundTimeMs = ROUND_START_MS;
+    lastTapAt = 0;
+    roundLocked = true;
+    prevWord = null;
+
+    scoreNumEl.textContent = '0';
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    renderRound();
+  }
+
+  function endGame(){
+    if(!running) return;
+    running = false;
+    roundToken++;
+    clearRoundTimers();
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目にしりとりが強い人でした';
+
+    var shareText = 'しりとり早押し選手権で' + score + '連続正解して「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目にしりとりが強い人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+})();
+</script>
+</body>
+</html>
