@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ながら作業選手権 | バカゲー製作所</title>
+<meta name="description" content="本業のゲージを連打で抑えつつ、突然出てくる割り込みタスクも即タップでさばけ。同時に2つの仕事をこなす、ながら作業の限界チャレンジ。">
+<meta property="og:title" content="ながら作業選手権 | バカゲー製作所">
+<meta property="og:description" content="本業ゲージを抑えつつ割り込みタスクも即タップ。ながら作業の限界に挑む同時進行バカゲー。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-nagara-sagyo.png">
+<meta property="og:url" content="https://bakage.com/games/nagara-sagyo/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-nagara-sagyo.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#C9B8FF;--gear:#A78BFA;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900}
+.gaugewrap{height:26px;margin:0 20px;border:3px solid var(--ink);border-radius:10px;background:#fff;overflow:hidden;position:relative}
+#gauge{height:100%;background:#3BAA5C;width:15%;transition:width .1s linear,background .2s linear}
+.gaugelabel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:900;color:var(--ink)}
+
+.mainzone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;gap:10px}
+.interrupt-slot{height:96px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+#mainbtn{
+  width:min(52vw,28vh,200px);height:min(52vw,28vh,200px);border-radius:50%;
+  background:#fff;border:6px solid var(--ink);box-shadow:8px 8px 0 var(--gear);
+  font-size:1.15rem;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;
+  flex-shrink:0;
+}
+
+.interrupt-wrap{display:flex;flex-direction:column;align-items:center;gap:5px;width:92px;opacity:0;pointer-events:none;transition:opacity .12s}
+.interrupt-wrap.show{opacity:1;pointer-events:auto}
+#interruptbtn{
+  width:74px;height:74px;border-radius:50%;background:var(--pink);border:5px solid var(--ink);
+  box-shadow:5px 5px 0 var(--ink);font-size:1.7rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  animation:alertPulse .5s ease-in-out infinite;
+}
+@keyframes alertPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.interrupt-barwrap{width:100%;height:8px;border:2px solid var(--ink);border-radius:5px;background:#fff;overflow:hidden}
+#interruptbar{height:100%;background:var(--ink);width:100%;transform-origin:left}
+
+.howto{text-align:center;font-size:.78rem;opacity:.65;padding:0 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.reason-line{font-size:.85rem;opacity:.75;margin-bottom:4px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🤹 ながら作業選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🤹 ながら作業選手権</h1>
+      <p>「本業をこなす!」を連打してゲージを抑えろ。<br>放っておくとゲージが上がり続け、100%になったら即終了。<br>そこに時々「❗」の割り込みタスクが出現、制限時間内にタップしないとこれも即終了。<br>同時に2つの仕事をこなし続けられるか?</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">回、割り込みをさばいた</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="reason-line" id="result-reason"></p>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>さばいた数: <b id="score-num">0</b></span>
+      <span>集中力勝負</span>
+    </div>
+    <div class="gaugewrap">
+      <div id="gauge"></div>
+      <div class="gaugelabel">本業ゲージ <span id="gauge-num">15</span>%</div>
+    </div>
+    <div class="mainzone">
+      <div class="interrupt-slot">
+        <div class="interrupt-wrap" id="interrupt-wrap">
+          <button id="interruptbtn">❗</button>
+          <div class="interrupt-barwrap"><div id="interruptbar"></div></div>
+        </div>
+      </div>
+      <button id="mainbtn">本業を<br>こなす!</button>
+    </div>
+    <div class="howto">連打でゲージを抑えつつ、❗が出たら即タップ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/nagara-sagyo/';
+  var TAP_COOLDOWN_MS = 50;
+  var TICK_MS = 100;
+
+  var START_GAUGE = 15;
+  var GAUGE_RISE_PER_TICK = 1.0;
+  var PUSH_AMOUNT = 8;
+
+  var DELAY_START_MIN = 1800;
+  var DELAY_START_MAX = 3000;
+  var DELAY_MIN_FLOOR = 700;
+  var DELAY_STEP = 90;
+
+  var WINDOW_START_MS = 1200;
+  var WINDOW_MIN_MS = 500;
+  var WINDOW_STEP = 35;
+
+  var RANK_COEF = 280;
+
+  var running = false;
+  var score = 0;
+  var gauge = START_GAUGE;
+  var minDelay = DELAY_START_MIN;
+  var maxDelay = DELAY_START_MAX;
+  var interruptActive = false;
+  var lastMainTapAt = 0;
+  var lastInterruptTapAt = 0;
+  var genToken = 0;
+
+  var tickId = null;
+  var interruptShowTimeoutId = null;
+  var interruptExpireTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var gaugeEl = document.getElementById('gauge');
+  var gaugeNumEl = document.getElementById('gauge-num');
+  var scoreNumEl = document.getElementById('score-num');
+  var interruptWrapEl = document.getElementById('interrupt-wrap');
+  var interruptBarEl = document.getElementById('interruptbar');
+
+  function titleFor(s){
+    if(s < 3) return 'ながら作業、無理でした';
+    if(s < 6) return 'まだまだ半人前';
+    if(s < 10) return 'そこそこできる方';
+    if(s < 16) return 'ながら作業の達人';
+    return '伝説のマルチタスカー';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * RANK_COEF);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function randInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function updateGaugeColor(){
+    if(gauge >= 80) gaugeEl.style.background = '#E23B4E';
+    else if(gauge >= 50) gaugeEl.style.background = 'var(--pink)';
+    else gaugeEl.style.background = '#3BAA5C';
+  }
+
+  function renderGauge(){
+    gaugeEl.style.width = Math.max(0, Math.min(100, gauge)) + '%';
+    gaugeNumEl.textContent = String(Math.round(gauge));
+    updateGaugeColor();
+  }
+
+  function clearAllTimers(){
+    clearInterval(tickId);
+    clearTimeout(interruptShowTimeoutId);
+    clearTimeout(interruptExpireTimeoutId);
+    tickId = null;
+    interruptShowTimeoutId = null;
+    interruptExpireTimeoutId = null;
+  }
+
+  function clearInterruptUI(){
+    interruptActive = false;
+    interruptWrapEl.classList.remove('show');
+  }
+
+  function scheduleNextInterrupt(){
+    clearTimeout(interruptShowTimeoutId);
+    var delay = randInt(minDelay, maxDelay);
+    var myGen = genToken;
+    interruptShowTimeoutId = setTimeout(function(){
+      if(!running || myGen !== genToken) return;
+      showInterrupt();
+    }, delay);
+  }
+
+  function showInterrupt(){
+    interruptActive = true;
+    interruptWrapEl.classList.add('show');
+    var windowMs = Math.max(WINDOW_MIN_MS, WINDOW_START_MS - score * WINDOW_STEP);
+
+    interruptBarEl.style.transition = 'none';
+    interruptBarEl.style.width = '100%';
+    void interruptBarEl.offsetWidth;
+    interruptBarEl.style.transition = 'width ' + windowMs + 'ms linear';
+    interruptBarEl.style.width = '0%';
+
+    var myGen = genToken;
+    interruptExpireTimeoutId = setTimeout(function(){
+      if(!running || myGen !== genToken) return;
+      endGame('miss');
+    }, windowMs);
+  }
+
+  function tick(){
+    if(!running) return;
+    gauge += GAUGE_RISE_PER_TICK;
+    if(gauge >= 100){
+      gauge = 100;
+      renderGauge();
+      endGame('gauge');
+      return;
+    }
+    renderGauge();
+  }
+
+  function onMainTap(e){
+    if(e) e.preventDefault();
+    if(!running) return;
+    var now = Date.now();
+    if(now - lastMainTapAt < TAP_COOLDOWN_MS) return;
+    lastMainTapAt = now;
+    gauge = Math.max(0, gauge - PUSH_AMOUNT);
+    renderGauge();
+  }
+
+  function onInterruptTap(e){
+    if(e) e.preventDefault();
+    if(!running || !interruptActive) return;
+    var now = Date.now();
+    if(now - lastInterruptTapAt < TAP_COOLDOWN_MS) return;
+    lastInterruptTapAt = now;
+
+    clearTimeout(interruptExpireTimeoutId);
+    clearInterruptUI();
+
+    score++;
+    scoreNumEl.textContent = String(score);
+    minDelay = Math.max(DELAY_MIN_FLOOR, minDelay - DELAY_STEP);
+    maxDelay = Math.max(minDelay + 250, maxDelay - DELAY_STEP);
+    scheduleNextInterrupt();
+  }
+
+  function startGame(){
+    genToken++;
+    clearAllTimers();
+
+    running = true;
+    score = 0;
+    gauge = START_GAUGE;
+    minDelay = DELAY_START_MIN;
+    maxDelay = DELAY_START_MAX;
+    lastMainTapAt = 0;
+    lastInterruptTapAt = 0;
+    clearInterruptUI();
+
+    scoreNumEl.textContent = '0';
+    renderGauge();
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+
+    tickId = setInterval(tick, TICK_MS);
+    scheduleNextInterrupt();
+  }
+
+  function endGame(reason){
+    if(!running) return;
+    running = false;
+    genToken++;
+    clearAllTimers();
+    clearInterruptUI();
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-reason').textContent =
+      reason === 'gauge' ? '本業ゲージが限界突破…' : '割り込みタスクを見逃した…';
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目にながら作業が得意な人でした';
+
+    var shareText = 'ながら作業選手権で割り込みを' + score + '回さばいて「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目にながら作業が得意な人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStart = document.getElementById('btn-start');
+  var btnRetry = document.getElementById('btn-retry');
+  var mainBtn = document.getElementById('mainbtn');
+  var interruptBtn = document.getElementById('interruptbtn');
+
+  btnStart.addEventListener('click', onStart);
+  btnStart.addEventListener('touchstart', onStart, {passive:false});
+  btnRetry.addEventListener('click', onRetry);
+  btnRetry.addEventListener('touchstart', onRetry, {passive:false});
+  mainBtn.addEventListener('click', onMainTap);
+  mainBtn.addEventListener('touchstart', onMainTap, {passive:false});
+  interruptBtn.addEventListener('click', onInterruptTap);
+  interruptBtn.addEventListener('touchstart', onInterruptTap, {passive:false});
+})();
+</script>
+</body>
+</html>
