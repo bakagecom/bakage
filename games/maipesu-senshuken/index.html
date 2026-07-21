@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>マイペース選手権 | バカゲー製作所</title>
+<meta name="description" content="外部の合図は一切なし。最初の2タップで決めた自分だけのペースを、どこまで一定にキープし続けられるか試すバカゲー。ズレたら即終了、キープできるほど許容誤差は縮んでいく。">
+<meta property="og:title" content="マイペース選手権 | バカゲー製作所">
+<meta property="og:description" content="メトロノームなし。自分で決めたペースをどれだけ一定にキープできるかだけのバカゲー。ズレたら即終了、続けるほど許容誤差はどんどん縮む。">
+<meta property="og:image" content="https://bakage.com/assets/ogp-maipesu-senshuken.png">
+<meta property="og:url" content="https://bakage.com/games/maipesu-senshuken/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-maipesu-senshuken.png">
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFF3BF;--gear:#FFD43B;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink);max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.92rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;width:100%;padding:16px;font-size:1.1rem;font-weight:900;border:4px solid var(--ink);border-radius:12px;background:var(--pink);color:var(--ink);box-shadow:6px 6px 0 var(--ink);cursor:pointer;transition:transform .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:#fff;margin-top:12px}
+.btn.share{background:var(--blue);color:#fff;margin-top:12px}
+
+#screen-play{width:100%;height:100%;position:absolute;inset:0;display:none;flex-direction:column}
+#screen-play.active{display:flex}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-weight:900;font-size:.85rem}
+
+.mainzone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:0 16px;min-height:0}
+.tap-circle{width:180px;height:180px;max-width:60vw;max-height:60vw;border-radius:50%;background:#fff;border:6px solid var(--ink);box-shadow:8px 8px 0 var(--gear);display:flex;align-items:center;justify-content:center;font-size:3rem;flex-shrink:0;transition:transform .1s}
+.tap-circle.pulse{transform:scale(0.88)}
+
+.feedback-line{font-size:.85rem;font-weight:700;min-height:1.3em;text-align:center}
+.howto{text-align:center;font-size:.78rem;opacity:.65;padding:0 16px 14px;pointer-events:none}
+
+.title-badge{display:inline-block;background:var(--bg);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:900;font-size:1.15rem;margin:10px 0}
+.rank-line{font-size:.95rem;margin-bottom:6px}
+.reason-line{font-size:.85rem;opacity:.75;margin-bottom:4px}
+.combo-count{font-size:2.4rem;font-weight:900;color:var(--pink)}
+footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../../">← バカゲー製作所</a>
+  <span>🚶 マイペース選手権</span>
+</div>
+
+<div class="stage">
+  <div class="panel" id="panel-outer">
+
+    <div class="card" id="screen-start">
+      <h1>🚶 マイペース選手権</h1>
+      <p>メトロノームなし、合図なし。最初の2タップで決まる「自分のペース」を、そのままどこまで一定にキープし続けられるかだけのバカゲー。<br>ズレが大きいと即終了、キープできるほど許容誤差はどんどん縮んでいく。</p>
+      <button class="btn" id="btn-start">タップして開始</button>
+    </div>
+
+    <div class="card" id="screen-result" style="display:none">
+      <h1>結果発表</h1>
+      <div class="combo-count" id="result-count">0</div>
+      <p style="margin-bottom:4px">回、自分のペースをキープした</p>
+      <div class="title-badge" id="result-title">称号</div>
+      <p class="reason-line" id="result-reason"></p>
+      <p class="reason-line" id="result-avg"></p>
+      <p class="rank-line" id="result-rank"></p>
+      <button class="btn share" id="btn-share">Xでシェアする</button>
+      <button class="btn secondary" id="btn-retry">もう一度あそぶ</button>
+    </div>
+
+  </div>
+
+  <div id="screen-play">
+    <div class="hud">
+      <span>成功数: <b id="score-num">0</b></span>
+      <span>マイペース集中</span>
+    </div>
+    <div class="mainzone">
+      <div class="tap-circle" id="tap-zone">🚶</div>
+      <div class="feedback-line" id="feedback-line">&nbsp;</div>
+    </div>
+    <div class="howto" id="howto-text">好きなタイミングでタップ!</div>
+  </div>
+</div>
+
+<footer>バカゲー製作所 | <a href="https://x.com/bakage_com">@bakage_com</a></footer>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/maipesu-senshuken/';
+  var TAP_COOLDOWN_MS = 50;
+
+  var TOL_START = 0.32;
+  var TOL_FLOOR = 0.08;
+  var TOL_STEP = 0.024;
+
+  var MIN_INTERVAL = 220;
+  var MAX_INTERVAL = 2500;
+
+  var BASELINE_WAIT_MS = 4000;
+  var MAX_WAIT_MULT = 3;
+  var MAX_WAIT_FLOOR = 600;
+  var MAX_WAIT_CEIL = 6000;
+
+  var PULSE_MS = 120;
+  var RANK_COEF = 300;
+
+  var running = false;
+  var score = 0;
+  var state = 'idle'; // 'idle' | 'calibrating' | 'judging'
+  var tolRatio = TOL_START;
+  var lastTapAt = 0;
+  var lastBeatTime = 0;
+  var targetInterval = 0;
+  var deviations = [];
+  var genToken = 0;
+
+  var waitTimeoutId = null;
+  var pulseTimeoutId = null;
+
+  var screenStart = document.getElementById('screen-start');
+  var screenPlay = document.getElementById('screen-play');
+  var screenResult = document.getElementById('screen-result');
+  var tapZoneEl = document.getElementById('tap-zone');
+  var feedbackEl = document.getElementById('feedback-line');
+  var scoreNumEl = document.getElementById('score-num');
+  var howtoEl = document.getElementById('howto-text');
+
+  function titleFor(s){
+    if(s < 3) return 'ペース迷子';
+    if(s < 6) return 'まあまあ一定';
+    if(s < 10) return '体内メトロノーム';
+    if(s < 16) return '人間メトロノーム';
+    return '伝説のマイペーサー';
+  }
+
+  function rankFor(s){
+    var rank = 999983 - Math.round(s * s * RANK_COEF);
+    if(rank < 2) rank = 2;
+    return rank;
+  }
+
+  function clearWaitTimer(){
+    clearTimeout(waitTimeoutId);
+    waitTimeoutId = null;
+  }
+
+  function clearPulseTimer(){
+    clearTimeout(pulseTimeoutId);
+    pulseTimeoutId = null;
+  }
+
+  function computeMaxWait(){
+    if(targetInterval <= 0) return BASELINE_WAIT_MS;
+    var w = targetInterval * MAX_WAIT_MULT;
+    if(w < MAX_WAIT_FLOOR) w = MAX_WAIT_FLOOR;
+    if(w > MAX_WAIT_CEIL) w = MAX_WAIT_CEIL;
+    return w;
+  }
+
+  function scheduleWait(ms){
+    clearWaitTimer();
+    var myGen = genToken;
+    waitTimeoutId = setTimeout(function(){
+      if(!running || myGen !== genToken) return;
+      endGame('timeout');
+    }, ms);
+  }
+
+  function pulse(){
+    clearPulseTimer();
+    tapZoneEl.classList.add('pulse');
+    pulseTimeoutId = setTimeout(function(){
+      tapZoneEl.classList.remove('pulse');
+    }, PULSE_MS);
+  }
+
+  function onSuccess(dev){
+    score++;
+    scoreNumEl.textContent = String(score);
+    deviations.push(dev);
+    tolRatio = Math.max(TOL_FLOOR, tolRatio - TOL_STEP);
+    feedbackEl.textContent = 'キープ成功!(ズレ ' + Math.round(dev * 100) + '%)';
+  }
+
+  function onTap(e){
+    if(e) e.preventDefault();
+    if(!running) return;
+    var nowMs = Date.now();
+    if(nowMs - lastTapAt < TAP_COOLDOWN_MS) return;
+    lastTapAt = nowMs;
+
+    var now = performance.now();
+    pulse();
+
+    if(state === 'idle'){
+      lastBeatTime = now;
+      state = 'calibrating';
+      howtoEl.textContent = 'もう一度、同じ感覚でタップ!';
+      feedbackEl.textContent = ' ';
+      scheduleWait(BASELINE_WAIT_MS);
+      return;
+    }
+
+    if(state === 'calibrating'){
+      var baseline = now - lastBeatTime;
+      if(baseline < MIN_INTERVAL) baseline = MIN_INTERVAL;
+      if(baseline > MAX_INTERVAL) baseline = MAX_INTERVAL;
+      targetInterval = baseline;
+      lastBeatTime = now;
+      state = 'judging';
+      howtoEl.textContent = 'そのままのペースをキープ!';
+      feedbackEl.textContent = '基準ペース設定!(約' + Math.round(targetInterval) + 'ms間隔)';
+      scheduleWait(computeMaxWait());
+      return;
+    }
+
+    if(state === 'judging'){
+      var interval = now - lastBeatTime;
+      lastBeatTime = now;
+      var dev = Math.abs(interval - targetInterval) / targetInterval;
+
+      if(dev <= tolRatio){
+        onSuccess(dev);
+        scheduleWait(computeMaxWait());
+      } else {
+        endGame('miss', dev);
+      }
+      return;
+    }
+  }
+
+  function startGame(){
+    genToken++;
+    clearWaitTimer();
+    clearPulseTimer();
+
+    running = true;
+    score = 0;
+    state = 'idle';
+    tolRatio = TOL_START;
+    lastTapAt = 0;
+    lastBeatTime = 0;
+    targetInterval = 0;
+    deviations = [];
+    scoreNumEl.textContent = '0';
+    feedbackEl.textContent = ' ';
+    howtoEl.textContent = '好きなタイミングでタップ!';
+    tapZoneEl.classList.remove('pulse');
+
+    screenStart.style.display = 'none';
+    screenResult.style.display = 'none';
+    screenPlay.classList.add('active');
+    window.scrollTo(0, 0);
+    document.body.classList.add('playing');
+  }
+
+  function endGame(reason, dev){
+    if(!running) return;
+    running = false;
+    genToken++;
+    clearWaitTimer();
+    clearPulseTimer();
+    document.body.classList.remove('playing');
+
+    screenPlay.classList.remove('active');
+    screenResult.style.display = 'block';
+
+    var title = titleFor(score);
+    var rank = rankFor(score);
+
+    var reasonText;
+    if(reason === 'timeout') reasonText = 'タップが止まってしまった…';
+    else reasonText = 'ペースが乱れた…(ズレ ' + Math.round(dev * 100) + '%)';
+
+    var avgText;
+    if(deviations.length > 0){
+      var sum = 0;
+      for(var i = 0; i < deviations.length; i++) sum += deviations[i];
+      var avg = Math.round((sum / deviations.length) * 100);
+      avgText = '平均ズレ: ' + avg + '%';
+    } else {
+      avgText = '平均ズレ: --';
+    }
+
+    document.getElementById('result-count').textContent = String(score);
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-reason').textContent = reasonText;
+    document.getElementById('result-avg').textContent = avgText;
+    document.getElementById('result-rank').textContent =
+      'あなたは今日、日本で ' + rank.toLocaleString() + ' 番目にマイペースが正確な人でした';
+
+    var shareText = 'マイペース選手権で' + score + '回連続で自分のペースをキープして「' + title + '」の称号を獲得!\n日本で' + rank.toLocaleString() + '番目にマイペースが正確な人でした。\n#バカゲー製作所';
+    var shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(GAME_URL);
+    document.getElementById('btn-share').onclick = function(){
+      window.open(shareUrl, '_blank', 'noopener');
+    };
+  }
+
+  function onStart(e){ if(e) e.preventDefault(); startGame(); }
+  function onRetry(e){
+    if(e) e.preventDefault();
+    screenResult.style.display = 'none';
+    screenStart.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  var btnStartEl = document.getElementById('btn-start');
+  var btnRetryEl = document.getElementById('btn-retry');
+
+  btnStartEl.addEventListener('click', onStart);
+  btnStartEl.addEventListener('touchstart', onStart, {passive:false});
+  btnRetryEl.addEventListener('click', onRetry);
+  btnRetryEl.addEventListener('touchstart', onRetry, {passive:false});
+  tapZoneEl.addEventListener('click', onTap);
+  tapZoneEl.addEventListener('touchstart', onTap, {passive:false});
+})();
+</script>
+</body>
+</html>
