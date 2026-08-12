@@ -70,8 +70,23 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
 <meta name="twitter:site" content="@bakage_com">
 <meta name="twitter:image" content="https://bakage.com/assets/ogp-souji-10sec.png">
 <!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
 </head>
 <body>
+<div class="bkg-game">
+
 
 <div class="topbar">
   <a href="../../">← バカゲー製作所</a>
@@ -304,9 +319,10 @@ footer{text-align:center;padding:10px;font-size:.72rem;opacity:.6}
   });
 })();
 </script>
+</div>
 <!-- bakage:footer -->
 <style>
-.bkg-nav{max-width:900px;margin:32px auto 0;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
 .bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
 .bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
 .bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
@@ -316,7 +332,7 @@ box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;
 font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
 .bkg-foot a{color:inherit}
 .bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
-.bkg-about{max-width:760px;margin:36px auto 0;padding:24px 20px;background:#fff;border:3px solid #181820;
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
 border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
 .bkg-about h2{font-size:1.15rem;margin:0 0 12px}
 .bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
