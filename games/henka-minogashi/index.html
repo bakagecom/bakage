@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>変化見落とし選手権 | バカゲー製作所</title>
+<meta name="description" content="一瞬まばたきした隙に、1マスだけ色が変わる。どれが変わったかを当てるだけのバカゲー。目の前で変わっているのに、驚くほど見つからない。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:10px;padding:0 4px}
+.grid{display:grid;gap:8px;width:100%}
+.cell{aspect-ratio:1/1;border:3px solid var(--ink);border-radius:10px;cursor:pointer}
+.blank .cell{background:var(--bg)!important;border-color:var(--bg)!important}
+.msg{margin-top:12px;font-weight:900;min-height:1.6em}
+.big{font-size:2.6rem;font-weight:900;margin:6px 0}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/henka-minogashi/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="変化見落とし選手権">
+<meta property="og:description" content="一瞬まばたきした隙に、1マスだけ色が変わる。どれが変わったかを当てるだけのバカゲー。目の前で変わっているのに、驚くほど見つからない。">
+<meta property="og:url" content="https://bakage.com/games/henka-minogashi/">
+<meta property="og:image" content="https://bakage.com/assets/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>👁 変化見落とし選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>👁 変化見落とし選手権</h1>
+      <p>マスがずらりと並びます。<br>一瞬だけ画面が消えて、戻ったとき<strong>1マスだけ色が変わっています</strong>。</p>
+      <p>変わったマスをタップ。<br>目の前で変わっているのに、これが驚くほど見つかりません。</p>
+      <p>1回間違えたら即終了。何問連続でいけるか?</p>
+      <button class="btn" id="startBtn">タップして開始</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="round">第1問</span><span id="streak">0 連続</span></div>
+      <div class="grid" id="grid"></div>
+      <div class="msg" id="msg">よく見て…</div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>結果発表</h1>
+      <div class="big" id="score">0</div>
+      <p>問連続で見破った</p>
+      <p id="rank" style="font-weight:900"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/henka-minogashi/';
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), grid=document.getElementById('grid'),
+      msg=document.getElementById('msg'), roundEl=document.getElementById('round'),
+      streakEl=document.getElementById('streak'), scoreEl=document.getElementById('score'),
+      rankEl=document.getElementById('rank');
+  var streak=0, cells=[], changedIndex=-1, accepting=false, timer=null;
+
+  function cols(n){ return n<=9?3:(n<=16?4:5); }
+
+  function hsl(h,s,l){ return 'hsl('+h+','+s+'%,'+l+'%)'; }
+
+  function setup(){
+    var lv = streak;
+    var count = Math.min(25, 9 + Math.floor(lv/2)*3);      // 9 → 25 マス
+    var delta = Math.max(6, 26 - lv*1.6);                   // 色差はだんだん小さく
+    var blank = Math.max(90, 260 - lv*10);                  // 空白時間もだんだん短く
+    var baseH = Math.floor(Math.random()*360);
+    grid.style.gridTemplateColumns = 'repeat('+cols(count)+',1fr)';
+    grid.innerHTML = '';
+    cells = [];
+    for (var i=0;i<count;i++){
+      var d = document.createElement('div');
+      d.className = 'cell';
+      var h = (baseH + Math.floor(Math.random()*40) - 20 + 360) % 360;
+      d.dataset.h = h;
+      d.style.background = hsl(h, 70, 58);
+      grid.appendChild(d);
+      cells.push(d);
+    }
+    changedIndex = Math.floor(Math.random()*count);
+    roundEl.textContent = '第' + (streak+1) + '問';
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = 'よく見て…';
+    accepting = false;
+
+    setTimeout(function(){
+      grid.parentNode.classList.add('blank');           // 一瞬まっさら（フリッカー法）
+      setTimeout(function(){
+        var c = cells[changedIndex];
+        var h = (parseInt(c.dataset.h,10) + (Math.random()<0.5?delta:-delta) + 360) % 360;
+        c.dataset.h = h;
+        c.style.background = hsl(h, 70, 58);
+        grid.parentNode.classList.remove('blank');
+        accepting = true;
+        msg.textContent = 'どれが変わった?';
+        clearTimeout(timer);
+        timer = setTimeout(function(){ if(accepting) finish('時間切れ'); },
+                           Math.max(2500, 7000 - lv*250));
+      }, blank);
+    }, 900);
+  }
+
+  function onPick(e){
+    if(!accepting) return;
+    var t = e.target;
+    if(!t.classList.contains('cell')) return;
+    e.preventDefault();
+    accepting = false;
+    clearTimeout(timer);
+    if(cells.indexOf(t) === changedIndex){
+      streak++;
+      msg.textContent = '正解!';
+      setTimeout(setup, 550);
+    } else {
+      cells[changedIndex].style.outline = '5px solid #fff';
+      msg.textContent = '正解はこっちでした';
+      setTimeout(function(){ finish('はずれ'); }, 900);
+    }
+  }
+
+  function rank(n){
+    if(n>=12) return '👁 変化を見逃さない人';
+    if(n>=8)  return '🔍 かなり目がいい';
+    if(n>=5)  return '🙂 まあまあ見えている';
+    if(n>=3)  return '😐 だいたいの人はここ';
+    if(n>=1)  return '😵 変化、見えてます?';
+    return '🫥 何も見えていない';
+  }
+
+  function finish(){
+    accepting=false; clearTimeout(timer);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = streak;
+    rankEl.textContent = rank(streak);
+  }
+
+  function start(e){
+    if(e) e.preventDefault();
+    streak=0;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    setup();
+  }
+
+  function share(e){
+    if(e) e.preventDefault();
+    var text = '【変化見落とし選手権】' + streak + '問連続で見破った! ' + rank(streak) +
+               '\n目の前で変わってるのに、これが本当に見つからない。';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+  grid.addEventListener('click', onPick);
+  grid.addEventListener('touchstart', onPick, {passive:false});
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>変化見落とし選手権 について</h2>
+<p>画面が一瞬だけ消えて、戻ってくると1マスだけ色が変わっています。変わった場所を当てるだけ。目の前で起きているのに、これが本当に見つかりません。</p>
+<h3>なぜ難しいのか</h3><p>人は視野全体を写真のように覚えているわけではなく、注意を向けたごく狭い範囲しか保持していません。ふだんは変化が起きると動きが目に飛び込んでくるので気づけるのですが、間に空白をはさむと、その手がかりが消えます。すると「前の画面」と「今の画面」を記憶だけで突き合わせることになり、注意を向けていなかった場所の変化はまったく気づけなくなります。心理学では変化の見落とし（チェンジ・ブラインドネス）と呼ばれ、映画のカット割りをまたいだ小道具の入れ替わりに誰も気づかない、という形でも知られています。マスが増えるほど、そして空白が短くなるほど、記憶を突き合わせる余裕がなくなります。</p>
+<h3>コツ</h3><ul><li>1マスずつ見比べようとしないこと。全部は覚えられません。3〜4マスの塊に区切って、その塊の印象だけを持つ</li><li>視線を1か所に固定して、周辺視で全体を眺める。動かすほど記憶が上書きされます</li><li>戻ってきた瞬間に「あれ」と思った場所が、たいてい正解です。考え直すと自信のほうが先に消えます</li></ul>
+<h3>記録の目安</h3><p>5問連続でだいたいの人と同じくらい、8問で目がいいほう、12問を超えると変化の検出がかなり鋭い部類です。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../yosoku-senshuken/">◀ 🪃 着地予測選手権</a></li><li><a href="../meme-maker/">🧩 今日のミームメーカー</a></li><li><a href="../todofuken-punch/">👊 都道府県当てパンチ</a></li><li><a href="../onkan-hansha/">🎲 音感反射選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "変化見落とし選手権", "description": "一瞬まばたきした隙に、1マスだけ色が変わる。どれが変わったかを当てるだけのバカゲー。目の前で変わっているのに、驚くほど見つからない。", "url": "https://bakage.com/games/henka-minogashi/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
