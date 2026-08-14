@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ニセ文字選手権 | バカゲー製作所</title>
+<meta name="description" content="短い文の中に、形のそっくりな別の文字が1つだけまざっている。ロと口、カと力、エと工。読めてしまうから見つからない。制限時間内にニセ文字をタップするバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--gear:#E8B400;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:10px;padding:0 4px}
+.screen{background:#fff;border:4px solid var(--ink);border-radius:16px;box-shadow:8px 8px 0 var(--ink);
+height:190px;display:flex;align-items:center;justify-content:center;padding:10px}
+.sent{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;line-height:1.5}
+.ch{font-size:1.75rem;font-weight:700;padding:6px 2px;border-radius:6px;cursor:pointer;color:var(--ink);
+background:transparent;border:none;font-family:inherit}
+.ch:active{background:#FFE98A}
+.ch.hit{background:#8BE58B}
+.ch.bad{background:var(--pink);color:#fff}
+.bar{height:12px;background:#fff;border:3px solid var(--ink);border-radius:8px;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--pink)}
+.msg{margin-top:12px;font-weight:900;min-height:1.6em;font-size:.95rem}
+.big{font-size:2.6rem;font-weight:900;margin:6px 0}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/nise-moji/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="ニセ文字選手権">
+<meta property="og:description" content="短い文の中に、形のそっくりな別の文字が1つだけまざっている。ロと口、カと力、エと工。読めてしまうから見つからない。">
+<meta property="og:url" content="https://bakage.com/games/nise-moji/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-nise-moji.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-nise-moji.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🔍 ニセ文字選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>🔍 ニセ文字選手権</h1>
+      <p>短い文の中に、<strong>形のそっくりな別の文字</strong>が1つだけまざっています。</p>
+      <p>ロ と 口。カ と 力。エ と 工。<br>その1文字をタップするだけです。</p>
+      <p>読めてしまうので、見つかりません。<br>間違えるか、時間切れで終了。何問連続でいけるか?</p>
+      <button class="btn" id="startBtn">タップして開始</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="round">第1問</span><span id="streak">0 連続</span></div>
+      <div class="screen" id="screen"><div class="sent" id="sent"></div></div>
+      <div class="bar"><i id="barIn"></i></div>
+      <div class="msg" id="msg">ニセ文字を1つ見つけて</div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>結果発表</h1>
+      <div class="big" id="score">0</div>
+      <p>問連続でニセ文字を見抜いた</p>
+      <p id="rank" style="font-weight:900"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/nise-moji/';
+
+  // a: ニセ文字より前 / f: まざっているニセ文字 / b: うしろ / t: 本当はこの文字
+  var ITEMS = [
+    {a:'となりに',   f:'口', b:'ボットが来た',   t:'ロ'},
+    {a:'ぬれた',     f:'夕', b:'オルを干す',     t:'タ'},
+    {a:'',           f:'工', b:'レベーターが遅い', t:'エ'},
+    {a:'きょうは',   f:'八', b:'ンバーグ',       t:'ハ'},
+    {a:'皿に',       f:'二', b:'ンジンが残る',   t:'ニ'},
+    {a:'',           f:'力', b:'レーは明日にする', t:'カ'},
+    {a:'',           f:'三', b:'カンをもらった', t:'ミ'},
+    {a:'また',       f:'千', b:'ョコを買った',   t:'チ'},
+    {a:'イ',         f:'又', b:'の散歩に行く',   t:'ヌ'},
+    {a:'',           f:'卜', b:'マトが安かった', t:'ト'},
+    {a:'近所の',     f:'エ', b:'場が動きだした', t:'工'},
+    {a:'',           f:'タ', b:'方から雨らしい', t:'夕'},
+    {a:'えりに',     f:'ロ', b:'紅がついてる',   t:'口'},
+    {a:'',           f:'ハ', b:'百屋のおじさん', t:'八'},
+    {a:'ケーキを',   f:'ニ', b:'人でわけた',     t:'二'},
+    {a:'',           f:'カ', b:'士がしこを踏む', t:'力'},
+    {a:'',           f:'チ', b:'円札をくずしたい', t:'千'},
+    {a:'赤い',       f:'ミ', b:'角形の看板',     t:'三'},
+    {a:'',           f:'又', b:'ードルをすする', t:'ヌ'},
+    {a:'長い',       f:'卜', b:'ンネルを抜けた', t:'ト'},
+    {a:'ポ',         f:'夕', b:'ージュがぬるい', t:'タ'},
+    {a:'サボ',       f:'千', b:'ンに水をやる',   t:'チ'},
+    {a:'カステ',     f:'口', b:'を切り分ける',   t:'ロ'},
+    {a:'ヘリコプ',   f:'夕', b:'ーの音がする',   t:'タ'},
+    {a:'',           f:'工', b:'アコンが効かない', t:'エ'},
+    {a:'温かい',     f:'三', b:'ルクを飲む',     t:'ミ'},
+    {a:'今日は',     f:'ハ', b:'時に集合',       t:'八'},
+    {a:'',           f:'エ', b:'具箱をあけてみた', t:'工'},
+    {a:'',           f:'夕', b:'ンスの上に置いた', t:'タ'},
+    {a:'駅の北',     f:'ロ', b:'で待ち合わせ',   t:'口'},
+    {a:'まだ体',     f:'カ', b:'には自信がある', t:'力'},
+    {a:'',           f:'チ', b:'葉まで高速で行く', t:'千'}
+  ];
+
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), sent=document.getElementById('sent'),
+      barIn=document.getElementById('barIn'), msg=document.getElementById('msg'),
+      roundEl=document.getElementById('round'), streakEl=document.getElementById('streak'),
+      scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank');
+
+  var streak=0, locked=true, timer=null, bag=[], cur=null;
+
+  function shuffle(a){
+    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+
+  function draw(){
+    if(bag.length === 0){ bag = shuffle(ITEMS.slice()); }
+    return bag.pop();
+  }
+
+  function setup(){
+    cur = draw();
+    var text = cur.a + cur.f + cur.b;
+    var fi = cur.a.length;
+
+    roundEl.textContent = '第' + (streak+1) + '問';
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = 'ニセ文字を1つ見つけて';
+
+    sent.innerHTML = '';
+    for(var i=0;i<text.length;i++){
+      var b = document.createElement('button');
+      b.className = 'ch';
+      b.type = 'button';
+      b.textContent = text.charAt(i);
+      if(i === fi){ b.setAttribute('data-f','1'); }
+      sent.appendChild(b);
+    }
+
+    // 制限時間。連続するほど短くなる
+    var dur = Math.max(2500, 6500 - streak*300);
+    barIn.style.transition = 'none';
+    barIn.style.width = '100%';
+    void barIn.offsetWidth;                       // 反映させてから走らせる
+    barIn.style.transition = 'width ' + dur + 'ms linear';
+    barIn.style.width = '0%';
+
+    locked = false;
+    clearTimeout(timer);
+    timer = setTimeout(function(){
+      if(locked) return;
+      locked = true;
+      reveal();
+      msg.textContent = '時間切れ。まざっていたのは ' + cur.f + '（本当は ' + cur.t + '）';
+      setTimeout(finish, 1400);
+    }, dur);
+  }
+
+  function reveal(){
+    barIn.style.transition = 'none';
+    barIn.style.width = '0%';
+    var chs = sent.querySelectorAll('.ch');
+    for(var i=0;i<chs.length;i++){
+      if(chs[i].getAttribute('data-f') === '1'){ chs[i].className = 'ch hit'; }
+    }
+  }
+
+  function onPick(e){
+    var t = e.target;
+    if(!t || !t.classList || !t.classList.contains('ch')) return;
+    e.preventDefault();
+    if(locked) return;
+    locked = true;
+    clearTimeout(timer);
+
+    if(t.getAttribute('data-f') === '1'){
+      reveal();
+      streak++;
+      streakEl.textContent = streak + ' 連続';
+      msg.textContent = '正解! 本当は ' + cur.t + ' です';
+      setTimeout(setup, 650);
+    } else {
+      t.className = 'ch bad';
+      reveal();
+      msg.textContent = 'ハズレ。ニセ文字は ' + cur.f + '（本当は ' + cur.t + '）';
+      setTimeout(finish, 1400);
+    }
+  }
+
+  function rank(n){
+    if(n>=15) return '🔬 校正の人ですか?';
+    if(n>=10) return '🧐 文として読んでいない';
+    if(n>=6)  return '👀 かなり見えている';
+    if(n>=3)  return '🙂 だいたいの人はここ';
+    if(n>=1)  return '😐 読めてしまいましたね';
+    return '🫠 1問目から素通り';
+  }
+
+  function finish(){
+    locked = true;
+    clearTimeout(timer);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = streak;
+    rankEl.textContent = rank(streak);
+  }
+
+  function start(e){
+    if(e) e.preventDefault();
+    clearTimeout(timer);
+    streak = 0;
+    bag = [];
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    setup();
+  }
+
+  function share(e){
+    if(e) e.preventDefault();
+    var text = '【ニセ文字選手権】' + streak + '問連続でニセ文字を見抜いた! ' + rank(streak) +
+               '\nロと口、カと力、エと工。読めてしまうから見つからない。';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+  sent.addEventListener('click', onPick);
+  sent.addEventListener('touchstart', onPick, {passive:false});
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>ニセ文字選手権 について</h2>
+<p>短い文の中に、形のそっくりな別の文字が1つだけまざっています。カタカナの「ロ」と漢字の「口」、「カ」と「力」、「エ」と「工」。目の前にあるのに、読めてしまうので見つかりません。</p>
+<h3>なぜ難しいのか</h3><p>文章を読むとき、人は文字を1つずつ形として確かめてはいません。語のかたまりと文脈から次に来るものを予測し、その予測に合う大まかな形だけを照合しています。だから輪郭のよく似た別の文字に入れ替わっていても、予測どおりの語として読めてしまう。ここで使っているのはカタカナと漢字の同形異字で、細部を見れば違いますが、読みの処理は細部まで見に行きません。つまりこれは注意力の問題ではなく、読むという処理が速いことの代償です。制限時間が短くなるほど、1文字ずつ確かめる余裕がなくなり、読む処理だけが残ります。</p>
+<h3>コツ</h3><ul><li>文として読まないこと。意味を取ろうとした時点で予測が働き、入れ替わりが埋まります。字の大きさと形だけを眺める</li><li>カタカナと漢字が切り替わる境目を先に疑う。ニセ文字はいつもその継ぎ目に立っています</li><li>犯人は10組しかいません。ロ口・カ力・エ工・ハ八・ニ二・ミ三・チ千・タ夕・ト卜・ヌ又。この形が見えたら一度止まる</li></ul>
+<h3>記録の目安</h3><p>3問連続で標準的なところです。6問を超えると読み飛ばしを抑えられていて、10問を超えると文として読まずに形として見る切り替えができています。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../chui-no-mabataki/">◀ 😵 注意の瞬き選手権</a></li><li><a href="../muchaburi-button/">🐸 AIの無茶ぶりボタン</a></li><li><a href="../douji-tap/">🧠 同時タップ選手権</a></li><li><a href="../shiritori-hayaoshi/">🎈 しりとり早押し選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "ニセ文字選手権", "description": "短い文の中に、形のそっくりな別の文字が1つだけまざっている。ロと口、カと力、エと工。読めてしまうから見つからない。", "url": "https://bakage.com/games/nise-moji/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
