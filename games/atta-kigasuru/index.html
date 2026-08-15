@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あった気がする選手権 | バカゲー製作所</title>
+<meta name="description" content="言葉が次々に流れたあと、3つのうち「出てこなかった1つ」を選ぶ。出ていないのに、たしかにあった気がする言葉が混ざる。自分の記憶が勝手に作られていることが分かるバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:10px;padding:0 4px}
+.screen{background:#fff;border:4px solid var(--ink);border-radius:16px;box-shadow:8px 8px 0 var(--ink);
+height:150px;display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:900;line-height:1.2;
+padding:8px;word-break:break-all}
+.msg{margin-top:12px;font-weight:900;min-height:1.6em;font-size:.95rem}
+.choices{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.choice{background:#fff;border:3px solid var(--ink);border-radius:12px;padding:13px 8px;font-size:1.15rem;font-weight:900;
+line-height:1.2;cursor:pointer;font-family:inherit;color:var(--ink);word-break:break-all}
+.choice:active{transform:translateY(2px)}
+.big{font-size:2.6rem;font-weight:900;margin:6px 0}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/atta-kigasuru/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="あった気がする選手権">
+<meta property="og:description" content="言葉が次々に流れたあと、3つのうち「出てこなかった1つ」を選ぶ。出ていないのに、たしかにあった気がする言葉が混ざります。">
+<meta property="og:url" content="https://bakage.com/games/atta-kigasuru/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-atta-kigasuru.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-atta-kigasuru.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>👻 あった気がする選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>👻 あった気がする選手権</h1>
+      <p>言葉が1つずつ、次々に流れます。<br>そのあと3つの言葉が出ます。</p>
+      <p>選ぶのは<strong>「さっき出てこなかった1つ」</strong>。<br>それだけです。</p>
+      <p>ところが、見てもいない言葉が<strong>たしかにあった気がする</strong>。<br>間違えたら即終了。何問連続でいけるか?</p>
+      <button class="btn" id="startBtn">タップして開始</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="round">第1問</span><span id="streak">0 連続</span></div>
+      <div class="screen" id="screen"></div>
+      <div class="msg" id="msg">言葉をおぼえて</div>
+      <div class="choices hide" id="choices"></div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>結果発表</h1>
+      <div class="big" id="score">0</div>
+      <p>問連続で、ニセの記憶に引っかからなかった</p>
+      <p id="rank" style="font-weight:900"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/atta-kigasuru/';
+
+  // c … そのグループの「まとめ役」の言葉。出していなくても、出た気がする言葉。
+  // w … 実際に流す候補（8語）。
+  var THEMES = [
+    {c:'ねむる', w:['ふとん','まくら','ねむい','よる','ゆめ','いびき','もうふ','目ざまし']},
+    {c:'あまい', w:['さとう','ケーキ','はちみつ','チョコ','あめ玉','いちご','プリン','ジャム']},
+    {c:'さむい', w:['こおり','ゆき','ふゆ','ふるえる','ストーブ','北風','つらら','手ぶくろ']},
+    {c:'はり',   w:['いと','ぬう','さす','指ぬき','注射','とがった','ちくちく','ぬの']},
+    {c:'やま',   w:['たに','のぼる','ちょうじょう','いわ','ふもと','リュック','つえ','ヤッホー']},
+    {c:'おんがく', w:['ピアノ','うた','リズム','ギター','コンサート','ドレミ','しきしゃ','おと']},
+    {c:'いしゃ', w:['びょういん','くすり','ちりょう','白衣','ちょうしんき','かんじゃ','手じゅつ','カルテ']},
+    {c:'ねこ',   w:['しっぽ','ひげ','ニャー','つめ','けづくろい','こたつ','にくきゅう','こばん']},
+    {c:'パン',   w:['こむぎ','トースター','バター','サンドイッチ','みみ','ふくらむ','こうぼ','かま']},
+    {c:'あめ',   w:['かさ','くも','ぬれる','長ぐつ','つゆ','かみなり','しずく','水たまり']},
+    {c:'がっこう', w:['きょうしつ','こくばん','チャイム','きゅうしょく','せんせい','ランドセル','しゅくだい','うんどうかい']},
+    {c:'うみ',   w:['なみ','すな','かもめ','しお','ふね','水平線','貝がら','日やけ']}
+  ];
+
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), scr=document.getElementById('screen'),
+      msg=document.getElementById('msg'), choices=document.getElementById('choices'),
+      roundEl=document.getElementById('round'), streakEl=document.getElementById('streak'),
+      scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank');
+
+  var streak=0, answer='', locked=true, timer=null, lastTheme=-1;
+
+  function shuffle(a){
+    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+
+  function setup(){
+    var lv = streak;
+    var listLen = Math.min(5 + Math.floor(lv/2), 8);      // 流す語数。だんだん増える
+    var dur = Math.max(340, 620 - lv*35);                 // 1語の表示時間。だんだん短くなる
+
+    var ti = Math.floor(Math.random()*THEMES.length);
+    if(ti === lastTheme){ ti = (ti + 1) % THEMES.length; }
+    lastTheme = ti;
+    var th = THEMES[ti];
+    var members = shuffle(th.w.slice());
+
+    // 半分の回は「まとめ役」を実際に流す。
+    // こうしないと「いちばんそれらしい言葉を選べば当たる」で終わってしまう。
+    var showCentral = Math.random() < 0.5;
+    var seq, opts;
+    if(showCentral){
+      seq = members.slice(0, listLen-1);
+      seq.splice(Math.floor(Math.random()*(seq.length+1)), 0, th.c);  // どこかに混ぜる
+      answer = members[listLen-1];                                    // 流していない普通の語
+      opts = [th.c, answer, seq[Math.floor(Math.random()*seq.length)]];
+      if(opts[2] === th.c){ opts[2] = members[0]; }
+    }else{
+      seq = members.slice(0, listLen);
+      answer = th.c;                                                  // 流していない「まとめ役」
+      opts = [th.c, seq[0], seq[seq.length-1]];
+    }
+    shuffle(opts);
+
+    roundEl.textContent = '第' + (streak+1) + '問';
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '言葉をおぼえて';
+    choices.classList.add('hide');
+    choices.innerHTML = '';
+    scr.textContent = '';
+    locked = true;
+
+    var k = 0;
+    clearTimeout(timer);
+    timer = setTimeout(function run(){
+      if(k >= seq.length){ scr.textContent=''; ask(opts); return; }
+      scr.textContent = seq[k];
+      k++;
+      timer = setTimeout(run, dur);
+    }, 600);
+  }
+
+  function ask(opts){
+    msg.textContent = '出てこなかったのはどれ?';
+    choices.innerHTML = '';
+    for(var i=0;i<opts.length;i++){
+      var b = document.createElement('button');
+      b.className = 'choice';
+      b.type = 'button';
+      b.textContent = opts[i];
+      b.setAttribute('data-v', opts[i]);
+      choices.appendChild(b);
+    }
+    choices.classList.remove('hide');
+    locked = false;
+  }
+
+  function onPick(e){
+    var t = e.target;
+    if(!t || !t.classList || !t.classList.contains('choice')) return;
+    e.preventDefault();
+    if(locked) return;
+    locked = true;
+    var v = t.getAttribute('data-v');
+    choices.classList.add('hide');
+    if(v !== answer){
+      scr.textContent = answer;
+      msg.textContent = '出ていなかったのは「' + answer + '」でした';
+      setTimeout(finish, 1300);
+      return;
+    }
+    streak++;
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '正解!';
+    setTimeout(setup, 650);
+  }
+
+  function rank(n){
+    if(n>=10) return '🧠 記憶がねつ造されない人';
+    if(n>=7)  return '👀 かなり正確に覚えている';
+    if(n>=5)  return '🙂 標準より上';
+    if(n>=3)  return '😐 だいたいの人はここ';
+    if(n>=1)  return '👻 あった気がしましたね';
+    return '🫠 全部あった気がする';
+  }
+
+  function finish(){
+    locked = true;
+    clearTimeout(timer);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = streak;
+    rankEl.textContent = rank(streak);
+  }
+
+  function start(e){
+    if(e) e.preventDefault();
+    clearTimeout(timer);
+    streak = 0;
+    lastTheme = -1;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    setup();
+  }
+
+  function share(e){
+    if(e) e.preventDefault();
+    var text = '【あった気がする選手権】' + streak + '問連続でニセの記憶に勝った! ' + rank(streak) +
+               '\n見てもいない言葉が、たしかにあった気がする。';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+  choices.addEventListener('click', onPick);
+  choices.addEventListener('touchstart', onPick, {passive:false});
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>あった気がする選手権 について</h2>
+<p>言葉が1つずつ流れたあと、3つの選択肢から「さっき出てこなかった1つ」を選びます。覚えているつもりの記憶が、その場で作られていることが分かります。</p>
+<h3>なぜ難しいのか</h3><p>流れる言葉は、毎回1つのまとまり（たとえば「ふとん・まくら・ねむい・よる・ゆめ」）から選ばれています。人はこういう並びを1語ずつ覚えるのではなく、「眠りの話だった」というおおまかな意味として保存します。あとから思い出すとき、脳はこの意味から言葉を組み立て直すので、まとまりの中心にある言葉は、実際には出ていなくても出たように感じられます。選択肢には毎回この中心の言葉が入りますが、半分の回では本当に流しています。つまり「いちばんそれらしいものを外す」という当てずっぽうは通用せず、実際に見たかどうかを思い出すしかありません。この、見たものと自分で補ったものを区別する働きは、語数が増えて表示が速くなるほど先に崩れます。</p>
+<h3>コツ</h3><ul><li>意味でまとめて覚えると必ず引っかかります。字面や文字数など、意味と関係のない特徴を1つ拾っておくと区別できます</li><li>中心の言葉が選択肢に出たら、それが流れた瞬間の画面を思い出せるか確かめる。思い出せない「知っている感じ」だけなら、たいてい見ていません</li><li>最初の1語と最後の1語は残りやすく、真ん中が抜けます。抜けやすい真ん中に意識を置くと精度が上がります</li></ul>
+<h3>記録の目安</h3><p>3問連続で標準的です。7問を超えると、見た記憶と補った記憶をかなり正確に見分けられています。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../nise-moji/">◀ 🔍 ニセ文字選手権</a></li><li><a href="../muchaburi-button/">🐸 AIの無茶ぶりボタン</a></li><li><a href="../douji-tap/">🧠 同時タップ選手権</a></li><li><a href="../shiritori-hayaoshi/">🎈 しりとり早押し選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "あった気がする選手権", "description": "言葉が次々に流れたあと、3つのうち「出てこなかった1つ」を選ぶ。出ていないのに、たしかにあった気がする言葉が混ざります。", "url": "https://bakage.com/games/atta-kigasuru/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
