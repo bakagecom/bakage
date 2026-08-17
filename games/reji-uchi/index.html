@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>レジ打ち選手権 | バカゲー製作所</title>
+<meta name="description" content="お客さんが言った品物を、棚から探して打つだけ。品数が2個から16個に増えていくと、同じことをしているのに急に手が止まります。選択肢が増えるほど遅くなるバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:8px;padding:0 4px}
+.order{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:4px solid var(--ink);
+border-radius:14px;padding:10px 14px;box-shadow:5px 5px 0 var(--ink);margin-bottom:10px}
+.order .want{font-size:2.1rem;line-height:1.1}
+.order .say{font-size:.95rem;font-weight:900}
+.shelf{display:grid;gap:8px;min-height:272px;align-content:center;justify-content:stretch}
+.item{height:62px;background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);
+font-size:1.9rem;line-height:1;cursor:pointer;font-family:inherit;color:var(--ink);padding:0;overflow:hidden}
+.item:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.bar{height:12px;background:#fff;border:3px solid var(--ink);border-radius:8px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--pink)}
+.msg{margin-top:10px;font-weight:900;min-height:1.6em;font-size:.95rem}
+.big{font-size:2.6rem;font-weight:900;margin:6px 0}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/reji-uchi/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="レジ打ち選手権">
+<meta property="og:description" content="お客さんが言った品物を、棚から探して打つだけ。品数が2個から16個に増えていくと、同じことをしているのに急に手が止まります。選択肢が増えるほど遅くなるバカゲー。">
+<meta property="og:url" content="https://bakage.com/games/reji-uchi/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-reji-uchi.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-reji-uchi.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🧾 レジ打ち選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>🧾 レジ打ち選手権</h1>
+      <p>お客さんが品物を1つ言います。<br><strong>棚から同じ品物を探して打つ</strong>だけ。</p>
+      <p>ただし品数は2個から始まって、<br>どんどん増えます。最後は16個。<br>並び順も毎回変わります。</p>
+      <p>間違えても、待たせても閉店。<br>何品連続でさばけるか?</p>
+      <button class="btn" id="startBtn">タップして開店</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="round">第1品</span><span id="streak">0 連続</span></div>
+      <div class="order"><span class="want" id="want">🍎</span><span class="say">を ください</span></div>
+      <div class="shelf" id="shelf"></div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="msg" id="msg">お客さんが待っています</div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>本日は閉店</h1>
+      <div class="big" id="score">0</div>
+      <p>品連続でさばけました</p>
+      <p id="rank" style="font-weight:900"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/reji-uchi/';
+
+  // 品ぞろえ。異体字セレクタの付く絵文字は、文字列の比較がぶれるので入れない。
+  var POOL = ['🍎','🍌','🍇','🍓','🍊','🍑','🍒','🥝','🍍','🥕','🌽','🍞','🥐','🧀',
+              '🥛','🍫','🍪','🍺','🍙','🍜','🍕','🍔','🍟','🥚','🐟','🧅','🥔','🍆',
+              '🥒','🧄','🍋','🥑','🍄','🍡','🍢','🍤'];
+
+  // 品数の増え方。ここがこのゲームの本体。
+  var STEPS = [2,3,4,5,6,8,10,12,14,16];
+
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), msg=document.getElementById('msg'),
+      roundEl=document.getElementById('round'), streakEl=document.getElementById('streak'),
+      scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank'),
+      barFill=document.getElementById('barFill'), shelf=document.getElementById('shelf'),
+      wantEl=document.getElementById('want');
+
+  var streak=0, target='', locked=true, timer=null;
+
+  function countFor(s){ return STEPS[Math.min(s, STEPS.length-1)]; }
+  function limitFor(s){ return Math.max(1300, 3200 - s*80); }
+  function colsFor(n){ return n<=4 ? 2 : (n<=9 ? 3 : 4); }
+
+  function shuffle(a){
+    for(var i=a.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+
+  function setup(){
+    var n = countFor(streak);
+    var limit = limitFor(streak);
+
+    var items = shuffle(POOL.slice()).slice(0, n);
+    target = items[Math.floor(Math.random() * n)];
+    shuffle(items);                                  // 位置を覚えても意味がないようにする
+    wantEl.textContent = target;
+
+    var h = '';
+    for(var i=0;i<n;i++){
+      h += '<button class="item" type="button" id="item' + i + '">' + items[i] + '</button>';
+    }
+    shelf.style.gridTemplateColumns = 'repeat(' + colsFor(n) + ',1fr)';
+    shelf.innerHTML = h;
+    var els = shelf.querySelectorAll('.item');
+    for(var k=0;k<els.length;k++){ bind(els[k], onPick); }
+
+    roundEl.textContent = '第' + (streak + 1) + '品';
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = n + ' 品の中から';
+    locked = false;
+
+    clearTimeout(timer);
+    barFill.style.transition = 'none';
+    barFill.style.width = '100%';
+    void barFill.offsetWidth;                        // いったん描かせてから動かす
+    barFill.style.transition = 'width ' + limit + 'ms linear';
+    barFill.style.width = '0%';
+    timer = setTimeout(function(){
+      if(locked) return;
+      locked = true;
+      msg.textContent = 'お待たせしすぎました';
+      setTimeout(finish, 900);
+    }, limit);
+  }
+
+  function stopBar(){
+    clearTimeout(timer);
+    var w = barFill.getBoundingClientRect().width;
+    barFill.style.transition = 'none';
+    barFill.style.width = w + 'px';
+  }
+
+  function onPick(e){
+    if(e && e.preventDefault) e.preventDefault();
+    if(locked) return;
+    locked = true;
+    stopBar();
+    // 見えている文字で判定する。内部の番号ではなく、表示そのものを正とする。
+    if(e.currentTarget.textContent !== target){
+      msg.textContent = 'それではありません…';
+      setTimeout(finish, 1100);
+      return;
+    }
+    streak++;
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '毎度ありがとうございます!';
+    setTimeout(setup, 380);
+  }
+
+  function rank(n){
+    if(n>=30) return '🧾 品数が増えても手が止まらない';
+    if(n>=20) return '⚡ レジ打ちがかなり速い部類';
+    if(n>=12) return '🙂 標準的な店員さん';
+    if(n>=6)  return '😐 だいたいの人はここ';
+    if(n>=1)  return '🥴 品ぞろえに負けました';
+    return '🫠 開店と同時に閉店';
+  }
+
+  function finish(){
+    locked = true;
+    clearTimeout(timer);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = streak;
+    rankEl.textContent = rank(streak);
+  }
+
+  function start(e){
+    if(e && e.preventDefault) e.preventDefault();
+    clearTimeout(timer);
+    streak = 0;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    setup();
+  }
+
+  function share(e){
+    if(e && e.preventDefault) e.preventDefault();
+    var text = '【レジ打ち選手権】' + streak + '品連続でさばいた! ' + rank(streak) +
+               '\n品数が増えると、決める時間より探す時間に持っていかれる。';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>レジ打ち選手権 について</h2>
+<p>お客さんが言った品物を、棚から探して打つだけ。やることは最初から最後まで同じなのに、品数が2個から16個に増えていくと、途中で急に手が止まります。</p>
+<h3>なぜ難しいのか</h3><p>選択肢が増えると、決めるまでの時間は品数に比例するのではなく、品数の対数に比例して伸びます。2個から4個に増えたときの遅れと、4個から8個に増えたときの遅れが同じくらい、という関係です（ヒックの法則）。だから序盤の1〜2品の増加がいちばんこたえて、後半は増えてもそこまで変わらない、という妙な感覚になります。ただしこのゲームは、それだけでは終わりません。品物は毎回並び替えられるので、位置を覚えて手を伸ばすことができず、必ずゼロから目で探すことになります。探す作業は決める作業と違って、品数にほぼ比例して重くなります。つまり後半は「どれか決める時間」ではなく「どこにあるか見つける時間」が成績を決めています。しかも人が探すとき最初に頼るのは色で、形はそのあとです。赤い品物が並ぶと、その中から形で選び直す一手間が入ります。</p>
+<h3>コツ</h3><ul><li>お題を見たら棚全体を眺めず、先に色を1つ決めて絞る。色で候補を減らしてから形を見るほうが速く、これは目の探し方の順序そのものです</li><li>並び順は毎回変わります。前の品を打った場所は次に何の役にも立たないので、指はいったん画面の中央に戻しておく</li><li>品数が増えた直後の1品でいちばん落とします。増えたと気づいたら、左上から右下へ視線の順路を固定して、同じ場所を二度見ないようにする</li></ul>
+<h3>記録の目安</h3><p>12品連続で標準的なところです。20品を超えると探す速さがかなり高い部類で、30品を超えると品数が16個になっても手が止まっていません。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../moritsuke-sagi/">◀ 🍔 盛りつけ詐欺選手権</a></li><li><a href="../nazo-ranking/">🏆 謎ランキングメーカー</a></li><li><a href="../housoku-senshuken/">🌶️ 法則発見選手権</a></li><li><a href="../maipesu-senshuken/">🧊 マイペース選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "レジ打ち選手権", "description": "お客さんが言った品物を、棚から探して打つだけ。品数が2個から16個に増えていくと、同じことをしているのに急に手が止まります。選択肢が増えるほど遅くなるバカゲー。", "url": "https://bakage.com/games/reji-uchi/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
