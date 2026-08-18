@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>でたらめ選手権 | バカゲー製作所</title>
+<meta name="description" content="🔵か🔴を、でたらめに30回押すだけ。ところが機械は毎回、あなたが次に押すほうを先に当ててきます。人間はランダムになれないバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:8px;padding:0 4px}
+.brain{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:4px solid var(--ink);
+border-radius:14px;padding:10px 14px;box-shadow:5px 5px 0 var(--ink);margin-bottom:10px;min-height:64px}
+.brain .face{font-size:2.1rem;line-height:1.1}
+.brain .said{font-size:.95rem;font-weight:900;line-height:1.4;text-align:left}
+.pads{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:188px;align-content:center}
+.pad{height:170px;background:#fff;border:4px solid var(--ink);border-radius:16px;box-shadow:5px 5px 0 var(--ink);
+font-size:3.4rem;line-height:1;cursor:pointer;font-family:inherit;color:var(--ink);padding:0;overflow:hidden}
+.pad:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.pad.dodged{background:#DFF6E3}
+.pad.caught{background:#FFE0E6}
+.bar{height:12px;background:#fff;border:3px solid var(--ink);border-radius:8px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--pink)}
+.msg{margin-top:10px;font-weight:900;min-height:1.6em;font-size:.95rem}
+.big{font-size:2.6rem;font-weight:900;margin:6px 0}
+.sub-note{font-size:.85rem;line-height:1.7;opacity:.85;margin-top:6px}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/detarame-senshuken/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="でたらめ選手権">
+<meta property="og:description" content="🔵か🔴を、でたらめに30回押すだけ。ところが機械は毎回、あなたが次に押すほうを先に当ててきます。人間はランダムになれないバカゲー。">
+<meta property="og:url" content="https://bakage.com/games/detarame-senshuken/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-detarame-senshuken.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-detarame-senshuken.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🎲 でたらめ選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>🎲 でたらめ選手権</h1>
+      <p>🔵 か 🔴 を、<strong>でたらめに30回</strong>押すだけ。<br>順番も理由もありません。好きに押してください。</p>
+      <p>ただし機械は、あなたが押す前に<br><strong>どっちを押すかを言い当てます。</strong></p>
+      <p>読まれずに何回かわせるか?<br>本当にでたらめなら、15回は逃げ切れるはずです。</p>
+      <button class="btn" id="startBtn">タップして開始</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="left">残り 30</span><span id="dodge">かわした 0</span></div>
+      <div class="brain"><span class="face" id="face">🤖</span><span class="said" id="said">機械が予想を決めました</span></div>
+      <div class="pads">
+        <button class="pad" type="button" id="padL">🔵</button>
+        <button class="pad" type="button" id="padR">🔴</button>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="msg" id="msg">思いついたほうを押す</div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>判定</h1>
+      <div class="big" id="score">0</div>
+      <p>回、機械をかわしました（30回中）</p>
+      <p id="rank" style="font-weight:900"></p>
+      <p class="sub-note" id="detail"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/detarame-senshuken/';
+  var ROUNDS = 30;
+  var LIMIT  = 1400;   // 1手あたりの持ち時間。急がせるほど癖が出る。
+
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), msg=document.getElementById('msg'),
+      leftEl=document.getElementById('left'), dodgeEl=document.getElementById('dodge'),
+      scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank'),
+      detailEl=document.getElementById('detail'), barFill=document.getElementById('barFill'),
+      faceEl=document.getElementById('face'), saidEl=document.getElementById('said'),
+      padL=document.getElementById('padL'), padR=document.getElementById('padR');
+
+  // ---- 予測する側 ------------------------------------------------------
+  // 直近3手・2手・1手の並びごとに「次に何が来たか」を数えておき、
+  // 多かったほうを次の予測にする。データが無いときは「人は交互に押したがる」
+  // という偏りを当てにして、直前の逆を予測する。
+  var hist, tables, turn, dodged, caught, timer, locked, guess;
+
+  function reset(){
+    hist = [];
+    tables = {1:{}, 2:{}, 3:{}};
+    turn = 0; dodged = 0; caught = 0;
+    locked = true; guess = 0;
+  }
+
+  function predict(){
+    for(var k=3;k>=1;k--){
+      if(hist.length < k) continue;
+      var c = hist.slice(-k).join('');
+      var t = tables[k][c];
+      if(t && t[0] !== t[1]) return t[0] > t[1] ? 0 : 1;
+    }
+    if(hist.length) return 1 - hist[hist.length-1];   // 交互に押したがる癖を当てにする
+    return Math.random() < 0.5 ? 0 : 1;
+  }
+
+  function learn(next){
+    for(var k=1;k<=3;k++){
+      if(hist.length < k) continue;
+      var c = hist.slice(-k).join('');
+      if(!tables[k][c]) tables[k][c] = [0,0];
+      tables[k][c][next]++;
+    }
+    hist.push(next);
+  }
+
+  // ---- 進行 ------------------------------------------------------------
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+
+  function stopBar(){
+    clearTimeout(timer);
+    var w = barFill.getBoundingClientRect().width;
+    barFill.style.transition = 'none';
+    barFill.style.width = w + 'px';
+  }
+
+  function nextTurn(){
+    if(turn >= ROUNDS){ finish(); return; }
+    padL.className = 'pad'; padR.className = 'pad';
+    guess = predict();                      // 押される前に決めておく
+    leftEl.textContent = '残り ' + (ROUNDS - turn);
+    dodgeEl.textContent = 'かわした ' + dodged;
+    faceEl.textContent = '🤖';
+    saidEl.textContent = '予想は決めました。さあどうぞ';
+    msg.textContent = '思いついたほうを押す';
+    locked = false;
+
+    barFill.style.transition = 'none';
+    barFill.style.width = '100%';
+    void barFill.offsetWidth;
+    barFill.style.transition = 'width ' + LIMIT + 'ms linear';
+    barFill.style.width = '0%';
+    timer = setTimeout(function(){
+      if(locked) return;
+      locked = true;
+      caught++; turn++;
+      faceEl.textContent = '😴';
+      saidEl.textContent = '迷ったな。それも読みのうち';
+      msg.textContent = '時間切れ（機械の勝ち）';
+      learn(guess);                          // 押さなかった手は予測どおり扱う
+      setTimeout(nextTurn, 620);
+    }, LIMIT);
+  }
+
+  function pick(side){
+    return function(e){
+      if(e && e.preventDefault) e.preventDefault();
+      if(locked) return;
+      locked = true;
+      stopBar();
+      var pad = side === 0 ? padL : padR;
+      var hit = (side === guess);
+      if(hit){
+        caught++;
+        pad.className = 'pad caught';
+        faceEl.textContent = '😏';
+        saidEl.textContent = '読んだ。' + (side===0 ? '🔵' : '🔴') + 'だろうと思った';
+        msg.textContent = '読まれた';
+      }else{
+        dodged++;
+        pad.className = 'pad dodged';
+        faceEl.textContent = '😵';
+        saidEl.textContent = '外した。' + (guess===0 ? '🔵' : '🔴') + 'だと思っていた';
+        msg.textContent = 'かわした!';
+      }
+      turn++;
+      dodgeEl.textContent = 'かわした ' + dodged;
+      learn(side);
+      setTimeout(nextTurn, 480);
+    };
+  }
+
+  function rank(n){
+    if(n>=21) return '🎲 サイコロ人間。機械が読めていません';
+    if(n>=18) return '⚡ 読まれにくい部類';
+    if(n>=15) return '🙂 互角。ほぼ五分';
+    if(n>=12) return '😐 だいたいの人はここ';
+    if(n>=8)  return '🥴 だいぶ読まれました';
+    return '🫠 まる見え';
+  }
+
+  function finish(){
+    locked = true;
+    clearTimeout(timer);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = dodged;
+    rankEl.textContent = rank(dodged);
+    var pct = Math.round(caught / ROUNDS * 100);
+    detailEl.textContent = '機械の的中率 ' + pct + '%（' + caught + '/' + ROUNDS +
+                           '）。本当にでたらめなら50%に落ち着きます。';
+  }
+
+  function start(e){
+    if(e && e.preventDefault) e.preventDefault();
+    clearTimeout(timer);
+    reset();
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    nextTurn();
+  }
+
+  function share(e){
+    if(e && e.preventDefault) e.preventDefault();
+    var text = '【でたらめ選手権】30回中' + dodged + '回、機械をかわした! ' + rank(dodged) +
+               '\nでたらめに押しているつもりが、けっこう読まれる。';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  reset();
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+  bind(padL, pick(0));
+  bind(padR, pick(1));
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>でたらめ選手権 について</h2>
+<p>🔵か🔴を、でたらめに30回押すだけ。ただし押す前に、機械はあなたがどちらを押すか予想を決めています。読まれずに何回かわせるか、それだけのゲームです。</p>
+<h3>なぜ難しいのか</h3><p>人はでたらめな列を作れません。いちばん強く出るのは「同じものが続くのを避ける」癖です。本当にランダムなら同じ手が3回続くことも珍しくないのに、人は2回続いた時点で「そろそろ変えないと不自然だ」と感じて切り替えます。だから直前の数手を見るだけで、次がかなり当たる。このゲームの機械は、あなたの直近3手・2手・1手の並びごとに「そのあとどちらを押したか」を数えているだけで、賢いことは何もしていません。それでも半分以上は当ててきます。しかも1手ごとに持ち時間があるので、急かされるほど考える余裕がなくなり、癖はむしろ強く出ます。</p>
+<h3>コツ</h3><ul><li>交互に押すのをやめる。同じ手を3回、4回と続けるほうが、かえって読まれません</li><li>押す手を前もって決めない。決めた瞬間にそれは規則になり、機械は規則を探しています</li><li>バーが減っていく焦りに乗らないこと。急いで出した手ほど、直前の手に引っぱられます</li></ul>
+<h3>記録の目安</h3><p>30回中15回かわせれば機械と五分です。多くの人は12回前後で、これは機械の的中率6割にあたります。18回を超えると、自分の癖から抜け出せている状態です。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../reji-uchi/">◀ 🧾 レジ打ち選手権</a></li><li><a href="../nazo-ranking/">🏆 謎ランキングメーカー</a></li><li><a href="../housoku-senshuken/">🌶️ 法則発見選手権</a></li><li><a href="../maipesu-senshuken/">🧊 マイペース選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "でたらめ選手権", "description": "🔵か🔴を、でたらめに30回押すだけ。ところが機械は毎回、あなたが次に押すほうを先に当ててきます。人間はランダムになれないバカゲー。", "url": "https://bakage.com/games/detarame-senshuken/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
