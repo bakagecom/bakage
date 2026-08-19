@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デカ文字選手権 | バカゲー製作所</title>
+<meta name="description" content="大きな数字が、小さな数字の集まりでできている。答えるのは小さいほうだけ。それだけなのに、大きいほうが勝手に目に入ってきて手が止まる。全体が先に見えてしまうバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:8px;padding:0 4px}
+.ask{font-weight:900;font-size:1rem;margin-bottom:8px}
+.board{background:#fff;border:4px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);
+padding:10px 6px;display:flex;align-items:center;justify-content:center;min-height:300px}
+.big{display:grid;grid-template-columns:repeat(5,var(--cs));grid-auto-rows:var(--cs);justify-content:center;--cs:40px}
+.cell{display:flex;align-items:center;justify-content:center;font-size:var(--fs,34px);font-weight:900;line-height:1;color:var(--ink)}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.opt{height:64px;background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);
+font-size:2rem;font-weight:900;line-height:1;cursor:pointer;font-family:inherit;color:var(--ink);padding:0}
+.opt:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.bar{height:12px;background:#fff;border:3px solid var(--ink);border-radius:8px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--pink)}
+.msg{margin-top:8px;font-weight:900;min-height:1.6em;font-size:.95rem}
+.bignum{font-size:2.6rem;font-weight:900;margin:6px 0}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/deka-moji/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="デカ文字選手権">
+<meta property="og:description" content="大きな数字が、小さな数字の集まりでできている。答えるのは小さいほうだけ。それだけなのに、大きいほうが勝手に目に入ってきて手が止まる。全体が先に見えてしまうバカゲー。">
+<meta property="og:url" content="https://bakage.com/games/deka-moji/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-deka-moji.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-deka-moji.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🔢 デカ文字選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>🔢 デカ文字選手権</h1>
+      <p>大きな数字が、<strong>小さな数字</strong>でできています。</p>
+      <p>答えるのは<strong>小さいほうだけ</strong>。<br>大きいほうは無視してください。</p>
+      <p>それだけのことが、<br>だんだんできなくなります。<br>何問連続で答えられるか?</p>
+      <button class="btn" id="startBtn">タップして開始</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="round">第1問</span><span id="streak">0 連続</span></div>
+      <div class="ask">小さいほうの数字は?</div>
+      <div class="board"><div class="big" id="big"></div></div>
+      <div class="opts" id="opts"></div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="msg" id="msg">小さいほうだけを見る</div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>終了</h1>
+      <div class="bignum" id="score">0</div>
+      <p>問連続で正解しました</p>
+      <p id="rank" style="font-weight:900"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/deka-moji/';
+
+  // 5x7 のドット。1 のところに小さい数字を置く。
+  var FONT = {
+    '0':['01110','10001','10011','10101','11001','10001','01110'],
+    '1':['00100','01100','00100','00100','00100','00100','01110'],
+    '2':['01110','10001','00001','00010','00100','01000','11111'],
+    '3':['11111','00010','00100','00010','00001','10001','01110'],
+    '4':['00010','00110','01010','10010','11111','00010','00010'],
+    '5':['11111','10000','11110','00001','00001','10001','01110'],
+    '6':['00110','01000','10000','11110','10001','10001','01110'],
+    '7':['11111','00001','00010','00100','01000','01000','01000'],
+    '8':['01110','10001','10001','01110','10001','10001','01110'],
+    '9':['01110','10001','10001','01111','00001','00010','01100']
+  };
+  var DIGITS = ['0','1','2','3','4','5','6','7','8','9'];
+
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), msg=document.getElementById('msg'),
+      roundEl=document.getElementById('round'), streakEl=document.getElementById('streak'),
+      scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank'),
+      barFill=document.getElementById('barFill'), bigEl=document.getElementById('big'),
+      optsEl=document.getElementById('opts');
+
+  var streak=0, target='', bigNow='', locked=true, timer=null;
+
+  function limitFor(s){ return Math.max(900, 2600 - s*110); }
+  // 進むほど図全体を小さくする。図が小さいほど全体の形が強くなり、中身は読みにくくなる。
+  function scaleFor(s){ return Math.max(0.66, 1 - s * 0.022); }
+
+  function shuffle(a){
+    for(var i=a.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+
+  function pickDigit(exclude){
+    var pool = DIGITS.filter(function(d){ return exclude.indexOf(d) < 0; });
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  function draw(bigDigit, smallDigit){
+    var rows = FONT[bigDigit], html = '';
+    for(var r=0;r<rows.length;r++){
+      for(var c=0;c<5;c++){
+        html += rows[r].charAt(c) === '1'
+          ? '<span class="cell on">' + smallDigit + '</span>'
+          : '<span class="cell"></span>';
+      }
+    }
+    bigEl.innerHTML = html;
+  }
+
+  function setup(){
+    var limit = limitFor(streak);
+    var small = DIGITS[Math.floor(Math.random()*10)];
+    var big = pickDigit([small]);          // 大きいほうは必ず別の数字。毎回ぶつかる
+    var other = pickDigit([small, big]);   // 3つ目は無関係な数字
+    target = small;
+    bigNow = big;
+
+    var sc = scaleFor(streak);
+    bigEl.style.setProperty('--cs', (40 * sc).toFixed(1) + 'px');
+    bigEl.style.setProperty('--fs', (34 * sc).toFixed(1) + 'px');
+    draw(big, small);
+
+    var opts = shuffle([small, big, other]);
+    var h = '';
+    for(var i=0;i<3;i++){
+      h += '<button class="opt" type="button" id="opt' + i + '">' + opts[i] + '</button>';
+    }
+    optsEl.innerHTML = h;
+    var els = optsEl.querySelectorAll('.opt');
+    for(var k=0;k<els.length;k++){ bind(els[k], onPick); }
+
+    roundEl.textContent = '第' + (streak + 1) + '問';
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '小さいほうだけを見る';
+    locked = false;
+
+    clearTimeout(timer);
+    barFill.style.transition = 'none';
+    barFill.style.width = '100%';
+    void barFill.offsetWidth;                    // いったん描かせてから動かす
+    barFill.style.transition = 'width ' + limit + 'ms linear';
+    barFill.style.width = '0%';
+    timer = setTimeout(function(){
+      if(locked) return;
+      locked = true;
+      msg.textContent = '時間切れ';
+      setTimeout(finish, 900);
+    }, limit);
+  }
+
+  function stopBar(){
+    clearTimeout(timer);
+    var w = barFill.getBoundingClientRect().width;
+    barFill.style.transition = 'none';
+    barFill.style.width = w + 'px';
+  }
+
+  function onPick(e){
+    if(e && e.preventDefault) e.preventDefault();
+    if(locked) return;
+    locked = true;
+    stopBar();
+    // 見えている文字で判定する。内部の番号ではなく、表示そのものを正とする。
+    if(e.currentTarget.textContent !== target){
+      msg.textContent = (e.currentTarget.textContent === bigNow)
+        ? 'それは大きいほうです…' : 'ちがいます…';
+      setTimeout(finish, 1100);
+      return;
+    }
+    streak++;
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '正解!';
+    setTimeout(setup, 380);
+  }
+
+  function rank(n){
+    if(n>=25) return '🔬 全体に引っぱられない目';
+    if(n>=18) return '⚡ 細かいほうを見るのが速い';
+    if(n>=12) return '🙂 標準的なところ';
+    if(n>=6)  return '😐 だいたいの人はここ';
+    if(n>=1)  return '🥴 デカ文字に負けました';
+    return '🫠 1問目からデカ文字';
+  }
+
+  function finish(){
+    locked = true;
+    clearTimeout(timer);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = streak;
+    rankEl.textContent = rank(streak);
+  }
+
+  function start(e){
+    if(e && e.preventDefault) e.preventDefault();
+    clearTimeout(timer);
+    streak = 0;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    setup();
+  }
+
+  function share(e){
+    if(e && e.preventDefault) e.preventDefault();
+    var text = '【デカ文字選手権】' + streak + '問連続正解! ' + rank(streak) +
+               '\n小さいほうを答えるだけなのに、大きいほうが先に見えてしまう。';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>デカ文字選手権 について</h2>
+<p>大きな数字が、小さな数字の集まりでできています。答えるのは小さいほうだけ。それだけのことが、だんだんできなくなります。</p>
+<h3>なぜ難しいのか</h3><p>人の視覚は、細部より先に全体の形をつかみます。ばらばらの要素が並んでいると、まず「何の形か」が決まり、そのあとで中身が見えてくる。この順番は自分では変えられないので、小さいほうを答えるときは、先に届いた大きいほうの答えをいったん退けてから答えることになります。逆に大きいほうを答える場合は、小さい数字がどれだけ違っていてもほとんど遅れません。邪魔が一方向にしか起きないところが、この課題の特徴です。ラウンドが進むと図そのものが少しずつ小さくなります。図が視野の中に収まるほど全体の形は一目で決まってしまい、そのぶん中身を読むのが後回しになります。時間も縮むので、退ける作業が間に合わなくなります。</p>
+<h3>コツ</h3><ul><li>画面全体を見ず、マス1つに視線を寄せる。視野に入る範囲が狭いほど、大きい形は組み上がりません</li><li>大きいほうの数字も、必ず選択肢に並んでいます。読んでしまったらその1つを先に消す。消してから選ぶほうが速い</li><li>迷ったら輪郭の途中にある1マスを見る。線の端は全体の一部として見えにくいぶん、文字として読めます</li></ul>
+<h3>記録の目安</h3><p>12問連続で標準、25問を超えると全体に引っぱられにくい部類です。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../detarame-senshuken/">◀ 🎲 でたらめ選手権</a></li><li><a href="../nazo-ranking/">🏆 謎ランキングメーカー</a></li><li><a href="../housoku-senshuken/">🌶️ 法則発見選手権</a></li><li><a href="../maipesu-senshuken/">🧊 マイペース選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "デカ文字選手権", "description": "大きな数字が、小さな数字の集まりでできている。答えるのは小さいほうだけ。それだけなのに、大きいほうが勝手に目に入ってきて手が止まる。全体が先に見えてしまうバカゲー。", "url": "https://bakage.com/games/deka-moji/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
