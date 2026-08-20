@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>デカ文字選手権 | バカゲー製作所</title>
-<meta name="description" content="大きな数字が、小さな数字の集まりでできている。答えるのは小さいほうだけ。それだけなのに、大きいほうが勝手に目に入ってきて手が止まる。全体が先に見えてしまうバカゲー。">
+<title>まわりのせい選手権 | バカゲー製作所</title>
+<meta name="description" content="2つの丸のうち大きいほうを選ぶだけ。ただし片方は大きな丸に、片方は小さな丸に囲まれている。まわりが変わると、真ん中の大きさが変わって見えるバカゲー。">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
@@ -33,13 +33,13 @@ font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
 .hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:8px;padding:0 4px}
 .ask{font-weight:900;font-size:1rem;margin-bottom:8px}
 .board{background:#fff;border:4px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);
-padding:10px 6px;display:flex;align-items:center;justify-content:center;min-height:300px}
-.big{display:grid;grid-template-columns:repeat(5,var(--cs));grid-auto-rows:var(--cs);justify-content:center;--cs:40px}
-.cell{display:flex;align-items:center;justify-content:center;font-size:var(--fs,34px);font-weight:900;line-height:1;color:var(--ink)}
-.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.opt{height:64px;background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);
-font-size:2rem;font-weight:900;line-height:1;cursor:pointer;font-family:inherit;color:var(--ink);padding:0}
-.opt:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+padding:10px 8px;display:flex;gap:8px;align-items:center;justify-content:center;min-height:196px}
+.dish{flex:1;min-width:0;height:168px;position:relative;background:transparent;border:none;padding:0;
+border-radius:12px;cursor:pointer;font-family:inherit}
+.dish:active{transform:translateY(2px)}
+.halo{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px}
+.ring{position:absolute;border-radius:50%;background:var(--blue);opacity:.85}
+.core{position:absolute;left:50%;top:50%;border-radius:50%;background:var(--pink);border:2px solid var(--ink)}
 .bar{height:12px;background:#fff;border:3px solid var(--ink);border-radius:8px;margin-top:10px;overflow:hidden}
 .bar i{display:block;height:100%;width:100%;background:var(--pink)}
 .msg{margin-top:8px;font-weight:900;min-height:1.6em;font-size:.95rem}
@@ -47,16 +47,16 @@ font-size:2rem;font-weight:900;line-height:1;cursor:pointer;font-family:inherit;
 .hide{display:none!important}
 </style>
 <!-- bakage:head -->
-<link rel="canonical" href="https://bakage.com/games/deka-moji/">
+<link rel="canonical" href="https://bakage.com/games/mawari-no-sei/">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
 <meta name="google-adsense-account" content="ca-pub-8474927598037118">
-<meta property="og:title" content="デカ文字選手権">
-<meta property="og:description" content="大きな数字が、小さな数字の集まりでできている。答えるのは小さいほうだけ。それだけなのに、大きいほうが勝手に目に入ってきて手が止まる。全体が先に見えてしまうバカゲー。">
-<meta property="og:url" content="https://bakage.com/games/deka-moji/">
-<meta property="og:image" content="https://bakage.com/assets/ogp-deka-moji.png">
+<meta property="og:title" content="まわりのせい選手権">
+<meta property="og:description" content="2つの丸のうち大きいほうを選ぶだけ。ただし片方は大きな丸に、片方は小さな丸に囲まれている。まわりが変わると、真ん中の大きさが変わって見えるバカゲー。">
+<meta property="og:url" content="https://bakage.com/games/mawari-no-sei/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-mawari-no-sei.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@bakage_com">
-<meta name="twitter:image" content="https://bakage.com/assets/ogp-deka-moji.png">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-mawari-no-sei.png">
 <!-- /bakage:head -->
 <style>
 /* 注入分をゲーム本体の外に出すための調整。
@@ -75,25 +75,27 @@ position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:
 <body>
 <div class="bkg-game">
 
-<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🔢 デカ文字選手権</span></div>
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🔵 まわりのせい選手権</span></div>
 <div class="stage">
   <div class="panel">
 
     <div id="intro" class="card">
-      <h1>🔢 デカ文字選手権</h1>
-      <p>大きな数字が、<strong>小さな数字</strong>でできています。</p>
-      <p>答えるのは<strong>小さいほうだけ</strong>。<br>大きいほうは無視してください。</p>
-      <p>それだけのことが、<br>だんだんできなくなります。<br>何問連続で答えられるか?</p>
+      <h1>🔵 まわりのせい選手権</h1>
+      <p>ピンクの丸が<strong>2つ</strong>出ます。</p>
+      <p><strong>大きいほう</strong>を選ぶだけ。<br>まわりの青い丸は関係ありません。</p>
+      <p>関係ないはずなのに、<br>まわりが変わると<br>真ん中の大きさが変わって見えます。<br>何問連続で当てられるか?</p>
       <button class="btn" id="startBtn">タップして開始</button>
     </div>
 
     <div id="play" class="hide">
       <div class="hud"><span id="round">第1問</span><span id="streak">0 連続</span></div>
-      <div class="ask">小さいほうの数字は?</div>
-      <div class="board"><div class="big" id="big"></div></div>
-      <div class="opts" id="opts"></div>
+      <div class="ask">ピンクが大きいのはどっち?</div>
+      <div class="board">
+        <button class="dish" type="button" id="dish0"><span class="halo" id="halo0"></span></button>
+        <button class="dish" type="button" id="dish1"><span class="halo" id="halo1"></span></button>
+      </div>
       <div class="bar"><i id="barFill"></i></div>
-      <div class="msg" id="msg">小さいほうだけを見る</div>
+      <div class="msg" id="msg">真ん中だけを見る</div>
     </div>
 
     <div id="result" class="card hide">
@@ -110,90 +112,68 @@ position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:
 
 <script>
 (function(){
-  var GAME_URL = 'https://bakage.com/games/deka-moji/';
+  var GAME_URL = 'https://bakage.com/games/mawari-no-sei/';
 
-  // 5x7 のドット。1 のところに小さい数字を置く。
-  var FONT = {
-    '0':['01110','10001','10011','10101','11001','10001','01110'],
-    '1':['00100','01100','00100','00100','00100','00100','01110'],
-    '2':['01110','10001','00001','00010','00100','01000','11111'],
-    '3':['11111','00010','00100','00010','00001','10001','01110'],
-    '4':['00010','00110','01010','10010','11111','00010','00010'],
-    '5':['11111','10000','11110','00001','00001','10001','01110'],
-    '6':['00110','01000','10000','11110','10001','10001','01110'],
-    '7':['11111','00001','00010','00100','01000','01000','01000'],
-    '8':['01110','10001','10001','01110','10001','10001','01110'],
-    '9':['01110','10001','10001','01111','00001','00010','01100']
+  // まわりの丸の置き方。大きい輪は6個・遠く、小さい輪は8個・近く。
+  var HALO = {
+    big:   {n:6, d:38, r:52},
+    small: {n:8, d:13, r:36}
   };
-  var DIGITS = ['0','1','2','3','4','5','6','7','8','9'];
+  var BASE = 46;   // 真ん中の丸の基準の直径(px)
 
   var intro=document.getElementById('intro'), play=document.getElementById('play'),
       result=document.getElementById('result'), msg=document.getElementById('msg'),
       roundEl=document.getElementById('round'), streakEl=document.getElementById('streak'),
       scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank'),
-      barFill=document.getElementById('barFill'), bigEl=document.getElementById('big'),
-      optsEl=document.getElementById('opts');
+      barFill=document.getElementById('barFill');
 
-  var streak=0, target='', bigNow='', locked=true, timer=null;
+  var streak=0, answer=0, tricked=false, locked=true, timer=null, readyAt=0;
 
-  function limitFor(s){ return Math.max(900, 2600 - s*110); }
-  // 進むほど図全体を小さくする。図が小さいほど全体の形が強くなり、中身は読みにくくなる。
-  function scaleFor(s){ return Math.max(0.66, 1 - s * 0.022); }
-
-  function shuffle(a){
-    for(var i=a.length-1;i>0;i--){
-      var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t;
-    }
-    return a;
-  }
+  // 進むほど2つの差が縮む。錯視のぶんは約5px相当なので、そこを割ると勘に近づく。
+  function diffFor(s){ return Math.max(3, 15 - s * 0.9); }
+  function limitFor(s){ return Math.max(1100, 3000 - s * 100); }
 
   function bind(el, fn){
     el.addEventListener('click', fn);
     el.addEventListener('touchstart', fn, {passive:false});
   }
 
-  function pickDigit(exclude){
-    var pool = DIGITS.filter(function(d){ return exclude.indexOf(d) < 0; });
-    return pool[Math.floor(Math.random()*pool.length)];
-  }
-
-  function draw(bigDigit, smallDigit){
-    var rows = FONT[bigDigit], html = '';
-    for(var r=0;r<rows.length;r++){
-      for(var c=0;c<5;c++){
-        html += rows[r].charAt(c) === '1'
-          ? '<span class="cell on">' + smallDigit + '</span>'
-          : '<span class="cell"></span>';
-      }
+  // まわりの丸と真ん中の丸を描く。真ん中の大きさは style で持たせる。
+  function drawSide(haloEl, kind, coreSize){
+    var h = HALO[kind], html = '';
+    for(var i=0;i<h.n;i++){
+      var a = (Math.PI * 2 * i / h.n) - Math.PI / 2;
+      var x = 75 + Math.cos(a) * h.r - h.d / 2;
+      var y = 75 + Math.sin(a) * h.r - h.d / 2;
+      html += '<span class="ring" style="width:' + h.d + 'px;height:' + h.d + 'px;left:' +
+              x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px"></span>';
     }
-    bigEl.innerHTML = html;
+    var s = coreSize.toFixed(1);
+    var m = (-coreSize / 2).toFixed(1);
+    html += '<span class="core" id="core' + haloEl.dataset.idx + '" style="width:' + s +
+            'px;height:' + s + 'px;margin:' + m + 'px 0 0 ' + m + 'px"></span>';
+    haloEl.innerHTML = html;
   }
 
   function setup(){
     var limit = limitFor(streak);
-    var small = DIGITS[Math.floor(Math.random()*10)];
-    var big = pickDigit([small]);          // 大きいほうは必ず別の数字。毎回ぶつかる
-    var other = pickDigit([small, big]);   // 3つ目は無関係な数字
-    target = small;
-    bigNow = big;
+    var d = diffFor(streak);
 
-    var sc = scaleFor(streak);
-    bigEl.style.setProperty('--cs', (40 * sc).toFixed(1) + 'px');
-    bigEl.style.setProperty('--fs', (34 * sc).toFixed(1) + 'px');
-    draw(big, small);
+    answer = Math.random() < 0.5 ? 0 : 1;           // 実際に大きいのはどっちか
+    // 大きい輪に囲まれた側は小さく見える。錯視が正解と逆を向く回を tricked とする。
+    var bigHaloSide = Math.random() < 0.5 ? 0 : 1;
+    tricked = (bigHaloSide === answer);
 
-    var opts = shuffle([small, big, other]);
-    var h = '';
-    for(var i=0;i<3;i++){
-      h += '<button class="opt" type="button" id="opt' + i + '">' + opts[i] + '</button>';
+    for(var i=0;i<2;i++){
+      var halo = document.getElementById('halo' + i);
+      halo.dataset.idx = i;
+      var size = BASE + (i === answer ? d / 2 : -d / 2);
+      drawSide(halo, i === bigHaloSide ? 'big' : 'small', size);
     }
-    optsEl.innerHTML = h;
-    var els = optsEl.querySelectorAll('.opt');
-    for(var k=0;k<els.length;k++){ bind(els[k], onPick); }
 
     roundEl.textContent = '第' + (streak + 1) + '問';
     streakEl.textContent = streak + ' 連続';
-    msg.textContent = '小さいほうだけを見る';
+    msg.textContent = '真ん中だけを見る';
     locked = false;
 
     clearTimeout(timer);
@@ -220,12 +200,18 @@ position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:
   function onPick(e){
     if(e && e.preventDefault) e.preventDefault();
     if(locked) return;
+    // 開始ボタンをタップした指から出る click（ゴーストクリック）が、
+    // 指の下に現れた選択肢に届いてしまう。開始直後の一瞬だけ受け付けない。
+    if(Date.now() < readyAt) return;
     locked = true;
     stopBar();
-    // 見えている文字で判定する。内部の番号ではなく、表示そのものを正とする。
-    if(e.currentTarget.textContent !== target){
-      msg.textContent = (e.currentTarget.textContent === bigNow)
-        ? 'それは大きいほうです…' : 'ちがいます…';
+    // 描かれている実寸で判定する。内部の番号ではなく、表示そのものを正とする。
+    var a = document.getElementById('core0').getBoundingClientRect().width;
+    var b = document.getElementById('core1').getBoundingClientRect().width;
+    var real = a > b ? 0 : 1;
+    var picked = parseInt(e.currentTarget.id.replace('dish',''), 10);
+    if(picked !== real){
+      msg.textContent = tricked ? 'まわりに負けました…' : 'ちがいます…';
       setTimeout(finish, 1100);
       return;
     }
@@ -236,12 +222,12 @@ position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:
   }
 
   function rank(n){
-    if(n>=25) return '🔬 全体に引っぱられない目';
-    if(n>=18) return '⚡ 細かいほうを見るのが速い';
-    if(n>=12) return '🙂 標準的なところ';
-    if(n>=6)  return '😐 だいたいの人はここ';
-    if(n>=1)  return '🥴 デカ文字に負けました';
-    return '🫠 1問目からデカ文字';
+    if(n>=22) return '📏 まわりに引っぱられない目';
+    if(n>=16) return '⚡ 対比を切り離せています';
+    if(n>=10) return '🙂 標準的なところ';
+    if(n>=5)  return '😐 だいたいの人はここ';
+    if(n>=1)  return '🥴 まわりのせいで負けました';
+    return '🫠 1問目からまわりのせい';
   }
 
   function finish(){
@@ -258,6 +244,7 @@ position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:
     if(e && e.preventDefault) e.preventDefault();
     clearTimeout(timer);
     streak = 0;
+    readyAt = Date.now() + 450;
     document.body.classList.add('playing');
     intro.classList.add('hide');
     result.classList.add('hide');
@@ -267,12 +254,14 @@ position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:
 
   function share(e){
     if(e && e.preventDefault) e.preventDefault();
-    var text = '【デカ文字選手権】' + streak + '問連続正解! ' + rank(streak) +
-               '\n小さいほうを答えるだけなのに、大きいほうが先に見えてしまう。';
+    var text = '【まわりのせい選手権】' + streak + '問連続正解! ' + rank(streak) +
+               '\nまわりの丸を変えるだけで、真ん中の大きさが変わって見える。';
     window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
                 '&url=' + encodeURIComponent(GAME_URL), '_blank');
   }
 
+  bind(document.getElementById('dish0'), onPick);
+  bind(document.getElementById('dish1'), onPick);
   bind(document.getElementById('startBtn'), start);
   bind(document.getElementById('retryBtn'), start);
   bind(document.getElementById('shareBtn'), share);
@@ -300,23 +289,23 @@ border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothi
 .bkg-about li{font-size:.9rem;line-height:1.9}
 </style>
 <section class="bkg-about">
-<h2>デカ文字選手権 について</h2>
-<p>大きな数字が、小さな数字の集まりでできています。答えるのは小さいほうだけ。それだけのことが、だんだんできなくなります。</p>
-<h3>なぜ難しいのか</h3><p>人の視覚は、細部より先に全体の形をつかみます。ばらばらの要素が並んでいると、まず「何の形か」が決まり、そのあとで中身が見えてくる。この順番は自分では変えられないので、小さいほうを答えるときは、先に届いた大きいほうの答えをいったん退けてから答えることになります。逆に大きいほうを答える場合は、小さい数字がどれだけ違っていてもほとんど遅れません。邪魔が一方向にしか起きないところが、この課題の特徴です。ラウンドが進むと図そのものが少しずつ小さくなります。図が視野の中に収まるほど全体の形は一目で決まってしまい、そのぶん中身を読むのが後回しになります。時間も縮むので、退ける作業が間に合わなくなります。</p>
-<h3>コツ</h3><ul><li>画面全体を見ず、マス1つに視線を寄せる。視野に入る範囲が狭いほど、大きい形は組み上がりません</li><li>大きいほうの数字も、必ず選択肢に並んでいます。読んでしまったらその1つを先に消す。消してから選ぶほうが速い</li><li>迷ったら輪郭の途中にある1マスを見る。線の端は全体の一部として見えにくいぶん、文字として読めます</li></ul>
-<h3>記録の目安</h3><p>12問連続で標準、25問を超えると全体に引っぱられにくい部類です。</p>
+<h2>まわりのせい選手権 について</h2>
+<p>ピンクの丸が2つ並びます。大きいほうを選ぶだけ。ただし片方は大きな丸に、もう片方は小さな丸に囲まれています。</p>
+<h3>なぜ難しいのか</h3><p>人は大きさを絶対的な長さとして測っておらず、まわりにあるものとの対比で見積もっています。大きな丸に囲まれた円は小さく、小さな丸に囲まれた円は大きく見える。エビングハウス錯視と呼ばれるもので、この効果は円の直径のおよそ1割ほどに相当します。このゲームは2つの差が1問ごとに縮んでいくので、進むほど差そのものが錯視の効き幅の中に入っていきます。さらに、まわりの丸の置き方は毎回ランダムに決まるため、錯視が正解と同じ側を向く回と、逆を向く回が混ざります。逆を向いた回では、正しく見えているつもりの判断がそのまま裏返ります。</p>
+<h3>コツ</h3><ul><li>2つを見比べず、片方ずつ見る。並べて比べると、まわりの丸まで一緒に比較してしまいます</li><li>円の輪郭ではなく、上端と下端が画面のどのあたりに来ているかを見る。外の基準を使うと対比の影響が減ります</li><li>まわりの丸が明らかに違う回ほど疑うこと。錯視が効いているのはその回です</li></ul>
+<h3>記録の目安</h3><p>10連続で標準、16連続を超えると対比を切り離せています。差が3pxまで縮むと錯視の効き幅とほぼ同じになるので、そこから先は勘に近づきます。</p>
 </section>
 
 <nav class="bkg-nav">
 <h2>ほかのバカゲーもどうぞ</h2>
-<ul><li><a href="../detarame-senshuken/">◀ 🎲 でたらめ選手権</a></li><li><a href="../mawari-no-sei/">🔵 まわりのせい選手権 ▶</a></li><li><a href="../muchaburi-button/">🐸 AIの無茶ぶりボタン</a></li><li><a href="../gyaku-swipe/">🎪 逆スワイプ選手権</a></li><li><a href="../tsunawatari/">🥁 綱渡り選手権</a></li></ul>
+<ul><li><a href="../deka-moji/">◀ 🔢 デカ文字選手権</a></li><li><a href="../nazo-ranking/">🏆 謎ランキングメーカー</a></li><li><a href="../housoku-senshuken/">🌶️ 法則発見選手権</a></li><li><a href="../maipesu-senshuken/">🧊 マイペース選手権</a></li></ul>
 </nav>
 <div class="bkg-foot">
 <p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
  ｜ <a href="../../privacy.html">プライバシーポリシー</a>
  ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
 </div>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "デカ文字選手権", "description": "大きな数字が、小さな数字の集まりでできている。答えるのは小さいほうだけ。それだけなのに、大きいほうが勝手に目に入ってきて手が止まる。全体が先に見えてしまうバカゲー。", "url": "https://bakage.com/games/deka-moji/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "まわりのせい選手権", "description": "2つの丸のうち大きいほうを選ぶだけ。ただし片方は大きな丸に、片方は小さな丸に囲まれている。まわりが変わると、真ん中の大きさが変わって見えるバカゲー。", "url": "https://bakage.com/games/mawari-no-sei/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
 <!-- /bakage:footer -->
 </body>
 </html>
