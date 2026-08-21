@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>みんなそう言ってる選手権 | バカゲー製作所</title>
+<meta name="description" content="見本と同じ長さの棒を選ぶだけ。ただし「他の人はこう答えました」という票数が一緒に出ます。しかも多数派はたいてい間違っている。人の答えに引っぱられるかを試すバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:8px;padding:0 4px}
+.ask{font-weight:900;font-size:1rem;margin-bottom:8px}
+.board{background:#fff;border:4px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);
+padding:12px 10px;display:flex;gap:10px;align-items:flex-end;justify-content:center;min-height:200px}
+.sample{width:76px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+border-right:3px dashed var(--ink);padding-right:8px}
+.opts{flex:1;min-width:0;display:flex;gap:6px;align-items:flex-end;justify-content:center}
+.opt{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+background:transparent;border:none;padding:0;cursor:pointer;font-family:inherit}
+.opt:active{transform:translateY(2px)}
+.line{display:block;width:16px;border:2px solid var(--ink);border-radius:4px;background:var(--blue)}
+.sample .line{background:var(--pink)}
+.tag{font-weight:900;font-size:.8rem;margin-top:6px}
+.votes{font-size:.78rem;font-weight:900;margin-top:2px;background:var(--ink);color:#fff;border-radius:8px;padding:1px 6px}
+.votes.dim{background:#fff;color:var(--ink);border:2px solid var(--ink);padding:0 4px}
+.bar{height:12px;background:#fff;border:3px solid var(--ink);border-radius:8px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--pink)}
+.msg{margin-top:8px;font-weight:900;min-height:1.6em;font-size:.95rem}
+.bignum{font-size:2.6rem;font-weight:900;margin:6px 0}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/minna-sou-itteru/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="みんなそう言ってる選手権">
+<meta property="og:description" content="見本と同じ長さの棒を選ぶだけ。ただし棒には「何人がこれを選んだか」が付いていて、多数派はたいてい間違っている。">
+<meta property="og:url" content="https://bakage.com/games/minna-sou-itteru/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-minna-sou-itteru.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-minna-sou-itteru.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>👥 みんなそう言ってる選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>👥 みんなそう言ってる選手権</h1>
+      <p>ピンクの<strong>見本</strong>と<br>同じ長さの棒を選ぶだけ。</p>
+      <p>ただし、それぞれの棒には<br><strong>「何人がこれを選んだか」</strong>が出ます。</p>
+      <p>多いほうが正しい、とは限りません。<br>何問連続で当てられるか?</p>
+      <button class="btn" id="startBtn">タップして開始</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="round">第1問</span><span id="streak">0 連続</span></div>
+      <div class="ask">見本と同じ長さはどれ?</div>
+      <div class="board">
+        <div class="sample"><span class="line" id="sline"></span><span class="tag">見本</span></div>
+        <div class="opts">
+          <button class="opt" type="button" id="opt0"><span class="line"></span><span class="tag">A</span><span class="votes">👥0</span></button>
+          <button class="opt" type="button" id="opt1"><span class="line"></span><span class="tag">B</span><span class="votes">👥0</span></button>
+          <button class="opt" type="button" id="opt2"><span class="line"></span><span class="tag">C</span><span class="votes">👥0</span></button>
+        </div>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="msg" id="msg">人数は見なくていい</div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>終了</h1>
+      <div class="bignum" id="score">0</div>
+      <p>問連続で正解しました</p>
+      <p id="rank" style="font-weight:900"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/minna-sou-itteru/';
+
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), msg=document.getElementById('msg'),
+      roundEl=document.getElementById('round'), streakEl=document.getElementById('streak'),
+      scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank'),
+      barFill=document.getElementById('barFill'), sline=document.getElementById('sline');
+
+  var opts=[document.getElementById('opt0'),document.getElementById('opt1'),document.getElementById('opt2')];
+  var streak=0, locked=true, timer=null, readyAt=0, crowdOnWrong=true;
+
+  // 進むほど、正解と外れの差が縮む。錯覚ではなく「見れば分かる」差のまま残す。
+  function diffFor(s){ return Math.max(4, 26 - s * 1.3); }
+  function limitFor(s){ return Math.max(1200, 3000 - s * 95); }
+  // 進むほど、多数派の人数が増える。同調の圧だけを強くしていく。
+  function crowdFor(s){ return Math.min(9, 4 + Math.floor(s / 2)); }
+
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+
+  function setup(){
+    var limit = limitFor(streak);
+    var d = diffFor(streak);
+    var base = 58 + Math.floor(Math.random() * 40);        // 見本の高さ(px)
+
+    var answer = Math.floor(Math.random() * 3);
+    var heights = [], others = Math.random() < 0.5 ? [d, -d] : [-d, d], k = 0;
+    for(var i=0;i<3;i++){
+      heights.push(i === answer ? base : base + others[k++]);
+    }
+
+    // 票を配る。10人のうち、多数派は「たいてい」外れに付く。
+    // ==たまに正解に付ける。== そうしないと「人数が多い＝外れ」という別の正解ができてしまう。
+    crowdOnWrong = Math.random() < 0.8;
+    var crowd = crowdFor(streak);
+    var target;
+    if(crowdOnWrong){
+      var wrongs = [0,1,2].filter(function(i){ return i !== answer; });
+      target = wrongs[Math.floor(Math.random() * wrongs.length)];
+    } else {
+      target = answer;
+    }
+    var votes = [], rest = 10 - crowd;
+    for(var j=0;j<3;j++) votes.push(0);
+    votes[target] = crowd;
+    var free = [0,1,2].filter(function(i){ return i !== target; });
+    votes[free[0]] = Math.floor(rest / 2);
+    votes[free[1]] = rest - votes[free[0]];
+
+    sline.style.height = base + 'px';
+    for(var m=0;m<3;m++){
+      var line = opts[m].querySelector('.line');
+      line.style.height = heights[m] + 'px';
+      var v = opts[m].querySelector('.votes');
+      v.textContent = '👥' + votes[m];
+      v.className = 'votes' + (votes[m] === Math.max(votes[0],votes[1],votes[2]) ? '' : ' dim');
+    }
+
+    roundEl.textContent = '第' + (streak + 1) + '問';
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '人数は見なくていい';
+    locked = false;
+
+    clearTimeout(timer);
+    barFill.style.transition = 'none';
+    barFill.style.width = '100%';
+    void barFill.offsetWidth;
+    barFill.style.transition = 'width ' + limit + 'ms linear';
+    barFill.style.width = '0%';
+    timer = setTimeout(function(){
+      if(locked) return;
+      locked = true;
+      msg.textContent = '時間切れ';
+      setTimeout(finish, 900);
+    }, limit);
+  }
+
+  function stopBar(){
+    clearTimeout(timer);
+    var w = barFill.getBoundingClientRect().width;
+    barFill.style.transition = 'none';
+    barFill.style.width = w + 'px';
+  }
+
+  function onPick(e){
+    if(e && e.preventDefault) e.preventDefault();
+    if(locked) return;
+    // 開始ボタンを押した指から出るゴーストクリックが、
+    // 指の下に現れた選択肢へ届いてしまう。開始直後だけ受け付けない。
+    if(Date.now() < readyAt) return;
+    locked = true;
+    stopBar();
+    // 描かれている実寸で判定する。内部の番号ではなく、表示そのものを正とする。
+    var s = sline.getBoundingClientRect().height, best = -1, bestGap = 1e9;
+    for(var i=0;i<3;i++){
+      var gap = Math.abs(opts[i].querySelector('.line').getBoundingClientRect().height - s);
+      if(gap < bestGap){ bestGap = gap; best = i; }
+    }
+    var picked = parseInt(e.currentTarget.id.replace('opt',''), 10);
+    if(picked !== best){
+      msg.textContent = crowdOnWrong ? 'みんなに付いていきましたね…' : 'ちがいます…';
+      setTimeout(finish, 1100);
+      return;
+    }
+    streak++;
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '正解!';
+    setTimeout(setup, 380);
+  }
+
+  function rank(n){
+    if(n>=22) return '🗿 人数がまったく効かない人';
+    if(n>=16) return '🧭 自分の目で見ています';
+    if(n>=10) return '🙂 標準的なところ';
+    if(n>=5)  return '😐 だいたいの人はここ';
+    if(n>=1)  return '🐑 みんなが行くほうへ';
+    return '🫠 1問目からみんなと一緒';
+  }
+
+  function finish(){
+    locked = true;
+    clearTimeout(timer);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = streak;
+    rankEl.textContent = rank(streak);
+  }
+
+  function start(e){
+    if(e && e.preventDefault) e.preventDefault();
+    clearTimeout(timer);
+    streak = 0;
+    readyAt = Date.now() + 450;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    setup();
+  }
+
+  function share(e){
+    if(e && e.preventDefault) e.preventDefault();
+    var text = '【みんなそう言ってる選手権】' + streak + '問連続正解! ' + rank(streak) +
+               '\n見本と同じ長さを選ぶだけ。なのに人数が出ているだけで手が止まる。';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  for(var i=0;i<3;i++) bind(opts[i], onPick);
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>みんなそう言ってる選手権 について</h2>
+<p>ピンクの見本と同じ長さの棒を、A・B・Cから選ぶだけ。ただしそれぞれの棒には「何人がこれを選んだか」という人数が付いています。</p>
+<h3>なぜ難しいのか</h3><p>長さを見比べるだけなら、ほとんどの人がまず間違えません。難しくしているのは人数のほうです。表示される票は本物の集計ではなく、こちらで作っています。5回に4回は、多数派をわざと外れの棒に置いてあります。しかも残りの1回は正解に置くので、「人数が多いほうが外れ」という裏の法則も使えません。つまり票からは何も分からないのに、目に入ってしまう。1950年代にアッシュが同じ形の線の課題で行った実験では、まわりのサクラが全員そろって明らかな誤答をすると、被験者の答えのおよそ3分の1が多数派に一致し、7割以上の人が一度は多数派に合わせました。このゲームでは、進むほど多数派の人数が4人から9人まで増え、同時に正解と外れの長さの差が26pxから4pxまで縮み、制限時間も3.0秒から1.2秒へ短くなります。差が縮んで迷いが生まれたところに、人数がいちばん重くのしかかる作りです。</p>
+<h3>コツ</h3><ul><li>人数を見ないのは無理なので、先に長さだけで答えを決めてしまい、そのあとで人数を見る順番にする</li><li>3本を並べて見比べず、見本の上端が画面のどのあたりかを覚えて、その高さに合う1本を探す。基準が見本側にあると票に引っぱられにくくなります</li><li>多数派が付いている棒を最初に外して残り2本で考える、はやらないこと。5回に1回は多数派が正解に付いています</li></ul>
+<h3>記録の目安</h3><p>10連続で標準的なところ、16連続を超えると人数の影響をほぼ受けていません。差が4pxまで縮む20問目あたりからは、長さの見きわめ自体が本当に難しくなります。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../mawari-no-sei/">◀ 🔵 まわりのせい選手権</a></li><li><a href="../oshina-button/">🎈 押すなボタン</a></li><li><a href="../kaiten-senshuken/">🌶️ 回転あて選手権</a></li><li><a href="../wagomu-genkai/">🪃 輪ゴム限界選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "みんなそう言ってる選手権", "description": "見本と同じ長さの棒を選ぶだけ。ただし棒には「何人がこれを選んだか」が付いていて、多数派はたいてい間違っている。", "url": "https://bakage.com/games/minna-sou-itteru/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
