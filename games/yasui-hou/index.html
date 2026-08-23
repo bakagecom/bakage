@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1円でも安いほう選手権 | バカゲー製作所</title>
+<meta name="description" content="2つの値段のうち、安いほうをタップするだけ。ただし桁数が違うと、左端の数字だけを見てしまう。999円と1099円で手が止まるバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--ink:#181820;--pink:#FF5C78;--blue:#0076CE}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:8px;padding:0 4px}
+.ask{font-weight:900;font-size:1rem;margin-bottom:10px}
+.tags{display:flex;flex-direction:column;gap:12px}
+.tag{background:#fff;border:4px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);
+padding:14px 10px;cursor:pointer;font-family:inherit;color:var(--ink);
+display:flex;align-items:baseline;justify-content:center;gap:3px;min-height:76px}
+.tag:active{transform:translateY(2px)}
+.price{font-size:clamp(1.8rem,10.5vw,2.5rem);font-weight:900;line-height:1.1}
+.yen{font-size:1rem;font-weight:900}
+.bar{height:12px;background:#fff;border:3px solid var(--ink);border-radius:8px;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--pink)}
+.msg{margin-top:8px;font-weight:900;min-height:1.6em;font-size:.95rem}
+.bignum{font-size:2.6rem;font-weight:900;margin:6px 0}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/yasui-hou/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="1円でも安いほう選手権">
+<meta property="og:description" content="値札が2枚出ます。安いほうをタップするだけ。ただしカンマが無く、999円と1099円のような組が混ざります。左端の数字から読む癖が出ます。">
+<meta property="og:url" content="https://bakage.com/games/yasui-hou/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-yasui-hou.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-yasui-hou.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🏷️ 1円でも安いほう選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>🏷️ 1円でも安いほう選手権</h1>
+      <p>値札が2枚出ます。<br><strong>安いほう</strong>をタップするだけ。</p>
+      <p>ただし<strong>カンマがありません</strong>。<br>桁が1つ違うと、目は左端しか見ません。</p>
+      <p>何問連続で当てられるか?</p>
+      <button class="btn" id="startBtn">タップして開始</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="round">第1問</span><span id="streak">0 連続</span></div>
+      <div class="ask">安いのはどっち?</div>
+      <div class="tags">
+        <button class="tag" type="button" id="opt0"><span class="price">0</span><span class="yen">円</span></button>
+        <button class="tag" type="button" id="opt1"><span class="price">0</span><span class="yen">円</span></button>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="msg" id="msg">左端の数字にだまされない</div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>終了</h1>
+      <div class="bignum" id="score">0</div>
+      <p>問連続で正解しました</p>
+      <p id="saved" style="font-weight:900">通算 0円お得</p>
+      <p id="rank" style="font-weight:900"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/yasui-hou/';
+
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), msg=document.getElementById('msg'),
+      roundEl=document.getElementById('round'), streakEl=document.getElementById('streak'),
+      scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank'),
+      savedEl=document.getElementById('saved'), barFill=document.getElementById('barFill');
+
+  var opts=[document.getElementById('opt0'),document.getElementById('opt1')];
+  var streak=0, saved=0, locked=true, timer=null, readyAt=0;
+
+  // 進むほど時間が短くなる。3.2秒 → 1.4秒。
+  function limitFor(s){ return Math.max(1400, 3200 - s * 90); }
+  // 同じ桁数の組で、2つの値段の差。90円 → 2円。
+  function gapFor(s){ return Math.max(2, 90 - s * 4); }
+  // 桁数が違う組（左端が逆転する罠）の出る割合。18% → 45%。
+  function ketaP(s){ return Math.min(0.45, 0.18 + s * 0.02); }
+  // 同じ桁数で差が小さい組の割合。12% → 35%。
+  function chikaiP(s){ return Math.min(0.35, 0.12 + s * 0.015); }
+
+  function ri(n){ return Math.floor(Math.random() * n); }
+
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+
+  // 安いほう cheap と高いほう high を作る。
+  function makePair(s){
+    var r = Math.random(), k1 = ketaP(s), k2 = chikaiP(s), cheap, high;
+    if(r < k1){
+      // 桁が1つ多いのに、左端の数字は小さい。999 と 1099 の関係。
+      if(Math.random() < 0.5){
+        cheap = 900 + ri(100);          // 3桁・左端は9
+        high  = 1000 + ri(400);         // 4桁・左端は1
+      } else {
+        cheap = 9000 + ri(1000);        // 4桁・左端は9
+        high  = 10000 + ri(3000);       // 5桁・左端は1
+      }
+    } else if(r < k1 + k2){
+      // 同じ桁数で、差だけが小さい。
+      cheap = 1200 + ri(7600);
+      high  = cheap + 1 + ri(gapFor(s));
+    } else {
+      // 素直な組。リズムを作るための回。
+      cheap = 1000 + ri(5000);
+      high  = cheap + 800 + ri(2500);
+    }
+    return [cheap, high];
+  }
+
+  function setup(){
+    var pair = makePair(streak);
+    var left = Math.random() < 0.5 ? 0 : 1;   // 安いほうを置く側
+    var v = [];
+    v[left] = pair[0];
+    v[1 - left] = pair[1];
+
+    for(var i=0;i<2;i++){
+      opts[i].querySelector('.price').textContent = String(v[i]);
+    }
+
+    roundEl.textContent = '第' + (streak + 1) + '問';
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '左端の数字にだまされない';
+    locked = false;
+
+    var limit = limitFor(streak);
+    clearTimeout(timer);
+    barFill.style.transition = 'none';
+    barFill.style.width = '100%';
+    void barFill.offsetWidth;
+    barFill.style.transition = 'width ' + limit + 'ms linear';
+    barFill.style.width = '0%';
+    timer = setTimeout(function(){
+      if(locked) return;
+      locked = true;
+      msg.textContent = '時間切れ';
+      setTimeout(finish, 900);
+    }, limit);
+  }
+
+  function stopBar(){
+    clearTimeout(timer);
+    var w = barFill.getBoundingClientRect().width;
+    barFill.style.transition = 'none';
+    barFill.style.width = w + 'px';
+  }
+
+  function shown(i){
+    return parseInt(opts[i].querySelector('.price').textContent.replace(/[^0-9]/g, ''), 10);
+  }
+
+  function onPick(e){
+    if(e && e.preventDefault) e.preventDefault();
+    if(locked) return;
+    // 開始ボタンを押した指から出るゴーストクリックが、
+    // 指の下に現れた値札へ届いてしまう。開始直後だけ受け付けない。
+    if(Date.now() < readyAt) return;
+    locked = true;
+    stopBar();
+
+    // 画面に出ている数字だけで判定する。内部の値ではなく、表示そのものを正とする。
+    var a = shown(0), b = shown(1);
+    var best = a < b ? 0 : 1;
+    var picked = parseInt(e.currentTarget.id.replace('opt',''), 10);
+    var diff = Math.abs(a - b);
+
+    if(picked !== best){
+      msg.textContent = String(diff) + '円 損しました';
+      setTimeout(finish, 1100);
+      return;
+    }
+    streak++;
+    saved += diff;
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '+' + diff + '円お得!';
+    setTimeout(setup, 380);
+  }
+
+  function rank(n){
+    if(n>=25) return '🧾 値札にまったくだまされない人';
+    if(n>=18) return '🔍 桁を先に数えています';
+    if(n>=12) return '🙂 標準的なところ';
+    if(n>=6)  return '😅 左端に引っぱられ気味';
+    if(n>=1)  return '🐌 レジの前で固まるタイプ';
+    return '💸 1問目から損しました';
+  }
+
+  function yen(n){
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function finish(){
+    locked = true;
+    clearTimeout(timer);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = streak;
+    savedEl.textContent = '通算 ' + yen(saved) + '円お得';
+    rankEl.textContent = rank(streak);
+  }
+
+  function start(e){
+    if(e && e.preventDefault) e.preventDefault();
+    clearTimeout(timer);
+    streak = 0;
+    saved = 0;
+    readyAt = Date.now() + 450;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    setup();
+  }
+
+  function share(e){
+    if(e && e.preventDefault) e.preventDefault();
+    var text = '【1円でも安いほう選手権】' + streak + '問連続正解! ' + rank(streak) +
+               '\n通算 ' + yen(saved) + '円ぶん安いほうを選びました。999円と1099円、パッと見でどっち?';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  for(var i=0;i<2;i++) bind(opts[i], onPick);
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>1円でも安いほう選手権 について</h2>
+<p>値札が2枚出ます。安いほうをタップするだけ。ただしカンマが打ってないので、桁数はぱっと見では分かりません。</p>
+<h3>なぜ難しいのか</h3><p>数字を見ると、意味を取ろうとする前に大きさが勝手に入ってきます。しかもその読み取りは左端の桁から始まり、左端の数字の大小がそのまま「どちらが大きいか」の答えとして先に出てきます。桁数が同じならこれで合っているので、普段は困りません。困るのは桁数が違うときです。このゲームでは、安いほうの左端が必ず9、高いほうの左端が必ず1になる組を混ぜてあります。900円台と1000〜1399円、あるいは9000円台と10000〜12999円。左端だけを見ると答えが完全に逆になります。カンマがあれば桁の区切りが一目で見えますが、カンマを外すと文字数を数える工程がもう一段必要になり、そのぶん左端の癖が先に出ます。実際の値札で末尾が980円や1980円になっているのも、同じ性質を使っています。1000円を980円にすると、値引き額は20円でも、左端の数字が1から9へ下がって見えます。もうひとつの難しさは、桁数が同じ組のほうにあります。2つの数が近いほど、どちらが大きいかの判断は遅く、不正確になります。このゲームでは同じ桁数の組の差が90円から2円まで縮み、桁数が違う組の出現率が18%から45%まで上がり、制限時間は3.2秒から1.4秒まで短くなります。時間が足りなくなるほど、左端だけで答える割合が上がります。</p>
+<h3>コツ</h3><ul><li>左端の数字ではなく、まず文字数を数える。桁が1つでも多ければ、左端が9でもそちらが高い値段です</li><li>桁数が同じだと分かってから、上の位を1つずつ比べる。下2桁は最後で足ります</li><li>2枚をまとめて眺めず、上の桁数を見てから下の桁数を見る、と順番を決めておく。順番が固定されていると左端に引っぱられにくくなります</li></ul>
+<h3>記録の目安</h3><p>12連続で標準的なところ、18連続を超えると桁を先に見る習慣がついています。22問目からは同じ桁数で差が2円の組も出るので、そこから先は純粋な読み比べの速さになります。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../minna-sou-itteru/">◀ 👥 みんなそう言ってる選手権</a></li><li><a href="../oshina-button/">🎈 押すなボタン</a></li><li><a href="../kaiten-senshuken/">🌶️ 回転あて選手権</a></li><li><a href="../wagomu-genkai/">🪃 輪ゴム限界選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "1円でも安いほう選手権", "description": "値札が2枚出ます。安いほうをタップするだけ。ただしカンマが無く、999円と1099円のような組が混ざります。左端の数字から読む癖が出ます。", "url": "https://bakage.com/games/yasui-hou/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
