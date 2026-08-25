@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2つ前と同じ選手権 | バカゲー製作所</title>
+<meta name="description" content="絵柄が1つずつ流れます。答えるのは2つ前と同じかどうかだけ。1つ前や3つ前と同じ絵柄が混ざると、見覚えはあるのに位置が言えなくなるバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--ink:#181820;--pink:#FF5C78;--ok:#1F9D55;--ng:#E8382C}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:8px;padding:0 4px}
+.rule{font-weight:900;font-size:.8rem;margin-bottom:8px}
+.field{position:relative;height:150px;background:#fff;border:4px solid var(--ink);border-radius:14px;
+box-shadow:5px 5px 0 var(--ink);overflow:hidden;margin-bottom:12px;display:flex;align-items:center;justify-content:center}
+.field.ok{background:#E6F6EC}
+.field.ng{background:#FDEAE8}
+.tile{font-size:4.2rem;line-height:1}
+.opts{display:flex;gap:12px}
+.opt{flex:1;background:#fff;border:4px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);
+padding:12px 6px;min-height:76px;cursor:pointer;font-family:inherit;color:var(--ink);font-weight:900;font-size:1rem;
+display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.opt:active{transform:translateY(2px)}
+.opt small{font-size:.68rem;font-weight:700;opacity:.7}
+.bar{height:12px;background:#fff;border:3px solid var(--ink);border-radius:8px;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--pink)}
+.msg{margin-top:8px;font-weight:900;min-height:1.6em;font-size:.95rem}
+.bignum{font-size:2.6rem;font-weight:900;margin:6px 0}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/futatsu-mae/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="2つ前と同じ選手権">
+<meta property="og:description" content="流れてくる絵柄が2つ前と同じかどうかを答えるだけ。1つ前や3つ前にも同じ絵柄がまざるので、見覚えはあるのに何個前かが言えなくなります。">
+<meta property="og:url" content="https://bakage.com/games/futatsu-mae/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-futatsu-mae.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-futatsu-mae.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🔁 2つ前と同じ選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>🔁 2つ前と同じ選手権</h1>
+      <p>絵柄が1つずつ流れます。<br>答えるのは<strong>「2つ前と同じか」</strong>だけ。</p>
+      <p>1つ前や3つ前にも、<br>同じ絵柄がまざります。<br>見覚えはあるのに、<br><strong>何個前かが言えなくなります</strong>。</p>
+      <p>全22問。何問当てられるか?</p>
+      <button class="btn" id="startBtn">タップして開始</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="round">ウォームアップ</span><span id="streak">0 連続</span></div>
+      <div class="rule">いま出ているもの = 2つ前 なら「同じ」</div>
+      <div class="field" id="field">
+        <div class="tile" id="tile">🍎</div>
+      </div>
+      <div class="opts">
+        <button class="opt" type="button" id="opt0">同じ<small>2つ前と一致</small></button>
+        <button class="opt" type="button" id="opt1">ちがう<small>一致しない</small></button>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="msg" id="msg">まだ答えません</div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>終了</h1>
+      <div class="bignum" id="score">0</div>
+      <p>22問中、正解した数です</p>
+      <p id="rates" style="font-weight:900">&nbsp;</p>
+      <p id="best" style="font-weight:900">&nbsp;</p>
+      <p id="rank" style="font-weight:900"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/futatsu-mae/';
+  var POOL = ['🍎','🐟','⭐','🚗','🌸','🎩'];
+  var WARM = 2;      // 最初の2つは答えない（2つ前がまだ無い）
+  var TOTAL = 22;    // 答える回数
+
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), msg=document.getElementById('msg'),
+      roundEl=document.getElementById('round'), streakEl=document.getElementById('streak'),
+      scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank'),
+      ratesEl=document.getElementById('rates'), bestEl=document.getElementById('best'),
+      barFill=document.getElementById('barFill'), tile=document.getElementById('tile'),
+      field=document.getElementById('field');
+
+  var opts=[document.getElementById('opt0'),document.getElementById('opt1')];
+
+  var seq=[], kind=[], idx=0, locked=true, timer=null, gap=null, readyAt=0;
+  var streak=0, best=0, ok=0;
+  var stat={match:[0,0], lure:[0,0], other:[0,0]};   // [正解, 出題]
+
+  function pick(list){ return list[Math.floor(Math.random()*list.length)]; }
+
+  // 進むほど表示時間が短くなる。1.5秒 → 0.9秒。
+  function durFor(n){ return Math.max(900, 1500 - n * 28); }
+
+  function build(){
+    seq = [pick(POOL), pick(POOL)];
+    kind = ['warm','warm'];
+    for(var i=WARM;i<WARM+TOTAL;i++){
+      var two = seq[i-2], one = seq[i-1], three = (i>=3 ? seq[i-3] : null);
+      var r = Math.random(), t, v;
+      if(r < 0.38){ t='match'; v=two; }
+      else {
+        // ルアー＝1つ前・3つ前と同じ絵柄。見覚えはあるが位置が違う。
+        var lures = [];
+        if(one !== two) lures.push(one);
+        if(three !== null && three !== two && lures.indexOf(three) < 0) lures.push(three);
+        if(r < 0.66 && lures.length){ t='lure'; v=pick(lures); }
+        else {
+          var rest = POOL.filter(function(c){ return c!==two && c!==one && c!==three; });
+          t='other'; v=pick(rest.length ? rest : POOL.filter(function(c){ return c!==two; }));
+        }
+      }
+      seq.push(v); kind.push(t);
+    }
+  }
+
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+
+  function show(){
+    clearTimeout(timer); clearTimeout(gap);
+    field.className = 'field';
+    tile.textContent = seq[idx];
+    streakEl.textContent = streak + ' 連続';
+
+    if(idx < WARM){
+      locked = true;
+      roundEl.textContent = 'ウォームアップ';
+      msg.textContent = 'まだ答えません（' + (WARM - idx) + '個）';
+      barFill.style.transition='none'; barFill.style.width='100%';
+      timer = setTimeout(function(){ idx++; show(); }, 1500);
+      return;
+    }
+
+    var n = idx - WARM;
+    roundEl.textContent = '第' + (n + 1) + '問 / ' + TOTAL;
+    msg.textContent = '2つ前と同じ?';
+    locked = false;
+
+    var limit = durFor(n);
+    barFill.style.transition = 'none';
+    barFill.style.width = '100%';
+    void barFill.offsetWidth;
+    barFill.style.transition = 'width ' + limit + 'ms linear';
+    barFill.style.width = '0%';
+    timer = setTimeout(function(){
+      if(locked) return;
+      judge(-1);
+    }, limit);
+  }
+
+  function stopBar(){
+    clearTimeout(timer);
+    var w = barFill.getBoundingClientRect().width;
+    barFill.style.transition = 'none';
+    barFill.style.width = w + 'px';
+  }
+
+  // 正解は「画面に出ている絵柄」と「2つ前に画面へ出した絵柄」の一致で決める。
+  function judge(picked){
+    locked = true;
+    stopBar();
+    var same = (tile.textContent === seq[idx-2]);
+    var right = (picked === 0 && same) || (picked === 1 && !same);
+    var t = kind[idx];
+    stat[t][1]++;
+    if(right){
+      stat[t][0]++; ok++; streak++;
+      if(streak > best) best = streak;
+      field.className = 'field ok';
+      msg.textContent = same ? '同じでした' : 'ちがいました';
+    } else {
+      streak = 0;
+      field.className = 'field ng';
+      if(picked < 0) msg.textContent = '見送り（時間切れ）';
+      else if(same) msg.textContent = '2つ前と同じでした';
+      else if(t === 'lure') msg.textContent = '見覚えはありますが、2つ前ではありません';
+      else msg.textContent = '2つ前とは違いました';
+    }
+    streakEl.textContent = streak + ' 連続';
+    idx++;
+    gap = setTimeout(function(){
+      if(idx >= WARM + TOTAL) finish(); else show();
+    }, 220);
+  }
+
+  function onPick(e){
+    if(e && e.preventDefault) e.preventDefault();
+    if(locked) return;
+    // 開始ボタンを押した指から出るゴーストクリックが、
+    // 指の下に現れたボタンへ届いてしまう。開始直後だけ受け付けない。
+    if(Date.now() < readyAt) return;
+    judge(parseInt(e.currentTarget.id.replace('opt',''), 10));
+  }
+
+  function rank(n){
+    if(n>=21) return '🧊 窓の入れ替えがまったく崩れていません';
+    if(n>=19) return '🔁 2つ前を持ち続けられる部類です';
+    if(n>=17) return '🙂 標準的なところ';
+    if(n>=14) return '😐 全部「ちがう」と押した場合とほぼ同じです';
+    if(n>=1)  return '🌀 2つ前が片っ端から消えました';
+    return '💥 1問も残りませんでした';
+  }
+
+  function pct(a){ return a[1] ? Math.round(a[0]/a[1]*100) + '%' : '—'; }
+
+  function finish(){
+    locked = true;
+    clearTimeout(timer); clearTimeout(gap);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = ok;
+    ratesEl.textContent = '一致した回 ' + pct(stat.match) + '（' + stat.match[0] + '/' + stat.match[1] + '）' +
+                          ' ／ ひっかけ ' + pct(stat.lure) + '（' + stat.lure[0] + '/' + stat.lure[1] + '）' +
+                          ' ／ それ以外 ' + pct(stat.other) + '（' + stat.other[0] + '/' + stat.other[1] + '）';
+    bestEl.textContent = '最長 ' + best + ' 連続';
+    rankEl.textContent = rank(ok);
+  }
+
+  function start(e){
+    if(e && e.preventDefault) e.preventDefault();
+    clearTimeout(timer); clearTimeout(gap);
+    streak = 0; best = 0; ok = 0; idx = 0;
+    stat = {match:[0,0], lure:[0,0], other:[0,0]};
+    build();
+    readyAt = Date.now() + 450;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    show();
+  }
+
+  function share(e){
+    if(e && e.preventDefault) e.preventDefault();
+    var t = '【2つ前と同じ選手権】' + TOTAL + '問中 ' + ok + '問正解! ' + rank(ok);
+    if(stat.lure[1]) t += '\nひっかけの回だけ ' + pct(stat.lure) + '。';
+    t += '\n流れてくる絵柄が2つ前と同じか答えるだけ。見覚えはあるのに、何個前かが言えなくなります。';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(t) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  for(var i=0;i<2;i++) bind(opts[i], onPick);
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>2つ前と同じ選手権 について</h2>
+<p>絵柄が1つずつ流れます。答えるのは「いま出ているものが、2つ前と同じか」だけ。覚えておくのはたった2つです。それだけのことが、22問もちません。</p>
+<h3>なぜ難しいのか</h3><p>覚える量が足りないのではありません。この課題では、新しい絵柄が来るたびに、それまで「2つ前」だったものを捨て、「1つ前」を「2つ前」の枠へ送る必要があります。この入れ替えを1問ごとに、しかも答えを出しながらやります。覚えた列をそのまま再生する記憶力ゲームとは、負荷のかかる場所が違います。効いているのは容量ではなく、置き換えの速さです。もう1つの仕掛けは絵柄の種類が6つしかないことです。どれを見ても必ず見覚えがあります。「見たことがある」という感覚は速く自動的に湧きますが、「何個前に見たか」を思い出すのは遅く、意識してやる作業です。急かされると前者だけが残るので、見覚えの強さで答えることになります。この課題で「同じ」と答えて外す回は、たいてい1つ前か3つ前と同じ絵柄が出た回です。直前に見たばかりなので、見覚えはむしろいちばん強く出ます。全体のおよそ3割弱をこの引っかけにしてあり、表示時間は1.5秒から0.9秒まで縮んでいきます。置き換えに使える時間が減るほど、見覚えのほうが先に届きます。</p>
+<h3>コツ</h3><ul><li>絵柄を並べて覚えないこと。枠を2つだけ用意して、新しいのが来たら古いほうを捨て、1つ前を2つ前へ送る。この送りを、答えるより先に済ませてしまう</li><li>「強く見た気がする」ときほど疑う。1つ前と同じ絵柄が出た回は、直前に見たばかりなので見覚えが最大になりますが、答えは「ちがう」です</li><li>迷った回は「ちがう」を選ぶ。一致する回は4割弱しかないので、判断がつかないまま「同じ」を押すと損をします</li></ul>
+<h3>記録の目安</h3><p>17問で標準的なところ、19問を超えると2つ前を保ち続けられている部類です。⚠️ ただし全部「ちがう」で押し通しても14問前後は当たります。一致する回が4割弱しかないためで、そこが実質の出発点です。超えたぶんだけ、本当に2つ前を見ています。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../socchi-janai/">◀ 🎯 そっちじゃない選手権</a></li><li><a href="../oshina-button/">🎈 押すなボタン</a></li><li><a href="../kaiten-senshuken/">🌶️ 回転あて選手権</a></li><li><a href="../wagomu-genkai/">🪃 輪ゴム限界選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "2つ前と同じ選手権", "description": "流れてくる絵柄が2つ前と同じかどうかを答えるだけ。1つ前や3つ前にも同じ絵柄がまざるので、見覚えはあるのに何個前かが言えなくなります。", "url": "https://bakage.com/games/futatsu-mae/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
