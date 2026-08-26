@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://bakage.com/</loc><lastmod>2026-08-25</lastmod><priority>1.0</priority></url>
+  <url><loc>https://bakage.com/</loc><lastmod>2026-08-26</lastmod><priority>1.0</priority></url>
+  <url><loc>https://bakage.com/games/kuuki-yomi/</loc><lastmod>2026-08-26</lastmod><priority>0.8</priority></url>
   <url><loc>https://bakage.com/games/futatsu-mae/</loc><lastmod>2026-08-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://bakage.com/games/socchi-janai/</loc><lastmod>2026-08-24</lastmod><priority>0.8</priority></url>
   <url><loc>https://bakage.com/games/yasui-hou/</loc><lastmod>2026-08-23</lastmod><priority>0.8</priority></url>
@@ -48,7 +49,7 @@
   <url><loc>https://bakage.com/games/iro-uso/</loc><lastmod>2026-07-19</lastmod><priority>0.8</priority></url>
   <url><loc>https://bakage.com/games/e-awase/</loc><lastmod>2026-07-19</lastmod><priority>0.8</priority></url>
   <url><loc>https://bakage.com/games/dotchi-ooi/</loc><lastmod>2026-07-19</lastmod><priority>0.8</priority></url>
-  <url><loc>https://bakage.com/about.html</loc><lastmod>2026-08-25</lastmod><priority>0.5</priority></url>
-  <url><loc>https://bakage.com/privacy.html</loc><lastmod>2026-08-25</lastmod><priority>0.2</priority></url>
-  <url><loc>https://bakage.com/contact.html</loc><lastmod>2026-08-25</lastmod><priority>0.2</priority></url>
+  <url><loc>https://bakage.com/about.html</loc><lastmod>2026-08-26</lastmod><priority>0.5</priority></url>
+  <url><loc>https://bakage.com/privacy.html</loc><lastmod>2026-08-26</lastmod><priority>0.2</priority></url>
+  <url><loc>https://bakage.com/contact.html</loc><lastmod>2026-08-26</lastmod><priority>0.2</priority></url>
 </urlset>

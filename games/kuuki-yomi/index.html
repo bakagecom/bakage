@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>空気読み選手権 | バカゲー製作所</title>
+<meta name="description" content="顔がずらりと並びます。答えるのは、その場が全体としていい空気かわるい空気かだけ。1人だけ声の大きい顔がまざると、平均のほうが読めなくなるバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-JLPMYL3495');
+</script>
+<style>
+:root{--bg:#FFD100;--ink:#181820;--pink:#FF5C78;--ok:#1F9D55;--ng:#E8382C}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;user-select:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+body.playing{overflow:hidden}
+a{color:var(--ink)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:900;font-size:.9rem}
+.topbar a{text-decoration:none;opacity:.75}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:16px}
+.panel{width:100%;max-width:420px;text-align:center}
+.card{background:#fff;border:4px solid var(--ink);border-radius:16px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+.card h1{font-size:1.5rem;margin-bottom:10px}
+.card p{font-size:.9rem;line-height:1.8;margin-bottom:8px}
+.btn{display:inline-block;margin-top:16px;padding:14px 28px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit}
+.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hud{display:flex;justify-content:space-between;font-weight:900;font-size:.95rem;margin-bottom:8px;padding:0 4px}
+.rule{font-weight:900;font-size:.8rem;margin-bottom:8px}
+.field{position:relative;height:176px;background:#fff;border:4px solid var(--ink);border-radius:14px;
+box-shadow:5px 5px 0 var(--ink);overflow:hidden;margin-bottom:12px;padding:8px 6px;
+display:flex;flex-wrap:wrap;align-content:center;justify-content:center}
+.field.ok{background:#E6F6EC}
+.field.ng{background:#FDEAE8}
+.face{flex:0 0 24%;font-size:clamp(1.35rem,6.2vw,1.8rem);line-height:1.2}
+.opts{display:flex;gap:12px}
+.opt{flex:1;background:#fff;border:4px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);
+padding:12px 6px;min-height:76px;cursor:pointer;font-family:inherit;color:var(--ink);font-weight:900;font-size:1rem;
+display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.opt:active{transform:translateY(2px)}
+.opt small{font-size:.68rem;font-weight:700;opacity:.7}
+.bar{height:12px;background:#fff;border:3px solid var(--ink);border-radius:8px;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--pink)}
+.msg{margin-top:8px;font-weight:900;min-height:1.6em;font-size:.95rem}
+.bignum{font-size:2.6rem;font-weight:900;margin:6px 0}
+.hide{display:none!important}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/kuuki-yomi/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="空気読み選手権">
+<meta property="og:description" content="並んだ顔の平均がいい側かわるい側かを答えるだけ。1人だけ声の大きい顔がまざると、全体の向きが読めなくなります。">
+<meta property="og:url" content="https://bakage.com/games/kuuki-yomi/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-kuuki-yomi.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-kuuki-yomi.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🌤️ 空気読み選手権</span></div>
+<div class="stage">
+  <div class="panel">
+
+    <div id="intro" class="card">
+      <h1>🌤️ 空気読み選手権</h1>
+      <p>顔がずらりと並びます。<br>答えるのは<strong>「全体としてどっちの空気か」</strong>だけ。</p>
+      <p>1人ずつ見ている時間はありません。<br>しかも毎回1人だけ、<br><strong>とびきり声の大きい顔</strong>がまざります。</p>
+      <p>全20問。何問読めるか?</p>
+      <button class="btn" id="startBtn">タップして開始</button>
+    </div>
+
+    <div id="play" class="hide">
+      <div class="hud"><span id="round">第1問 / 20</span><span id="streak">0 連続</span></div>
+      <div class="rule">この集団の平均は、いい側? わるい側?</div>
+      <div class="field" id="field"></div>
+      <div class="opts">
+        <button class="opt" type="button" id="opt0">いい空気<small>平均はプラス側</small></button>
+        <button class="opt" type="button" id="opt1">わるい空気<small>平均はマイナス側</small></button>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="msg" id="msg">全体を見る</div>
+    </div>
+
+    <div id="result" class="card hide">
+      <h1>終了</h1>
+      <div class="bignum" id="score">0</div>
+      <p>20問中、正解した数です</p>
+      <p id="rates" style="font-weight:900">&nbsp;</p>
+      <p id="best" style="font-weight:900">&nbsp;</p>
+      <p id="rank" style="font-weight:900"></p>
+      <button class="btn" id="shareBtn">Xでシェアする</button>
+      <button class="btn sub" id="retryBtn">もう一度</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var GAME_URL = 'https://bakage.com/games/kuuki-yomi/';
+  // 表情と点数。-3 と +3 は「声の大きい1人」専用で、他の顔は -2〜+2 に収める。
+  var FACE = {'-3':'😡','-2':'😠','-1':'😟','0':'😐',
+              '1':'🙂','2':'😊','3':'😄'};
+  var TOTAL = 20;
+
+  var intro=document.getElementById('intro'), play=document.getElementById('play'),
+      result=document.getElementById('result'), msg=document.getElementById('msg'),
+      roundEl=document.getElementById('round'), streakEl=document.getElementById('streak'),
+      scoreEl=document.getElementById('score'), rankEl=document.getElementById('rank'),
+      ratesEl=document.getElementById('rates'), bestEl=document.getElementById('best'),
+      barFill=document.getElementById('barFill'), field=document.getElementById('field');
+
+  var opts=[document.getElementById('opt0'),document.getElementById('opt1')];
+
+  var trials=[], idx=0, locked=true, timer=null, gap=null, readyAt=0;
+  var streak=0, best=0, ok=0;
+  var stat={agree:[0,0], conflict:[0,0]};   // [正解, 出題]
+
+  function ri(n){ return Math.floor(Math.random()*n); }
+
+  // 進むほど人数が増え、平均の傾きが小さくなり、見る時間が短くなる。
+  function sizeFor(n){ return n < 6 ? 8 : (n < 13 ? 12 : 16); }
+  function tiltFor(n){ return 1.10 - n * 0.036; }        // 1.10 → 0.42
+  function limitFor(n){ return Math.max(800, 1900 - n * 58); }  // 1.9秒 → 0.8秒
+
+  // 平均が t 付近になる集団を作る。声の大きい1人（±3）を必ず1人だけ入れる。
+  function crowd(n, t, conflict){
+    var sgn = t > 0 ? 1 : -1;
+    var loud = conflict ? -3 * sgn : 3 * sgn;
+    var restN = n - 1;
+    var want = Math.round(t * n - loud);          // 残り全員の合計
+    var v = [], i;
+    for(i=0;i<restN;i++) v.push(0);
+    var guard = 0;
+    while(guard++ < 4000){
+      var sum = 0;
+      for(i=0;i<restN;i++) sum += v[i];
+      if(sum === want) break;
+      var k = ri(restN);
+      var d = sum < want ? 1 : -1;
+      if(v[k] + d >= -2 && v[k] + d <= 2) v[k] += d;
+    }
+    // 合計を保ったまま散らす（同じ顔ばかりにしない）
+    for(i=0;i<restN*6;i++){
+      var a = ri(restN), b = ri(restN);
+      if(a !== b && v[a] + 1 <= 2 && v[b] - 1 >= -2){ v[a]++; v[b]--; }
+    }
+    v.push(loud);
+    for(i=v.length-1;i>0;i--){ var j=ri(i+1), tmp=v[i]; v[i]=v[j]; v[j]=tmp; }
+    var total = 0;
+    for(i=0;i<v.length;i++) total += v[i];
+    return {vals:v, mean: total / v.length};
+  }
+
+  function build(){
+    trials = [];
+    for(var n=0;n<TOTAL;n++){
+      var size = sizeFor(n);
+      var conflict = Math.random() < (0.25 + n * 0.016);   // 25% → 55%
+      var c = null, guard = 0;
+      do {
+        var sgn = Math.random() < 0.5 ? 1 : -1;
+        c = crowd(size, sgn * tiltFor(n), conflict);
+      } while (++guard < 60 && (c.mean === 0 || Math.abs(c.mean) < 0.24));
+      trials.push({vals:c.vals, mean:c.mean, kind: conflict ? 'conflict' : 'agree'});
+    }
+  }
+
+  function bind(el, fn){
+    el.addEventListener('click', fn);
+    el.addEventListener('touchstart', fn, {passive:false});
+  }
+
+  function draw(vals){
+    var html = '';
+    for(var i=0;i<vals.length;i++){
+      html += '<span class="face">' + FACE[String(vals[i])] + '</span>';
+    }
+    field.innerHTML = html;
+  }
+
+  function show(){
+    clearTimeout(timer); clearTimeout(gap);
+    field.className = 'field';
+    var t = trials[idx];
+    draw(t.vals);
+    roundEl.textContent = '第' + (idx + 1) + '問 / ' + TOTAL;
+    streakEl.textContent = streak + ' 連続';
+    msg.textContent = '全体を見る';
+    locked = false;
+
+    var limit = limitFor(idx);
+    barFill.style.transition = 'none';
+    barFill.style.width = '100%';
+    void barFill.offsetWidth;
+    barFill.style.transition = 'width ' + limit + 'ms linear';
+    barFill.style.width = '0%';
+    timer = setTimeout(function(){
+      if(locked) return;
+      judge(-1);
+    }, limit);
+  }
+
+  function stopBar(){
+    clearTimeout(timer);
+    var w = barFill.getBoundingClientRect().width;
+    barFill.style.transition = 'none';
+    barFill.style.width = w + 'px';
+  }
+
+  // 正解は「いま画面に並んでいる顔の点数の平均」で決める。
+  function judge(picked){
+    locked = true;
+    stopBar();
+    var t = trials[idx];
+    var good = t.mean > 0;
+    var right = (picked === 0 && good) || (picked === 1 && !good);
+    stat[t.kind][1]++;
+    if(right){
+      stat[t.kind][0]++; ok++; streak++;
+      if(streak > best) best = streak;
+      field.className = 'field ok';
+      msg.textContent = (good ? 'いい空気' : 'わるい空気') + 'でした（平均 ' + t.mean.toFixed(2) + '）';
+    } else {
+      streak = 0;
+      field.className = 'field ng';
+      if(picked < 0) msg.textContent = '見送り（時間切れ）';
+      else if(t.kind === 'conflict') msg.textContent = '声の大きい1人と、全体の向きは逆でした（平均 ' + t.mean.toFixed(2) + '）';
+      else msg.textContent = '全体は' + (good ? 'いい空気' : 'わるい空気') + 'でした（平均 ' + t.mean.toFixed(2) + '）';
+    }
+    streakEl.textContent = streak + ' 連続';
+    idx++;
+    gap = setTimeout(function(){
+      if(idx >= TOTAL) finish(); else show();
+    }, 260);
+  }
+
+  function onPick(e){
+    if(e && e.preventDefault) e.preventDefault();
+    if(locked) return;
+    // 開始ボタンを押した指から出るゴーストクリックが、
+    // 指の下に現れたボタンへ届いてしまう。開始直後だけ受け付けない。
+    if(Date.now() < readyAt) return;
+    judge(parseInt(e.currentTarget.id.replace('opt',''), 10));
+  }
+
+  function rank(n){
+    if(n>=18) return '🌤️ 大声に一度も持っていかれていません';
+    if(n>=16) return '🙂 平均のほうを見られている部類です';
+    if(n>=13) return '😐 標準的なところ';
+    if(n>=11) return '🌀 当てずっぽうとほぼ同じです';
+    if(n>=1)  return '💨 声の大きい1人が全部でした';
+    return '💥 1問も読めませんでした';
+  }
+
+  function pct(a){ return a[1] ? Math.round(a[0]/a[1]*100) + '%' : '—'; }
+
+  function finish(){
+    locked = true;
+    clearTimeout(timer); clearTimeout(gap);
+    document.body.classList.remove('playing');
+    play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent = ok;
+    ratesEl.textContent = '大声が全体と同じ向き ' + pct(stat.agree) + '（' + stat.agree[0] + '/' + stat.agree[1] + '）' +
+                          ' ／ 逆向き ' + pct(stat.conflict) + '（' + stat.conflict[0] + '/' + stat.conflict[1] + '）';
+    bestEl.textContent = '最長 ' + best + ' 連続';
+    rankEl.textContent = rank(ok);
+  }
+
+  function start(e){
+    if(e && e.preventDefault) e.preventDefault();
+    clearTimeout(timer); clearTimeout(gap);
+    streak = 0; best = 0; ok = 0; idx = 0;
+    stat = {agree:[0,0], conflict:[0,0]};
+    build();
+    readyAt = Date.now() + 450;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');
+    result.classList.add('hide');
+    play.classList.remove('hide');
+    show();
+  }
+
+  function share(e){
+    if(e && e.preventDefault) e.preventDefault();
+    var t = '【空気読み選手権】' + TOTAL + '問中 ' + ok + '問正解! ' + rank(ok);
+    if(stat.conflict[1]) t += '\n大声が全体と逆を向いた回だけ ' + pct(stat.conflict) + '。';
+    t += '\n並んだ顔の平均がいい側かわるい側かを答えるだけ。1人だけ声の大きい顔がまざると読めなくなります。';
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(t) +
+                '&url=' + encodeURIComponent(GAME_URL), '_blank');
+  }
+
+  for(var i=0;i<2;i++) bind(opts[i], onPick);
+  bind(document.getElementById('startBtn'), start);
+  bind(document.getElementById('retryBtn'), start);
+  bind(document.getElementById('shareBtn'), share);
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>空気読み選手権 について</h2>
+<p>顔が8人から16人まで並びます。答えるのは「この集団は全体としていい空気か、わるい空気か」だけ。1人ずつ見ている時間はありません。</p>
+<h3>なぜ難しいのか</h3><p>1人ずつ見なくても答えられます。人の視覚には、たくさん並んだものを1つずつ覚える代わりに、全体の平均だけを取り出す働きがあるからです。2000年代の研究では、複数の顔を一瞬だけ見せたあと、平均の表情はかなり正確に答えられるのに、「この顔はさっきの中にいたか」はほとんど当てられない、という結果が出ています。つまり平均は残り、個々の顔は残らない。このゲームで見ているのは、その平均のほうです。難しくしているのは、毎回1人だけ入れてある「とびきり声の大きい顔」です。他の全員は😠から😊までの範囲に収めてあり、😡と😄はこの1人だけに使っています。そして4割ほどの回では、その1人の向きを全体の平均とわざと逆にしてあります。平均はプラスなのに、その中に1人だけ本気で怒っている顔がいる、という配置です。目立つものは平均に混ざらず、単独で先に届きます。だから逆向きの回だけ、正答率がはっきり落ちます。進むにつれて人数は8人から16人へ増え、平均の傾きは1人あたり1.1点ほどから0.45点ほどまで小さくなり、見ていられる時間は1.9秒から0.8秒まで短くなります。人数が増えるほど平均そのものは安定するので、効いてくるのは傾きの小ささと時間のほうです。</p>
+<h3>コツ</h3><ul><li>1人ずつ数えないこと。数えれば必ず正確ですが、後半は16人を0.8秒で見ることになり、数え始めた時点で間に合いません。視線を並びの中央に置いて、全体をぼんやり見るほうが当たります</li><li>😡か😄が目に入ったら、いったんその1人を無いものとして残りを見る。この2つは毎回1人しか出ないので、それを外しても平均の向きはほとんど変わりません</li><li>はっきり分かったと感じた回ほど疑う。差が小さい問題で強い印象が出るのは、たいてい声の大きい1人が効いているときです</li></ul>
+<h3>記録の目安</h3><p>20問中13問で標準的なところ、16問を超えると平均のほうを見られている部類です。⚠️ ただし2択なので、当てずっぽうでも10問前後は当たります。そこが実質の出発点です。結果画面には「大声が全体と同じ向きだった回」と「逆向きだった回」の正答率が別々に出ます。逆向きのほうが低ければ、その差があなたに出ている引きずられ方の大きさです。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../futatsu-mae/">◀ 🔁 2つ前と同じ選手権</a></li><li><a href="../souji-10sec/">🥁 10秒お掃除ゲーム</a></li><li><a href="../onkan-hansha/">🎲 音感反射選手権</a></li><li><a href="../chui-no-mabataki/">😵 注意の瞬き選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "空気読み選手権", "description": "並んだ顔の平均がいい側かわるい側かを答えるだけ。1人だけ声の大きい顔がまざると、全体の向きが読めなくなります。", "url": "https://bakage.com/games/kuuki-yomi/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
