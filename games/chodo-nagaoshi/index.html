@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ちょうど長押し選手権 | バカゲー製作所</title>
+<meta name="description" content="ボタンをちょうど1秒だけ長押し。時計を見ずに、指先だけで1.000秒へ近づく5回勝負のバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-JLPMYL3495');</script>
+<style>
+:root{--bg:#7DE2D1;--ink:#17171f;--pink:#ff4f81;--white:#fff;--yellow:#ffe14d}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;user-select:none;touch-action:manipulation;overflow-y:auto}
+body.playing{overflow:hidden;touch-action:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:.9rem;font-weight:900}.topbar a{color:var(--ink);text-decoration:none;opacity:.75}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px}.panel{width:100%;max-width:430px;text-align:center}
+.card{background:var(--white);border:4px solid var(--ink);border-radius:18px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+h1{font-size:1.55rem;margin-bottom:12px}.card p{font-size:.92rem;line-height:1.8;margin:7px 0}
+.btn{margin-top:16px;padding:14px 28px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:900 1rem inherit;cursor:pointer}.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hide{display:none!important}.hud{display:flex;justify-content:space-between;font-weight:900;margin:0 4px 12px}.prompt{font-weight:900;font-size:1.05rem;margin-bottom:12px}
+.hold{width:100%;height:210px;border:5px solid var(--ink);border-radius:24px;background:var(--yellow);box-shadow:8px 8px 0 var(--ink);font:900 1.45rem inherit;color:var(--ink);cursor:pointer;touch-action:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.hold strong{font-size:3.2rem}.hold.pressed{background:var(--pink);color:#fff;transform:translate(4px,4px);box-shadow:4px 4px 0 var(--ink)}
+.msg{min-height:2em;margin-top:18px;font-weight:900;line-height:1.5}.history{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:14px}.chip{background:#fff;border:3px solid var(--ink);border-radius:9px;padding:8px 2px;font-size:.72rem;font-weight:900}.chip.empty{opacity:.35}
+@media(max-width:480px){header{padding:14px 16px}.stage{padding:12px}.card{padding:22px 16px}.hold{height:190px}}
+.score{font-size:3rem;font-weight:900;margin:8px 0}.breakdown{font-size:.86rem;line-height:1.7;margin-top:10px}.rank{font-weight:900;margin:10px 0}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/chodo-nagaoshi/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="ちょうど長押し選手権">
+<meta property="og:description" content="ボタンをちょうど1秒だけ長押し。時計を見ずに、指先だけで1.000秒へ近づく5回勝負です。">
+<meta property="og:url" content="https://bakage.com/games/chodo-nagaoshi/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-chodo-nagaoshi.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-chodo-nagaoshi.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>⏱️ ちょうど長押し選手権</span></div>
+<div class="stage"><div class="panel">
+  <div id="intro" class="card">
+    <h1>⏱️ ちょうど長押し選手権</h1>
+    <p>ボタンを押したまま待って、<br><strong>ちょうど1秒</strong>だと思った瞬間に離してください。</p>
+    <p>時計もゲージも出ません。<br>全5回の平均誤差で勝負。</p>
+    <button class="btn" id="startBtn">タップして開始</button>
+  </div>
+  <div id="play" class="hide">
+    <div class="hud"><span id="round">1 / 5</span><span>目標 1.000秒</span></div>
+    <div class="prompt" id="prompt">押して、1秒で離す</div>
+    <button class="hold" id="holdBtn" type="button"><strong>☝️</strong><span>ここを長押し</span></button>
+    <div class="msg" id="msg">準備できたら押してください</div>
+    <div class="history" id="history"></div>
+  </div>
+  <div id="result" class="card hide">
+    <h1>結果</h1><p>5回の平均誤差</p>
+    <div class="score" id="score">0 ms</div>
+    <div class="rank" id="rank"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <button class="btn" id="retryBtn">もう一度</button><button class="btn sub" id="shareBtn">Xで共有</button>
+  </div>
+</div></div>
+<script>
+(function(){
+  'use strict';
+  var TOTAL=5,TARGET=1000,GAME_URL='https://bakage.com/games/chodo-nagaoshi/';
+  var intro=document.getElementById('intro'),play=document.getElementById('play'),result=document.getElementById('result');
+  var hold=document.getElementById('holdBtn'),roundEl=document.getElementById('round'),promptEl=document.getElementById('prompt'),msg=document.getElementById('msg'),historyEl=document.getElementById('history');
+  var scoreEl=document.getElementById('score'),rankEl=document.getElementById('rank'),breakdownEl=document.getElementById('breakdown');
+  var values=[],started=0,down=false,blockUntil=0;
+  function bind(el,type,fn){el.addEventListener(type,fn,{passive:false})}
+  function now(){return performance.now()}
+  function renderHistory(){historyEl.innerHTML='';for(var i=0;i<TOTAL;i++){var d=document.createElement('div');d.className='chip'+(i>=values.length?' empty':'');d.textContent=i<values.length?(values[i]/1000).toFixed(3)+'秒':'—';historyEl.appendChild(d)}}
+  function start(e){if(e)e.preventDefault();values=[];down=false;blockUntil=Date.now()+450;document.body.classList.add('playing');intro.classList.add('hide');result.classList.add('hide');play.classList.remove('hide');roundEl.textContent='1 / '+TOTAL;promptEl.textContent='押して、1秒で離す';msg.textContent='準備できたら押してください';hold.classList.remove('pressed');renderHistory()}
+  function press(e){if(e)e.preventDefault();if(down||Date.now()<blockUntil||values.length>=TOTAL)return;down=true;started=now();hold.classList.add('pressed');hold.innerHTML='<strong>✊</strong><span>1秒だと思ったら離す</span>';promptEl.textContent='時計は見えません';msg.textContent='…' }
+  function release(e){if(e)e.preventDefault();if(!down)return;down=false;var elapsed=Math.max(1,Math.round(now()-started));values.push(elapsed);hold.classList.remove('pressed');hold.innerHTML='<strong>☝️</strong><span>ここを長押し</span>';var diff=elapsed-TARGET;msg.textContent=(elapsed/1000).toFixed(3)+'秒 — '+(diff===0?'ぴったり!':Math.abs(diff)+' ms '+(diff<0?'早い':'遅い'));renderHistory();if(values.length>=TOTAL){setTimeout(finish,650)}else{roundEl.textContent=(values.length+1)+' / '+TOTAL;promptEl.textContent='もう一度、押して1秒で離す';blockUntil=Date.now()+350}}
+  function avg(){var s=0;for(var i=0;i<values.length;i++)s+=Math.abs(values[i]-TARGET);return Math.round(s/values.length)}
+  function rank(n){if(n<=25)return'🏆 指先原子時計';if(n<=50)return'🎯 1秒職人';if(n<=100)return'👏 かなり正確';if(n<=200)return'🙂 人間らしい1秒';return'🌀 時間が伸び縮みしています'}
+  function finish(){document.body.classList.remove('playing');play.classList.add('hide');result.classList.remove('hide');var a=avg(),best=Math.min.apply(null,values.map(function(v){return Math.abs(v-TARGET)}));var signed=Math.round(values.reduce(function(s,v){return s+v-TARGET},0)/values.length);scoreEl.textContent=a+' ms';rankEl.textContent=rank(a);breakdownEl.textContent='ベスト誤差 '+best+' ms ／ 平均は '+Math.abs(signed)+' ms '+(signed<0?'早め':signed>0?'遅め':'ちょうど')+'。\n'+values.map(function(v){return(v/1000).toFixed(3)}).join(' / ')+' 秒'}
+  function share(e){if(e)e.preventDefault();var a=avg(),t='【ちょうど長押し選手権】\n5回の平均誤差 '+a+' ms！ '+rank(a)+'\n時計を見ずに、ボタンをちょうど1秒だけ長押し。';window.open('https://x.com/intent/tweet?text='+encodeURIComponent(t)+'&url='+encodeURIComponent(GAME_URL),'_blank')}
+  bind(document.getElementById('startBtn'),'click',start);bind(document.getElementById('retryBtn'),'click',start);bind(document.getElementById('shareBtn'),'click',share);
+  bind(hold,'pointerdown',press);bind(hold,'pointerup',release);bind(hold,'pointercancel',release);bind(hold,'lostpointercapture',release);
+  bind(document,'keydown',function(e){if((e.code==='Space'||e.code==='Enter')&&!e.repeat&&!play.classList.contains('hide'))press(e)});bind(document,'keyup',function(e){if(e.code==='Space'||e.code==='Enter')release(e)});
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>ちょうど長押し選手権 について</h2>
+<p>ボタンを押したまま待ち、ちょうど1秒だと思った瞬間に離します。時計は出ません。5回の平均誤差があなたの記録です。</p>
+<h3>なぜ難しいのか</h3><p>普段の1秒は、時計や音の区切りを借りて測っています。このゲームでは、その手がかりを全部外して、押してから離すまでの長さだけを自分で作ります。最初の1回が長いと次は短くしすぎ、短いと次は待ちすぎる。直前の失敗を直そうとするほど、1秒の中心を行き来します。結果は早すぎた時間をマイナス、遅すぎた時間をプラスで表示します。5回の平均だけでなく、どちら側へ偏りやすかったかも残るので、速さより自分の修正癖が見えるゲームです。</p>
+<h3>コツ</h3><ul><li>頭の中で数字を数えるより、息をひとつ吐く長さや指に力を入れて戻す流れを毎回そろえる</li><li>直前の誤差を全部取り返そうとしない。100ミリ秒早かった次に100ミリ秒足すと、今度は待ちすぎやすくなります</li><li>画面の色や文字が変わるのを待たない。押している最中に正解の合図は出ません</li></ul>
+<h3>記録の目安</h3><p>平均誤差100ミリ秒未満ならかなり正確、50ミリ秒未満なら指先時計の達人級です。1回だけ偶然ぴったりでも、記録は5回の平均で決まります。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../kuuki-yomi/">◀ 🌤️ 空気読み選手権</a></li><li><a href="../souji-10sec/">🥁 10秒お掃除ゲーム</a></li><li><a href="../onkan-hansha/">🎲 音感反射選手権</a></li><li><a href="../chui-no-mabataki/">😵 注意の瞬き選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "ちょうど長押し選手権", "description": "ボタンをちょうど1秒だけ長押し。時計を見ずに、指先だけで1.000秒へ近づく5回勝負です。", "url": "https://bakage.com/games/chodo-nagaoshi/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
