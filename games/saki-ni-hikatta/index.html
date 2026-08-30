@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>先に光ったのはどっち選手権 | バカゲー製作所</title>
+<meta name="description" content="左右のランプが、ほんの数十ミリ秒だけずれて光ります。先に光ったのはどっち。差はどんどん縮む全16問のバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-JLPMYL3495');</script>
+<style>
+:root{--bg:#7DE2D1;--ink:#17171f;--pink:#ff4f81;--white:#fff;--yellow:#ffe14d;--dim:#c8ccd6}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;user-select:none;touch-action:manipulation;overflow-y:auto}
+body.playing{overflow:hidden;touch-action:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:.9rem;font-weight:900}.topbar a{color:var(--ink);text-decoration:none;opacity:.75}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px}.panel{width:100%;max-width:430px;text-align:center}
+.card{background:var(--white);border:4px solid var(--ink);border-radius:18px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+h1{font-size:1.5rem;margin-bottom:12px}.card p{font-size:.92rem;line-height:1.8;margin:7px 0}
+.btn{margin-top:16px;padding:14px 28px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:900 1rem inherit;cursor:pointer}.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hide{display:none!important}
+.hud{display:flex;justify-content:space-between;font-weight:900;margin:0 4px 10px}
+.prompt{font-weight:900;font-size:1.05rem;margin-bottom:10px;min-height:1.6em}
+.lamps{display:flex;gap:14px;justify-content:center;align-items:center}
+.lamp{flex:1 1 0;max-width:150px;aspect-ratio:1/1;border:5px solid var(--ink);border-radius:50%;background:var(--dim);box-shadow:6px 6px 0 var(--ink);transition:none}
+.lamp.on{background:var(--yellow)}
+.side{font-weight:900;font-size:.8rem;margin-top:6px;opacity:.7}
+.answers{display:flex;gap:10px;margin-top:14px}
+.ans{flex:1 1 0;padding:15px 4px;border:4px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);font:900 1rem inherit;cursor:pointer;box-shadow:4px 4px 0 var(--ink)}
+.ans:disabled{opacity:.35;box-shadow:none;transform:translate(4px,4px)}
+.ans:active:enabled{transform:translate(4px,4px);box-shadow:none;background:var(--pink);color:#fff}
+.msg{min-height:2.6em;margin-top:12px;font-weight:900;line-height:1.5;font-size:.9rem}
+.strip{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;margin-top:10px}
+.bit{height:9px;border-radius:2px;background:#fff;border:2px solid var(--ink)}
+.bit.ok{background:var(--yellow)}.bit.ng{background:var(--pink)}.bit.tie{background:var(--ink)}
+.score{font-size:2.6rem;font-weight:900;margin:8px 0}
+.rank{font-weight:900;margin:10px 0}
+.breakdown{font-size:.85rem;line-height:1.8;margin-top:10px;text-align:left;white-space:pre-line}
+@media(max-width:480px){.topbar{padding:14px 16px}.stage{padding:12px}.card{padding:22px 16px}.lamps{gap:10px}h1{font-size:1.3rem}}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/saki-ni-hikatta/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="先に光ったのはどっち選手権">
+<meta property="og:description" content="左右のランプが、ほんのわずかにずれて光ります。先に光ったのはどっちか。差がどんどん縮む全16問です。">
+<meta property="og:url" content="https://bakage.com/games/saki-ni-hikatta/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-saki-ni-hikatta.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-saki-ni-hikatta.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>💡 先に光ったのはどっち選手権</span></div>
+<div class="stage"><div class="panel">
+  <div id="intro" class="card">
+    <h1>💡 先に光ったのはどっち選手権</h1>
+    <p>左右のランプが、<strong>ほんのわずかにずれて</strong>光ります。<br>先に光ったのはどっちか、それだけを答えてください。</p>
+    <p>差は最初およそ0.25秒、最後は画面の書き換え2コマぶんまで縮みます。<br>全16問。うち4問は<strong>本当に同時</strong>で、採点しません。</p>
+    <button class="btn" id="startBtn">タップして開始</button>
+  </div>
+  <div id="play" class="hide">
+    <div class="hud"><span id="qno">1 / 16</span><span>連続 <span id="streak">0</span></span></div>
+    <div class="prompt" id="prompt">よく見て</div>
+    <div class="lamps"><div class="lamp" id="lampL"></div><div class="lamp" id="lampR"></div></div>
+    <div class="answers">
+      <button class="ans" id="ans0" type="button" disabled>⬅️ 左が先</button>
+      <button class="ans" id="ans1" type="button" disabled>右が先 ➡️</button>
+    </div>
+    <div class="msg" id="msg">ランプから目を離さないでください</div>
+    <div class="strip" id="strip"></div>
+  </div>
+  <div id="result" class="card hide">
+    <h1>結果</h1><p>採点した12問のうち</p>
+    <div class="score" id="score">0 / 12</div>
+    <div class="rank" id="rank"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <button class="btn" id="retryBtn">もう一度</button><button class="btn sub" id="shareBtn">Xで共有</button>
+  </div>
+</div></div>
+<script>
+(function(){
+  'use strict';
+  var TOTAL=16,SCORED=12,GAME_URL='https://bakage.com/games/saki-ni-hikatta/';
+  var SOAS=[250,210,170,140,115,95,78,64,53,45,38,32];
+  var SIM_AT=[4,8,12,15];
+  var intro=document.getElementById('intro'),play=document.getElementById('play'),result=document.getElementById('result');
+  var lampL=document.getElementById('lampL'),lampR=document.getElementById('lampR');
+  var ans0=document.getElementById('ans0'),ans1=document.getElementById('ans1');
+  var qnoEl=document.getElementById('qno'),streakEl=document.getElementById('streak'),promptEl=document.getElementById('prompt'),msg=document.getElementById('msg'),stripEl=document.getElementById('strip');
+  var scoreEl=document.getElementById('score'),rankEl=document.getElementById('rank'),breakdownEl=document.getElementById('breakdown');
+  var frameMs=16.7,trials=[],log=[],idx=0,streak=0,bestStreak=0,correct=0,awaiting=false,shownSOA=0,running=false;
+
+  function bind(el,fn){
+    var guard=0;
+    el.addEventListener('touchstart',function(e){e.preventDefault();guard=Date.now();fn(e)},{passive:false});
+    el.addEventListener('click',function(e){if(Date.now()-guard<600)return;fn(e)},{passive:false});
+  }
+  function measureFrame(done){
+    var ts=[];
+    function loop(t){ts.push(t);if(ts.length<12){requestAnimationFrame(loop);return}
+      var d=[],i;for(i=1;i<ts.length;i++)d.push(ts[i]-ts[i-1]);
+      d.sort(function(a,b){return a-b});
+      var med=d[Math.floor(d.length/2)];
+      if(!(med>4&&med<60))med=16.7;
+      done(med)}
+    requestAnimationFrame(loop);
+  }
+  function renderStrip(){
+    stripEl.innerHTML='';
+    for(var i=0;i<TOTAL;i++){
+      var d=document.createElement('div');d.className='bit';
+      if(i<log.length)d.className='bit '+(log[i].ok===null?'tie':(log[i].ok?'ok':'ng'));
+      stripEl.appendChild(d);
+    }
+  }
+  function enable(on){ans0.disabled=!on;ans1.disabled=!on}
+  function build(){
+    trials=[];var si=0;
+    for(var i=1;i<=TOTAL;i++){
+      var sim=SIM_AT.indexOf(i)>=0;
+      trials.push({sim:sim,soa:sim?0:SOAS[si++],first:Math.random()<0.5?0:1});
+    }
+  }
+  function start(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    if(running)return;running=true;
+    build();log=[];idx=0;streak=0;bestStreak=0;correct=0;awaiting=false;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');result.classList.add('hide');play.classList.remove('hide');
+    qnoEl.textContent='1 / '+TOTAL;streakEl.textContent='0';
+    promptEl.textContent='よく見て';msg.textContent='ランプから目を離さないでください';
+    enable(false);renderStrip();
+    measureFrame(function(m){frameMs=m;setTimeout(runTrial,400)});
+  }
+  function runTrial(){
+    var t=trials[idx];
+    lampL.classList.remove('on');lampR.classList.remove('on');
+    enable(false);awaiting=false;
+    promptEl.textContent='よく見て';
+    var pre=Math.max(6,Math.round((280+Math.random()*380)/frameMs));
+    var gap=t.sim?0:Math.max(2,Math.round(t.soa/frameMs));
+    var aF=pre,bF=pre+gap,offF=bF+Math.max(8,Math.round(260/frameMs));
+    var n=0,tA=0,tB=0;
+    var one=(t.first===0)?lampL:lampR,two=(t.first===0)?lampR:lampL;
+    function loop(ts){
+      n++;
+      if(n===aF){one.classList.add('on');tA=ts;if(t.sim){two.classList.add('on');tB=ts}}
+      if(!t.sim&&n===bF){two.classList.add('on');tB=ts}
+      if(n>=offF){
+        lampL.classList.remove('on');lampR.classList.remove('on');
+        shownSOA=Math.round(Math.abs(tB-tA));
+        awaiting=true;enable(true);
+        promptEl.textContent='先に光ったのは？';msg.textContent='迷ったら最初の直感で';
+        return;
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  }
+  function answer(side){
+    if(!awaiting)return;
+    awaiting=false;enable(false);
+    var t=trials[idx],ok;
+    if(t.sim){
+      ok=null;
+      msg.textContent='⚖️ この問題は同時でした。採点しません（あなたは「'+(side===0?'左':'右')+'が先」と答えました）';
+    }else{
+      ok=(side===t.first);
+      if(ok){correct++;streak++;if(streak>bestStreak)bestStreak=streak}else{streak=0}
+      msg.textContent=(ok?'⭕ 正解':'❌ はずれ')+' — 差は '+shownSOA+' ms でした';
+    }
+    log.push({sim:t.sim,soa:shownSOA,first:t.first,ans:side,ok:ok});
+    streakEl.textContent=String(streak);
+    renderStrip();
+    idx++;
+    setTimeout(function(){
+      if(idx>=TOTAL){finish();return}
+      qnoEl.textContent=(idx+1)+' / '+TOTAL;
+      runTrial();
+    },520);
+  }
+  function rank(n){
+    if(n>=12)return'🏆 順番の番人';
+    if(n>=10)return'⚡ 目のほうが速い';
+    if(n>=8)return'👏 標準より上';
+    if(n>=6)return'🙂 だいたい人並み';
+    return'🌀 世界はぜんぶ同時に起きています';
+  }
+  function finish(){
+    running=false;
+    document.body.classList.remove('playing');
+    play.classList.add('hide');result.classList.remove('hide');
+    var scored=log.filter(function(r){return !r.sim});
+    var sims=log.filter(function(r){return r.sim});
+    var hits=scored.filter(function(r){return r.ok});
+    var minOK=hits.length?Math.min.apply(null,hits.map(function(r){return r.soa})):0;
+    var big=scored.slice(0,6),small=scored.slice(6);
+    var bigOK=big.filter(function(r){return r.ok}).length;
+    var smallOK=small.filter(function(r){return r.ok}).length;
+    var simL=sims.filter(function(r){return r.ans===0}).length;
+    scoreEl.textContent=correct+' / '+SCORED;
+    rankEl.textContent=rank(correct);
+    breakdownEl.textContent=
+      '最長の連続正解：'+bestStreak+' 問\n'+
+      '差が大きい前半6問：'+bigOK+' / 6 ／ 差が小さい後半6問：'+smallOK+' / 6\n'+
+      (hits.length?('当てられたいちばん小さい差：'+minOK+' ms'):'差の大きい問題も当たりませんでした')+'\n'+
+      '同時に光った4問：左と答えたのが '+simL+' 回、右が '+(sims.length-simL)+' 回\n'+
+      '画面の書き換え間隔は '+frameMs.toFixed(1)+' ms でした（最短の差はこの2コマぶん）';
+  }
+  function share(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    var t='【先に光ったのはどっち選手権】\n12問中 '+correct+' 問正解！ '+rank(correct)+'\n左右のランプのわずかな時間差、どこまで見分けられますか。';
+    window.open('https://x.com/intent/tweet?text='+encodeURIComponent(t)+'&url='+encodeURIComponent(GAME_URL),'_blank');
+  }
+  bind(document.getElementById('startBtn'),start);
+  bind(document.getElementById('retryBtn'),start);
+  bind(document.getElementById('shareBtn'),share);
+  bind(ans0,function(){if(!ans0.disabled)answer(0)});
+  bind(ans1,function(){if(!ans1.disabled)answer(1)});
+  document.addEventListener('keydown',function(e){
+    if(!play.classList.contains('hide')){
+      if(e.code==='ArrowLeft'){e.preventDefault();answer(0)}
+      else if(e.code==='ArrowRight'){e.preventDefault();answer(1)}
+      return;
+    }
+    if((e.code==='Space'||e.code==='Enter')&&!e.repeat)start(e);
+  });
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>先に光ったのはどっち選手権 について</h2>
+<p>左右のランプが、ほんのわずかにずれて光ります。答えるのは「先に光ったのはどっち」だけ。差はおよそ0.25秒から始まって、最後は画面の書き換え2コマぶんまで縮みます。</p>
+<h3>なぜ難しいのか</h3><p>2つの出来事の前後を決めるには、信号が届く時間そのものに差が要ります。同じ形・同じ明るさのものが左右に出る場合、多くの人は 20〜40ms より小さい差では順番を決められません。差そのものが見えなくなるのではなく、順番という情報だけが先に失われます。ここで効いてくるのが視線です。注意を向けている側は、届くのがわずかに早く感じられます。だから片方のランプを見つめていると、そちらが先に光ったように見える。真ん中を見ているときといないときで、同じ差でも答えが変わります。そしてもう1つ。人は「どちらが先か」と問われると、差が無くても必ず答えを作ります。そこでこのゲームは、16問のうち4問を本当に同時に光らせています。その4問であなたがどちらを選んだかが、そのまま左右どちらへ寄る癖かを表します。表示の側にも限界があります。ブラウザが画面を書き換えられるのは多くの端末で1秒に60回、つまり約16.7msごとです。それより細かい差は作れないので、このゲームは最初に実際の書き換え間隔を測り、いちばん短い問題でもかならず2コマぶんは空けています。結果画面に出る差の数値は、その実測値です。</p>
+<h3>コツ</h3><ul><li>2つのランプの真ん中を見る。どちらかを見つめると、見ていた側が先に光ったように感じます</li><li>光った瞬間ではなく、まだ暗いままの側を探す。後から光るほうは一瞬だけ暗いので、そちらのほうが見つけやすい</li><li>迷った回に自分がどちらを選んだかは、結果画面の「同時に光った4問」で分かります。左に4回寄っていたら、それがあなたの初期設定です</li></ul>
+<h3>記録の目安</h3><p>2択なので、当てずっぽうでも12問中6問前後は当たります。8問で標準より上、10問を超えると差が50ms前後の問題まで見分けています。採点する12問の差は、60Hzの画面でおよそ 250・217・167・133・117・100・83・67・50・50・33・33ms です。33msは2コマぶんで、これ以上は画面の側が細かくできません。同時だった4問に正解はありません。左右どちらへ何回寄ったかだけを出しています。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../chodo-nagaoshi/">◀ ⏱️ ちょうど長押し選手権</a></li><li><a href="../souji-10sec/">🥁 10秒お掃除ゲーム</a></li><li><a href="../onkan-hansha/">🎲 音感反射選手権</a></li><li><a href="../chui-no-mabataki/">😵 注意の瞬き選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "先に光ったのはどっち選手権", "description": "左右のランプが、ほんのわずかにずれて光ります。先に光ったのはどっちか。差がどんどん縮む全16問です。", "url": "https://bakage.com/games/saki-ni-hikatta/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
