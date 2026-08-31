@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>どれ追ってた選手権 | バカゲー製作所</title>
+<meta name="description" content="同じ見た目の丸がまざって動きます。光った何個かだけを目で追い、止まったら選ぶだけ。追う数が1つ増えるたびに、あっさり見失う全10ラウンドのバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-JLPMYL3495');</script>
+<style>
+:root{--bg:#8FB8FF;--ink:#17171f;--pink:#ff4f81;--white:#fff;--yellow:#ffe14d;--dim:#c9cfdc;--green:#2fbf71}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;user-select:none;touch-action:manipulation;overflow-y:auto}
+body.playing{overflow:hidden;touch-action:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:.9rem;font-weight:900}.topbar a{color:var(--ink);text-decoration:none;opacity:.75}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px}.panel{width:100%;max-width:420px;text-align:center}
+.card{background:var(--white);border:4px solid var(--ink);border-radius:18px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+h1{font-size:1.45rem;margin-bottom:12px}.card p{font-size:.92rem;line-height:1.8;margin:7px 0}
+.btn{margin-top:16px;padding:14px 28px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:900 1rem inherit;cursor:pointer}.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hide{display:none!important}
+.hud{display:flex;justify-content:space-between;font-weight:900;margin:0 4px 8px;font-size:.9rem}
+.prompt{font-weight:900;font-size:1.02rem;margin-bottom:8px;min-height:1.5em}
+.field{position:relative;width:100%;aspect-ratio:1/1;background:var(--white);border:4px solid var(--ink);border-radius:14px;box-shadow:6px 6px 0 var(--ink);overflow:hidden}
+.dot{position:absolute;left:0;top:0;border-radius:50%;background:var(--dim);border:3px solid var(--ink);will-change:transform}
+.dot.mark{background:var(--pink)}
+.dot.pick{background:var(--yellow)}
+.dot.was{background:var(--green)}
+.dot.bad{background:var(--ink)}
+.dot.tap{cursor:pointer}
+.msg{min-height:2.6em;margin-top:10px;font-weight:900;line-height:1.5;font-size:.88rem}
+.strip{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:8px}
+.bit{height:9px;border-radius:2px;background:#fff;border:2px solid var(--ink)}
+.bit.ok{background:var(--yellow)}.bit.ng{background:var(--pink)}
+.score{font-size:2.5rem;font-weight:900;margin:8px 0}
+.rank{font-weight:900;margin:10px 0}
+.breakdown{font-size:.85rem;line-height:1.8;margin-top:10px;text-align:left;white-space:pre-line}
+@media(max-width:480px){.topbar{padding:14px 16px}.stage{padding:12px}.card{padding:22px 16px}h1{font-size:1.25rem}}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/dore-otteta/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="どれ追ってた選手権">
+<meta property="og:description" content="同じ見た目の丸がまざって動きます。光った何個かだけを目で追い、止まったら選ぶだけ。追う数が1つ増えるたびに見失います。">
+<meta property="og:url" content="https://bakage.com/games/dore-otteta/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-dore-otteta.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-dore-otteta.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>👀 どれ追ってた選手権</span></div>
+<div class="stage"><div class="panel">
+  <div id="intro" class="card">
+    <h1>👀 どれ追ってた選手権</h1>
+    <p>同じ見た目の丸がまざって動きます。<br><strong>最初にピンクになった丸だけ</strong>を目で追い、止まったらその丸を選んでください。</p>
+    <p>ラウンドが上がるたびに、追う数が1つずつ増えます。全10ラウンド、1回でも外したら終わりです。</p>
+    <button class="btn" id="startBtn">タップして開始</button>
+  </div>
+  <div id="play" class="hide">
+    <div class="hud"><span id="rno">1 / 10</span><span>追う数 <span id="tno">2</span></span></div>
+    <div class="prompt" id="prompt">覚えて</div>
+    <div class="field" id="field"></div>
+    <div class="msg" id="msg">ピンクの丸を覚えてください</div>
+    <div class="strip" id="strip"></div>
+  </div>
+  <div id="result" class="card hide">
+    <h1>結果</h1><p>クリアしたラウンド</p>
+    <div class="score" id="score">0 / 10</div>
+    <div class="rank" id="rank"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <button class="btn" id="retryBtn">もう一度</button><button class="btn sub" id="shareBtn">Xで共有</button>
+  </div>
+</div></div>
+<script>
+(function(){
+  'use strict';
+  var GAME_URL='https://bakage.com/games/dore-otteta/';
+  var ROUNDS=[
+    {n:6,k:2,sp:1.00},{n:8,k:2,sp:1.15},{n:8,k:3,sp:1.30},{n:10,k:3,sp:1.45},
+    {n:10,k:4,sp:1.60},{n:12,k:4,sp:1.75},{n:12,k:5,sp:1.90},{n:14,k:5,sp:2.05},
+    {n:14,k:6,sp:2.20},{n:16,k:6,sp:2.40}
+  ];
+  var TOTAL=ROUNDS.length,SHOW_MS=1300,MOVE_MS=3400,FEED_MS=1100;
+  var intro=document.getElementById('intro'),play=document.getElementById('play'),result=document.getElementById('result');
+  var field=document.getElementById('field'),rnoEl=document.getElementById('rno'),tnoEl=document.getElementById('tno');
+  var promptEl=document.getElementById('prompt'),msg=document.getElementById('msg'),stripEl=document.getElementById('strip');
+  var scoreEl=document.getElementById('score'),rankEl=document.getElementById('rank'),breakdownEl=document.getElementById('breakdown');
+  var dots=[],log=[],idx=0,cleared=0,maxK=0,picks=[],phase='idle',running=false,rafId=0,timers=[],lastTs=0,nearMiss=0;
+
+  function bind(el,fn){
+    var guard=0;
+    el.addEventListener('touchstart',function(e){e.preventDefault();guard=Date.now();fn(e)},{passive:false});
+    el.addEventListener('click',function(e){if(Date.now()-guard<600)return;fn(e)},{passive:false});
+  }
+  function later(fn,ms){timers.push(setTimeout(fn,ms))}
+  function clearTimers(){for(var i=0;i<timers.length;i++)clearTimeout(timers[i]);timers=[]}
+  function stopLoop(){if(rafId){cancelAnimationFrame(rafId);rafId=0}}
+
+  function renderStrip(){
+    stripEl.innerHTML='';
+    for(var i=0;i<TOTAL;i++){
+      var d=document.createElement('div');d.className='bit';
+      if(i<log.length)d.className='bit '+(log[i]?'ok':'ng');
+      stripEl.appendChild(d);
+    }
+  }
+  function place(d){d.el.style.transform='translate('+(d.x-d.r)+'px,'+(d.y-d.r)+'px)'}
+
+  function buildRound(){
+    var cfg=ROUNDS[idx];
+    field.innerHTML='';dots=[];picks=[];nearMiss=0;
+    var W=field.clientWidth||320,H=field.clientHeight||W;
+    var R=Math.max(12,Math.min(22,Math.round(W*0.046)));
+    var speed=W*0.22*cfg.sp/1000;
+    var tries,i,j,ok,x,y;
+    for(i=0;i<cfg.n;i++){
+      for(tries=0;tries<400;tries++){
+        x=R+2+Math.random()*(W-2*R-4);y=R+2+Math.random()*(H-2*R-4);ok=true;
+        for(j=0;j<dots.length;j++){
+          var dx=dots[j].x-x,dy=dots[j].y-y;
+          if(dx*dx+dy*dy<(2.6*R)*(2.6*R)){ok=false;break}
+        }
+        if(ok)break;
+      }
+      var a=Math.random()*Math.PI*2;
+      var el=document.createElement('div');
+      el.className='dot';el.style.width=(2*R)+'px';el.style.height=(2*R)+'px';
+      field.appendChild(el);
+      var d={el:el,x:x,y:y,r:R,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,target:false,i:i};
+      place(d);dots.push(d);
+      (function(dd){bind(el,function(){pick(dd)})})(d);
+    }
+    var order=[];for(i=0;i<cfg.n;i++)order.push(i);
+    for(i=order.length-1;i>0;i--){j=Math.floor(Math.random()*(i+1));var t=order[i];order[i]=order[j];order[j]=t}
+    for(i=0;i<cfg.k;i++){dots[order[i]].target=true;dots[order[i]].el.classList.add('mark')}
+    return {W:W,H:H,cfg:cfg};
+  }
+
+  function step(ts){
+    if(phase!=='move'){rafId=0;return}
+    var dt=lastTs?Math.min(50,ts-lastTs):16;lastTs=ts;
+    var W=field.clientWidth||320,H=field.clientHeight||W,i,j;
+    for(i=0;i<dots.length;i++){
+      var d=dots[i];
+      d.x+=d.vx*dt;d.y+=d.vy*dt;
+      if(d.x<d.r){d.x=d.r;d.vx=Math.abs(d.vx)}
+      if(d.x>W-d.r){d.x=W-d.r;d.vx=-Math.abs(d.vx)}
+      if(d.y<d.r){d.y=d.r;d.vy=Math.abs(d.vy)}
+      if(d.y>H-d.r){d.y=H-d.r;d.vy=-Math.abs(d.vy)}
+    }
+    for(i=0;i<dots.length;i++)for(j=i+1;j<dots.length;j++){
+      var a=dots[i],b=dots[j],dx=b.x-a.x,dy=b.y-a.y,dist=Math.sqrt(dx*dx+dy*dy),min=a.r+b.r;
+      if(dist>0&&dist<min){
+        if(a.target!==b.target)nearMiss++;
+        var nx=dx/dist,ny=dy/dist,push=(min-dist)/2+0.5;
+        a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;
+        var av=a.vx*nx+a.vy*ny,bv=b.vx*nx+b.vy*ny,diff=bv-av;
+        a.vx+=nx*diff;a.vy+=ny*diff;b.vx-=nx*diff;b.vy-=ny*diff;
+      }
+    }
+    for(i=0;i<dots.length;i++)place(dots[i]);
+    rafId=requestAnimationFrame(step);
+  }
+
+  function startRound(){
+    var cfg=ROUNDS[idx];
+    phase='show';clearTimers();stopLoop();
+    rnoEl.textContent=(idx+1)+' / '+TOTAL;tnoEl.textContent=String(cfg.k);
+    promptEl.textContent='覚えて';
+    msg.textContent='ピンクの丸 '+cfg.k+' 個を覚えてください';
+    buildRound();
+    later(function(){
+      var i;for(i=0;i<dots.length;i++)dots[i].el.classList.remove('mark');
+      phase='move';lastTs=0;
+      promptEl.textContent='追いかけて';
+      msg.textContent='目で追い続けてください';
+      rafId=requestAnimationFrame(step);
+      later(function(){
+        stopLoop();phase='pick';
+        promptEl.textContent='どれ追ってた？';
+        msg.textContent=cfg.k+' 個えらんでください（0 / '+cfg.k+'）';
+        for(i=0;i<dots.length;i++)dots[i].el.classList.add('tap');
+      },MOVE_MS);
+    },SHOW_MS);
+  }
+
+  function pick(d){
+    if(phase!=='pick')return;
+    var cfg=ROUNDS[idx],at=picks.indexOf(d);
+    if(at>=0){picks.splice(at,1);d.el.classList.remove('pick')}
+    else{
+      if(picks.length>=cfg.k)return;
+      picks.push(d);d.el.classList.add('pick');
+    }
+    msg.textContent=cfg.k+' 個えらんでください（'+picks.length+' / '+cfg.k+'）';
+    if(picks.length===cfg.k)later(judge,220);
+  }
+
+  function judge(){
+    if(phase!=='pick')return;
+    phase='feed';
+    var i,cfg=ROUNDS[idx],hit=0;
+    for(i=0;i<picks.length;i++)if(picks[i].target)hit++;
+    var ok=(hit===cfg.k);
+    for(i=0;i<dots.length;i++){
+      var d=dots[i];
+      d.el.classList.remove('tap','pick');
+      if(d.target)d.el.classList.add('was');
+      else if(picks.indexOf(d)>=0)d.el.classList.add('bad');
+    }
+    log.push(ok);
+    if(ok){cleared++;if(cfg.k>maxK)maxK=cfg.k}
+    promptEl.textContent=ok?'⭕ 全部合っています':'❌ 見失いました';
+    msg.textContent='正解は緑の丸です。'+cfg.k+' 個中 '+hit+' 個そろいました'+
+      (nearMiss?'（追う丸とほかの丸がすれ違った回数：'+nearMiss+'）':'');
+    renderStrip();
+    later(function(){
+      idx++;
+      if(!ok||idx>=TOTAL){finish();return}
+      startRound();
+    },FEED_MS);
+  }
+
+  function rank(n){
+    if(n>=9)return'🏆 全部見えている人';
+    if(n>=7)return'⚡ 注意の配り方が上手い';
+    if(n>=5)return'👏 標準より上';
+    if(n>=3)return'🙂 だいたい人並み';
+    return'🌀 丸は全部おなじ顔をしています';
+  }
+  function finish(){
+    running=false;phase='idle';clearTimers();stopLoop();
+    document.body.classList.remove('playing');
+    play.classList.add('hide');result.classList.remove('hide');
+    scoreEl.textContent=cleared+' / '+TOTAL;
+    rankEl.textContent=rank(cleared);
+    breakdownEl.textContent=
+      '同時に追いきれた最大の数：'+(maxK?maxK+' 個':'0 個')+'\n'+
+      '崩れたラウンド：'+(cleared>=TOTAL?'ありません（全ラウンド突破）':'第 '+(cleared+1)+' ラウンド（追う数 '+ROUNDS[Math.min(cleared,TOTAL-1)].k+' 個）')+'\n'+
+      '多くの人は4個あたりで崩れます。ここは練習ではあまり伸びない場所です。';
+  }
+  function start(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    if(running)return;running=true;
+    log=[];idx=0;cleared=0;maxK=0;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');result.classList.add('hide');play.classList.remove('hide');
+    renderStrip();
+    startRound();
+  }
+  function share(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    var t='【どれ追ってた選手権】\n10ラウンド中 '+cleared+' クリア！ '+rank(cleared)+'\n同時に追えたのは '+maxK+' 個でした。あなたはいくつ追えますか。';
+    window.open('https://x.com/intent/tweet?text='+encodeURIComponent(t)+'&url='+encodeURIComponent(GAME_URL),'_blank');
+  }
+  bind(document.getElementById('startBtn'),start);
+  bind(document.getElementById('retryBtn'),start);
+  bind(document.getElementById('shareBtn'),share);
+  document.addEventListener('keydown',function(e){
+    if((e.code==='Space'||e.code==='Enter')&&!e.repeat&&play.classList.contains('hide'))start(e);
+  });
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>どれ追ってた選手権 について</h2>
+<p>同じ見た目の丸がまざって動きます。最初にピンクだった丸だけを目で追い、止まったらその丸を選ぶだけ。追う数が1つ増えるたびに、あっさり見失います。</p>
+<h3>なぜ難しいのか</h3><p>丸は全部おなじ形と色なので、止まったあとに見分ける手がかりは何もありません。動いているあいだ、位置を追い続けるしかない課題です。ところが注意はいくつにでも分けられるものではなく、同時に追える独立した対象の数はおよそ4個から5個で頭打ちになります。パイリシンとストームが1988年に報告して以来、繰り返し確かめられている上限です。目で追えばいいと思われがちですが、視線は一度に1か所しか向けられないので、複数を同時に追うのは眼球ではなく注意の仕事になります。崩れるのは速さそのものよりも、追っている丸がほかの丸とすれ違う瞬間です。近づいた2つを別々のものとして保つには注意の解像度が足りず、そこで入れ替わります。だから同じ数でも速く動かすと追えなくなり、ゆっくりならもう少し多く追える、という交換が成り立ちます。このゲームはラウンドが上がるたびに追う数と速さの両方を上げるので、自分の上限がどこにあるかがはっきり出ます。</p>
+<h3>コツ</h3><ul><li>1個ずつ順番に見に行かないこと。視線は1か所しか向けられないので、見に行っているあいだに残りが入れ替わります。中央あたりを見て、周辺視で全部をまとめて抱えるほうが保ちます</li><li>追う丸どうしを線で結んだ形として覚えると、数が増えても1つのまとまりとして扱えます。ただし丸が交差すると形が崩れるので、そのたびに結び直す必要があります</li><li>すれ違った直後がいちばん危ないところです。ぶつかった2つのどちらが自分の丸か、その場で決め切ってください。あとから思い出そうとしても、もう区別は残っていません</li></ul>
+<h3>記録の目安</h3><p>第5ラウンド（追う数4個）まで進めば標準的なところです。7ラウンドを超えると注意の配り方がうまい部類で、全10ラウンド突破は6個を同時に追えている状態です。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../saki-ni-hikatta/">◀ 💡 先に光ったのはどっち選手権</a></li><li><a href="../souji-10sec/">🥁 10秒お掃除ゲーム</a></li><li><a href="../onkan-hansha/">🎲 音感反射選手権</a></li><li><a href="../chui-no-mabataki/">😵 注意の瞬き選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "どれ追ってた選手権", "description": "同じ見た目の丸がまざって動きます。光った何個かだけを目で追い、止まったら選ぶだけ。追う数が1つ増えるたびに見失います。", "url": "https://bakage.com/games/dore-otteta/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
