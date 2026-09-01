@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>なに色だっけ選手権 | バカゲー製作所</title>
+<meta name="description" content="色ちがいの図形が一瞬だけ並びます。消えたあとに聞かれるのは「あの形は何色だった？」だけ。色も形も覚えているのに、組み合わせだけが入れかわる全12問のバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-JLPMYL3495');</script>
+<style>
+:root{--bg:#FFC9DE;--ink:#17171f;--white:#fff;--yellow:#ffe14d;--pink:#ff4f81;--green:#2fbf71}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;user-select:none;touch-action:manipulation;overflow-y:auto}
+body.playing{overflow:hidden;touch-action:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:.9rem;font-weight:900}.topbar a{color:var(--ink);text-decoration:none;opacity:.75}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px}.panel{width:100%;max-width:420px;text-align:center}
+.card{background:var(--white);border:4px solid var(--ink);border-radius:18px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+h1{font-size:1.45rem;margin-bottom:12px}.card p{font-size:.92rem;line-height:1.8;margin:7px 0}
+.btn{margin-top:16px;padding:14px 28px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:900 1rem inherit;cursor:pointer}.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hide{display:none!important}
+.hud{display:flex;justify-content:space-between;font-weight:900;margin:0 4px 8px;font-size:.9rem}
+.prompt{font-weight:900;font-size:1.02rem;margin-bottom:8px;min-height:1.6em;display:flex;align-items:center;justify-content:center;gap:8px}
+.field{position:relative;width:100%;aspect-ratio:1/1;background:var(--white);border:4px solid var(--ink);border-radius:14px;box-shadow:6px 6px 0 var(--ink);overflow:hidden}
+.item{position:absolute;left:0;top:0;background:#ccc}
+.ghost{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#e6e6ee}
+.sp-maru{border-radius:50%}
+.sp-shikaku{border-radius:4px}
+.sp-sankaku{clip-path:polygon(50% 2%,100% 100%,0 100%)}
+.sp-hishi{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.sp-hoshi{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.sp-gokaku{clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)}
+.sp-juji{clip-path:polygon(34% 0,66% 0,66% 34%,100% 34%,100% 66%,66% 66%,66% 100%,34% 100%,34% 66%,0 66%,0 34%,34% 34%)}
+.sp-rokkaku{clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.swatch{display:inline-block;width:26px;height:26px;background:#8b8b96;flex:none}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ch{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 6px;border:3px solid var(--ink);border-radius:10px;background:#fff;font:900 .95rem inherit;color:var(--ink);cursor:pointer}
+.ch:active{transform:translateY(2px)}
+.ch .chip{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);flex:none}
+.msg{min-height:2.8em;margin-top:10px;font-weight:900;line-height:1.5;font-size:.88rem}
+.strip{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:8px}
+.bit{height:9px;border-radius:2px;background:#fff;border:2px solid var(--ink)}
+.bit.ok{background:var(--yellow)}.bit.ng{background:var(--pink)}
+.score{font-size:2.5rem;font-weight:900;margin:8px 0}
+.rank{font-weight:900;margin:10px 0}
+.breakdown{font-size:.85rem;line-height:1.8;margin-top:10px;text-align:left;white-space:pre-line}
+@media(max-width:480px){.topbar{padding:14px 16px}.stage{padding:12px}.card{padding:22px 16px}h1{font-size:1.25rem}.ch{font-size:.88rem;padding:11px 4px}}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/naniiro-dakke/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="なに色だっけ選手権">
+<meta property="og:description" content="色ちがいの図形が一瞬だけ並びます。消えたあとに聞かれるのは「あの形は何色だった？」だけ。色も形も覚えているのに、組み合わせだけが入れかわる全12問のバカゲー。">
+<meta property="og:url" content="https://bakage.com/games/naniiro-dakke/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-naniiro-dakke.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-naniiro-dakke.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🎨 なに色だっけ選手権</span></div>
+<div class="stage"><div class="panel">
+  <div id="intro" class="card">
+    <h1>🎨 なに色だっけ選手権</h1>
+    <p>色ちがいの図形が、一瞬だけ並びます。消えたあとに聞かれるのは<strong>「あの形は何色だった？」</strong>だけ。</p>
+    <p>図形は3個・5個・7個と増えていきます。全12問、最後まで通しでやります。</p>
+    <button class="btn" id="startBtn">タップして開始</button>
+  </div>
+  <div id="play" class="hide">
+    <div class="hud"><span id="qno">1 / 12</span><span>図形 <span id="cno">3</span> 個</span></div>
+    <div class="prompt" id="prompt">覚えて</div>
+    <div class="field" id="field"></div>
+    <div class="choices hide" id="choices"></div>
+    <div class="msg" id="msg">よく見てください</div>
+    <div class="strip" id="strip"></div>
+  </div>
+  <div id="result" class="card hide">
+    <h1>結果</h1><p>正解した問題</p>
+    <div class="score" id="score">0 / 12</div>
+    <div class="rank" id="rank"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <button class="btn" id="retryBtn">もう一度</button><button class="btn sub" id="shareBtn">Xで共有</button>
+  </div>
+</div></div>
+<script>
+(function(){
+  'use strict';
+  var GAME_URL='https://bakage.com/games/naniiro-dakke/';
+  var COLORS=[
+    {k:'aka',n:'赤',v:'#e23b3b'},{k:'ao',n:'青',v:'#2f6fe0'},
+    {k:'ki',n:'黄',v:'#f2c318'},{k:'midori',n:'緑',v:'#23a55a'},
+    {k:'murasaki',n:'紫',v:'#9b46d6'},{k:'daidai',n:'橙',v:'#f07a1e'},
+    {k:'momo',n:'桃',v:'#ef5da8'},{k:'mizu',n:'水',v:'#29b6d8'}
+  ];
+  var SHAPES=[
+    {k:'maru',n:'まる'},{k:'shikaku',n:'しかく'},{k:'sankaku',n:'さんかく'},{k:'hishi',n:'ひしがた'},
+    {k:'hoshi',n:'ほし'},{k:'gokaku',n:'ごかっけい'},{k:'juji',n:'じゅうじ'},{k:'rokkaku',n:'ろっかくけい'}
+  ];
+  var SIZES=[3,3,3,3,5,5,5,5,7,7,7,7];
+  var TOTAL=SIZES.length,SHOW_MS=650,GAP_MS=350,FEED_MS=650;
+
+  var intro=document.getElementById('intro'),play=document.getElementById('play'),result=document.getElementById('result');
+  var field=document.getElementById('field'),choicesEl=document.getElementById('choices');
+  var qnoEl=document.getElementById('qno'),cnoEl=document.getElementById('cno');
+  var promptEl=document.getElementById('prompt'),msg=document.getElementById('msg'),stripEl=document.getElementById('strip');
+  var scoreEl=document.getElementById('score'),rankEl=document.getElementById('rank'),breakdownEl=document.getElementById('breakdown');
+
+  var order=[],idx=0,correct=0,log=[],phase='idle',running=false,timers=[];
+  var swapErr=0,outErr=0,bySize={3:0,5:0,7:0},cur=null;
+
+  function bind(el,fn){
+    var guard=0;
+    el.addEventListener('touchstart',function(e){e.preventDefault();guard=Date.now();fn(e)},{passive:false});
+    el.addEventListener('click',function(e){if(Date.now()-guard<600)return;fn(e)},{passive:false});
+  }
+  function later(fn,ms){timers.push(setTimeout(fn,ms))}
+  function clearTimers(){for(var i=0;i<timers.length;i++)clearTimeout(timers[i]);timers=[]}
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+
+  function renderStrip(){
+    stripEl.innerHTML='';
+    for(var i=0;i<TOTAL;i++){
+      var d=document.createElement('div');d.className='bit';
+      if(i<log.length)d.className='bit '+(log[i]?'ok':'ng');
+      stripEl.appendChild(d);
+    }
+  }
+
+  function buildQuestion(){
+    var n=order[idx];
+    var cols=shuffle(COLORS.slice()).slice(0,n);
+    var shps=shuffle(SHAPES.slice()).slice(0,n);
+    var rest=[];
+    for(var i=0;i<COLORS.length;i++){
+      var used=false;
+      for(var j=0;j<cols.length;j++)if(cols[j].k===COLORS[i].k)used=true;
+      if(!used)rest.push(COLORS[i]);
+    }
+    var absent=rest[Math.floor(Math.random()*rest.length)];
+    var probe=Math.floor(Math.random()*n);
+    var others=[];
+    for(i=0;i<n;i++)if(i!==probe)others.push(cols[i]);
+    shuffle(others);
+    var opts=shuffle([cols[probe],others[0],others[1],absent]);
+    var swapSet={};
+    for(i=0;i<others.length;i++)swapSet[others[i].k]=true;
+    return {n:n,cols:cols,shps:shps,probe:probe,absent:absent,opts:opts,swapSet:swapSet};
+  }
+
+  function layout(q){
+    field.innerHTML='';
+    var W=field.clientWidth||320,H=field.clientHeight||W;
+    var G=4,cw=W/G,ch=H/G,S=Math.round(Math.min(cw,ch)*0.66);
+    var cells=[];for(var i=0;i<G*G;i++)cells.push(i);
+    shuffle(cells);
+    for(i=0;i<q.n;i++){
+      var c=cells[i],cx=(c%G)*cw+cw/2,cy=Math.floor(c/G)*ch+ch/2;
+      var el=document.createElement('div');
+      el.className='item sp-'+q.shps[i].k;
+      el.setAttribute('data-shape',q.shps[i].k);
+      el.style.width=S+'px';el.style.height=S+'px';
+      el.style.background=q.cols[i].v;
+      el.style.transform='translate('+Math.round(cx-S/2)+'px,'+Math.round(cy-S/2)+'px)';
+      field.appendChild(el);
+    }
+  }
+
+  function ghost(q,color){
+    field.innerHTML='';
+    var W=field.clientWidth||320,H=field.clientHeight||W;
+    var S=Math.round(Math.min(W,H)*0.42);
+    var g=document.createElement('div');
+    g.className='ghost sp-'+q.shps[q.probe].k;
+    g.id='ghost';
+    g.style.width=S+'px';g.style.height=S+'px';
+    if(color)g.style.background=color;
+    field.appendChild(g);
+  }
+
+  function askUI(q){
+    ghost(q,null);
+    promptEl.innerHTML='';
+    var sw=document.createElement('span');
+    sw.className='swatch sp-'+q.shps[q.probe].k;
+    promptEl.appendChild(sw);
+    var tx=document.createElement('span');
+    tx.textContent='この「'+q.shps[q.probe].n+'」は何色だった？';
+    promptEl.appendChild(tx);
+
+    choicesEl.innerHTML='';
+    choicesEl.classList.remove('hide');
+    for(var i=0;i<q.opts.length;i++){
+      (function(op){
+        var b=document.createElement('button');
+        b.className='ch';b.type='button';b.setAttribute('data-color',op.k);
+        var chip=document.createElement('span');
+        chip.className='chip';chip.style.background=op.v;
+        b.appendChild(chip);
+        var lab=document.createElement('span');lab.textContent=op.n;
+        b.appendChild(lab);
+        bind(b,function(){answer(op)});
+        choicesEl.appendChild(b);
+      })(q.opts[i]);
+    }
+  }
+
+  function startQuestion(){
+    phase='show';clearTimers();
+    cur=buildQuestion();
+    choicesEl.classList.add('hide');choicesEl.innerHTML='';
+    qnoEl.textContent=(idx+1)+' / '+TOTAL;
+    cnoEl.textContent=String(cur.n);
+    promptEl.textContent='覚えて';
+    msg.textContent='どの形が何色か、よく見てください';
+    layout(cur);
+    later(function(){
+      phase='gap';
+      field.innerHTML='';
+      promptEl.textContent='…';
+      msg.textContent='';
+      later(function(){
+        phase='ask';
+        askUI(cur);
+        msg.textContent='4つのうち1つを選んでください';
+      },GAP_MS);
+    },SHOW_MS);
+  }
+
+  function answer(op){
+    if(phase!=='ask')return;
+    phase='feed';
+    var q=cur,truth=q.cols[q.probe],ok=(op.k===truth.k);
+    log.push(ok);
+    if(ok){correct++;bySize[q.n]++}
+    else if(q.swapSet[op.k])swapErr++;
+    else outErr++;
+    choicesEl.classList.add('hide');
+    ghost(q,truth.v);
+    promptEl.innerHTML='';
+    var sw=document.createElement('span');
+    sw.className='swatch sp-'+q.shps[q.probe].k;
+    sw.style.background=truth.v;
+    promptEl.appendChild(sw);
+    var tx=document.createElement('span');
+    tx.textContent=ok?'⭕ '+truth.n+' で合っています':'❌ 正解は '+truth.n+' でした';
+    promptEl.appendChild(tx);
+    msg.textContent=ok?'':(q.swapSet[op.k]
+      ? '選んだ「'+op.n+'」は、同じ画面の別の形についていた色です'
+      : '選んだ「'+op.n+'」は、この画面には出ていない色です');
+    renderStrip();
+    later(function(){
+      idx++;
+      if(idx>=TOTAL){finish();return}
+      startQuestion();
+    },FEED_MS);
+  }
+
+  function rank(n){
+    if(n>=12)return'🏆 組み合わせまで持って帰れる人';
+    if(n>=10)return'⚡ 取りちがえがほとんどない';
+    if(n>=8)return'👏 標準より上';
+    if(n>=5)return'🙂 だいたい人並み';
+    return'🌀 色も形も見えていたのに';
+  }
+
+  function finish(){
+    running=false;phase='idle';clearTimers();
+    document.body.classList.remove('playing');
+    play.classList.add('hide');result.classList.remove('hide');
+    scoreEl.textContent=correct+' / '+TOTAL;
+    rankEl.textContent=rank(correct);
+    var miss=TOTAL-correct;
+    breakdownEl.textContent=
+      '図形3個：'+bySize[3]+' / 4　図形5個：'+bySize[5]+' / 4　図形7個：'+bySize[7]+' / 4\n'+
+      'まちがえた '+miss+' 問の内訳：入れかわり（同じ画面の別の形の色）'+swapErr+' 問 ／ 出ていない色 '+outErr+' 問\n'+
+      '選択肢は毎回4つなので、当てずっぽうでも3問前後は当たります。\n'+
+      '入れかわりのほうが多ければ、色は残っていて、どの形のものかだけが落ちています。';
+  }
+
+  function start(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    if(running)return;running=true;
+    order=shuffle(SIZES.slice());
+    idx=0;correct=0;log=[];swapErr=0;outErr=0;bySize={3:0,5:0,7:0};
+    document.body.classList.add('playing');
+    intro.classList.add('hide');result.classList.add('hide');play.classList.remove('hide');
+    renderStrip();
+    startQuestion();
+  }
+  function share(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    var t='【なに色だっけ選手権】\n12問中 '+correct+' 問正解！ '+rank(correct)+'\nまちがいのうち '+swapErr+' 問は、同じ画面の別の形の色でした。あなたはどうですか。';
+    window.open('https://x.com/intent/tweet?text='+encodeURIComponent(t)+'&url='+encodeURIComponent(GAME_URL),'_blank');
+  }
+  bind(document.getElementById('startBtn'),start);
+  bind(document.getElementById('retryBtn'),start);
+  bind(document.getElementById('shareBtn'),share);
+  document.addEventListener('keydown',function(e){
+    if((e.code==='Space'||e.code==='Enter')&&!e.repeat&&play.classList.contains('hide'))start(e);
+  });
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>なに色だっけ選手権 について</h2>
+<p>色ちがいの図形が、一瞬だけ並びます。消えたあとに聞かれるのは「さっきの ほし は何色だった？」だけ。色は見えていたし、形も見えていた。それなのに、どの色がどの形についていたかだけが出てきません。</p>
+<h3>なぜ難しいのか</h3><p>色と形は、それぞれ別の仕組みで処理されています。「この形はこの色」とひとつのものにまとめる工程は、そのあとで注意を使って行われます。だから注意が行き渡らないと、色も形もちゃんと見えているのに、組み合わせだけが入れかわります。1982年のトライスマンとシュミットの実験では、一瞬だけ見せた色つきの文字について、実際には出ていなかった色と文字の組み合わせを見たと答える誤りが、その画面に無かった色を答える誤りよりはっきり多く出ました。覚えたあとの短期記憶でも同じことが起きていて、ウィーラーとトライスマン（2002）は、色だけ・形だけを答えるより、その2つの組み合わせを答えるほうが成績が落ちることを報告しています。このゲームの選択肢は毎回4つで、正解1つ／同じ画面の別の形についていた色2つ／その画面に出ていなかった色1つ、と内訳を固定してあります。外したときにどちらだったかを結果画面で分けて出すのはそのためです。入れかわりのほうが多ければ、色そのものは残っていて、持ち主だけが落ちています。図形が3個から7個へ増えるのは、まとめて保てる数の上限（多くの人で3〜4個）を超えさせるためです。</p>
+<h3>コツ</h3><ul><li>全部を覚えようとしないこと。上限は3〜4個です。いくつかに絞って「形と色」を一組のまま持つほうが、結果的に残ります</li><li>色だけを見て回らない。頭の中に色の一覧を作ると、どれがどの形のものかが真っ先に落ちて、入れかわりがいちばん増えます</li><li>場所を手がかりにする。「右上のあれ」と位置ごと覚えると、形と色がばらけにくくなります</li></ul>
+<h3>記録の目安</h3><p>選択肢は4つなので、当てずっぽうでも12問中3問前後は当たります。7問で標準的なところ、9問を超えると組み合わせを保てているほう、11問以上はかなり上です。図形7個の4問だけを見ると、多くの人は当てずっぽうに近い成績になります。12問は少ないので、1回の結果を実力と決めつけないでください。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../dore-otteta/">◀ 👀 どれ追ってた選手権</a></li><li><a href="../sushi-stack/">🍣 寿司積み選手権</a></li><li><a href="../rizumu-tap/">🌀 リズムタップ選手権</a></li><li><a href="../moritsuke-sagi/">🍔 盛りつけ詐欺選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "なに色だっけ選手権", "description": "色ちがいの図形が一瞬だけ並びます。消えたあとに聞かれるのは「あの形は何色だった？」だけ。色も形も覚えているのに、組み合わせだけが入れかわる全12問のバカゲー。", "url": "https://bakage.com/games/naniiro-dakke/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
