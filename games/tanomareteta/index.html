@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>頼まれてたのに選手権 | バカゲー製作所</title>
+<meta name="description" content="食べ物を「あまい」「しょっぱい」に仕分けるだけ。ただし🍎が出たときだけ、ボタンを押さずに食べ物をタップする約束です。内容は覚えているのに、その瞬間に出てこない全20問のバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-JLPMYL3495');</script>
+<style>
+:root{--bg:#BFE6C8;--ink:#17171f;--white:#fff;--yellow:#ffe14d;--pink:#ff4f81;--blue:#7aa7ff}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;user-select:none;touch-action:manipulation;overflow-y:auto}
+body.playing{overflow:hidden;touch-action:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:.9rem;font-weight:900}.topbar a{color:var(--ink);text-decoration:none;opacity:.75}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px}.panel{width:100%;max-width:420px;text-align:center}
+.card{background:var(--white);border:4px solid var(--ink);border-radius:18px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+h1{font-size:1.45rem;margin-bottom:12px}.card p{font-size:.92rem;line-height:1.8;margin:7px 0}
+.yakusoku{margin:12px 0;padding:12px 10px;border:3px dashed var(--ink);border-radius:12px;background:#fffbe6;font-size:.95rem;line-height:1.7;font-weight:900}
+.small{font-size:.78rem;opacity:.75;line-height:1.7}
+.btn{margin-top:16px;padding:14px 28px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:900 1rem inherit;cursor:pointer}.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hide{display:none!important}
+.hud{display:flex;justify-content:space-between;font-weight:900;margin:0 4px 6px;font-size:.9rem}
+.bar{height:10px;border:3px solid var(--ink);border-radius:6px;background:#fff;overflow:hidden;margin:0 0 8px}
+.bar-in{height:100%;width:100%;background:var(--yellow)}
+.field{position:relative;width:100%;aspect-ratio:4/3;background:var(--white);border:4px solid var(--ink);border-radius:14px;box-shadow:6px 6px 0 var(--ink);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.food{font-size:5.2rem;line-height:1;padding:16px 22px;border-radius:16px;cursor:pointer}
+.food:active{transform:scale(.94)}
+.count{font-size:4rem;font-weight:900;line-height:1}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.ch{padding:16px 6px;border:3px solid var(--ink);border-radius:12px;background:#fff;font:900 1.02rem inherit;color:var(--ink);cursor:pointer;box-shadow:4px 4px 0 var(--ink)}
+.ch:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.msg{min-height:2.6em;margin-top:10px;font-weight:900;line-height:1.5;font-size:.86rem}
+.strip{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;margin-top:6px}
+.bit{height:9px;border-radius:2px;background:#fff;border:2px solid var(--ink)}
+.bit.done{background:var(--yellow)}
+.quizbtn{display:block;width:100%;margin-top:10px;padding:14px 12px;border:3px solid var(--ink);border-radius:12px;background:#fff;font:900 .9rem inherit;color:var(--ink);cursor:pointer;text-align:left;line-height:1.6}
+.quizbtn:active{transform:translateY(2px)}
+.score{font-size:2.4rem;font-weight:900;margin:8px 0}
+.rank{font-weight:900;margin:10px 0}
+.breakdown{font-size:.84rem;line-height:1.85;margin-top:10px;text-align:left;white-space:pre-line}
+@media(max-width:480px){.topbar{padding:14px 16px}.stage{padding:12px}.card{padding:22px 16px}h1{font-size:1.22rem}.food{font-size:4.4rem}.ch{font-size:.95rem;padding:14px 4px}}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/tanomareteta/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="頼まれてたのに選手権">
+<meta property="og:description" content="食べ物を「あまい」「しょっぱい」に仕分けるだけ。ただし🍎が出たときだけ、ボタンを押さずに食べ物をタップする約束です。内容は覚えているのに、その瞬間に出てこない全20問のバカゲー。">
+<meta property="og:url" content="https://bakage.com/games/tanomareteta/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-tanomareteta.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-tanomareteta.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>📝 頼まれてたのに選手権</span></div>
+<div class="stage"><div class="panel">
+  <div id="intro" class="card">
+    <h1>📝 頼まれてたのに選手権</h1>
+    <p>出てくる食べ物を<strong>「あまい」か「しょっぱい」</strong>に仕分けるだけ。全20問、持ち時間は進むほど短くなります。</p>
+    <div class="yakusoku">🍎 リンゴが出たときだけ、<br>ボタンを押さずに<u>食べ物そのものをタップ</u>してください。</div>
+    <p class="small">この約束を言うのはこれが最後です。作業中はどこにも出ません。正誤は最後にまとめて出します。<br>キーボード：← あまい ／ → しょっぱい ／ ↑ 食べ物</p>
+    <button class="btn" id="startBtn">タップして開始</button>
+  </div>
+  <div id="play" class="hide">
+    <div class="hud"><span id="qno">1 / 20</span><span id="lastrt">&nbsp;</span></div>
+    <div class="bar"><div class="bar-in" id="barIn"></div></div>
+    <div class="field" id="field">
+      <div class="food hide" id="food">🍩</div>
+      <div class="count hide" id="countdown">3</div>
+    </div>
+    <div class="choices">
+      <button class="ch" id="btnAma" type="button">あまい</button>
+      <button class="ch" id="btnShio" type="button">しょっぱい</button>
+    </div>
+    <div class="msg" id="msg">はじまります</div>
+    <div class="strip" id="strip"></div>
+  </div>
+  <div id="quiz" class="card hide">
+    <h1>さいごに1問</h1>
+    <p>いちばん最初に頼まれていたことは、なんでしたか。</p>
+    <div id="quizList"></div>
+  </div>
+  <div id="result" class="card hide">
+    <h1>結果</h1><p>頼まれごとを思い出せた回数</p>
+    <div class="score" id="score">0 / 4</div>
+    <div class="rank" id="rank"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <button class="btn" id="retryBtn">もう一度</button><button class="btn sub" id="shareBtn">Xで共有</button>
+  </div>
+</div></div>
+<script>
+(function(){
+  'use strict';
+  var GAME_URL='https://bakage.com/games/tanomareteta/';
+  var SWEET=['🍰','🍩','🍪','🍫','🍬','🍮','🍯','🍨','🍧','🍡','🍓','🍌','🍇','🍒','🧁','🥧','🍑','🍐'];
+  var SALTY=['🍟','🍕','🍔','🍜','🍣','🥓','🧀','🥨','🍤','🌭','🥟','🍢','🍖','🍛','🍲','🥪','🍱','🍙'];
+  var CUE='🍎';
+  var TOTAL=20;
+  var APPLE=[5,10,14,18];          // 0はじまり。6問目・11問目・15問目・19問目
+  var DL0=2000,DL_STEP=45,DL_MIN=1100,FEED_MS=340;
+
+  var intro=document.getElementById('intro'),play=document.getElementById('play');
+  var quiz=document.getElementById('quiz'),quizList=document.getElementById('quizList');
+  var result=document.getElementById('result');
+  var foodEl=document.getElementById('food'),countEl=document.getElementById('countdown');
+  var qnoEl=document.getElementById('qno'),lastEl=document.getElementById('lastrt');
+  var barIn=document.getElementById('barIn'),msg=document.getElementById('msg'),stripEl=document.getElementById('strip');
+  var scoreEl=document.getElementById('score'),rankEl=document.getElementById('rank'),breakdownEl=document.getElementById('breakdown');
+
+  var idx=0,phase='idle',running=false,timers=[],ticker=null,cur=null,t0=0,dl=DL0;
+  var plan=[];
+  var sortOK=0,sortNG=0,sortTO=0,appleHit=0,appleBtn=0,appleTO=0,falseTap=0,firstOK=null;
+  var rtAll=[],rtApple=[],quizOK=false;
+
+  function bind(el,fn){
+    var guard=0;
+    el.addEventListener('touchstart',function(e){e.preventDefault();guard=Date.now();fn(e)},{passive:false});
+    el.addEventListener('click',function(e){if(Date.now()-guard<600)return;fn(e)},{passive:false});
+  }
+  function later(fn,ms){timers.push(setTimeout(fn,ms))}
+  function clearTimers(){for(var i=0;i<timers.length;i++)clearTimeout(timers[i]);timers=[];if(ticker){clearInterval(ticker);ticker=null}}
+  function pick(a){return a[Math.floor(Math.random()*a.length)]}
+
+  function buildPlan(){
+    var p=[],isApple={},i;
+    for(i=0;i<APPLE.length;i++)isApple[APPLE[i]]=true;
+    for(i=0;i<TOTAL;i++){
+      if(isApple[i]){p.push({emoji:CUE,taste:null,apple:true})}
+      else if(Math.random()<0.5){p.push({emoji:pick(SWEET),taste:'ama',apple:false})}
+      else{p.push({emoji:pick(SALTY),taste:'shio',apple:false})}
+    }
+    return p;
+  }
+
+  function renderStrip(){
+    stripEl.innerHTML='';
+    for(var i=0;i<TOTAL;i++){
+      var d=document.createElement('div');
+      d.className='bit'+(i<idx?' done':'');
+      stripEl.appendChild(d);
+    }
+  }
+
+  function startTrial(){
+    phase='trial';
+    cur=plan[idx];
+    qnoEl.textContent=(idx+1)+' / '+TOTAL;
+    countEl.classList.add('hide');
+    foodEl.textContent=cur.emoji;
+    foodEl.classList.remove('hide');
+    msg.textContent='あまい？ しょっぱい？';
+    dl=Math.max(DL_MIN,DL0-idx*DL_STEP);
+    t0=Date.now();
+    barIn.style.width='100%';
+    ticker=setInterval(function(){
+      var left=1-(Date.now()-t0)/dl;
+      if(left<0)left=0;
+      barIn.style.width=(left*100).toFixed(1)+'%';
+    },50);
+    later(function(){respond('timeout')},dl);
+  }
+
+  function respond(kind){
+    if(phase!=='trial')return;
+    phase='feed';
+    clearTimers();
+    barIn.style.width='0%';
+    var rt=Date.now()-t0;
+    if(kind!=='timeout'){rtAll.push(rt);if(cur.apple)rtApple.push(rt)}
+    if(cur.apple){
+      var ok=(kind==='food');
+      if(ok)appleHit++;
+      else if(kind==='timeout')appleTO++;
+      else appleBtn++;
+      if(idx===APPLE[0])firstOK=ok;
+    }else{
+      if(kind==='timeout')sortTO++;
+      else if(kind==='food'){falseTap++;sortNG++}
+      else if(kind===cur.taste)sortOK++;
+      else sortNG++;
+    }
+    lastEl.textContent=(kind==='timeout')?'時間切れ':(rt/1000).toFixed(2)+' 秒';
+    foodEl.classList.add('hide');
+    msg.textContent='';
+    idx++;
+    renderStrip();
+    later(function(){
+      if(idx>=TOTAL){askQuiz();return}
+      startTrial();
+    },FEED_MS);
+  }
+
+  var QOPTS=[
+    {t:'🍎 が出たら、ボタンを押さずに食べ物をタップする',ok:true},
+    {t:'🍎 が出たら、あまい・しょっぱいの両方を押す',ok:false},
+    {t:'🍎 が出たら、何も押さずに待つ',ok:false}
+  ];
+
+  function askQuiz(){
+    phase='quiz';
+    play.classList.add('hide');
+    quiz.classList.remove('hide');
+    var opts=QOPTS.slice();
+    for(var i=opts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=opts[i];opts[i]=opts[j];opts[j]=t}
+    quizList.innerHTML='';
+    for(i=0;i<opts.length;i++){
+      (function(op){
+        var b=document.createElement('button');
+        b.className='quizbtn';b.type='button';b.textContent=op.t;
+        bind(b,function(){if(phase!=='quiz')return;quizOK=op.ok;finish()});
+        quizList.appendChild(b);
+      })(opts[i]);
+    }
+  }
+
+  function rank(n){
+    if(n>=4)return'🏆 頼まれごとを落とさない人';
+    if(n===3)return'⚡ ほとんど落とさない人';
+    if(n===2)return'🙂 半分は思い出す人';
+    if(n===1)return'😅 レジで思い出す人';
+    return'🤦 家に着いてから思い出す人';
+  }
+
+  function avg(a){if(!a.length)return null;var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
+
+  function finish(){
+    running=false;phase='done';clearTimers();
+    document.body.classList.remove('playing');
+    quiz.classList.add('hide');play.classList.add('hide');
+    result.classList.remove('hide');
+    scoreEl.textContent=appleHit+' / '+APPLE.length;
+    rankEl.textContent=rank(appleHit);
+    var a1=avg(rtAll),a2=avg(rtApple);
+    var lines=[];
+    lines.push('仕分け：'+sortOK+' / 16 問正解（時間切れ '+sortTO+' 問）');
+    lines.push('リンゴ：4回中 '+appleHit+' 回 思い出せた（1回目：'+(firstOK?'◯':'✕')+'）');
+    lines.push('　思い出せなかった内訳：ボタンを押した '+appleBtn+' 回 ／ 時間切れ '+appleTO+' 回');
+    lines.push('リンゴ以外の回で食べ物をタップした：'+falseTap+' 回');
+    lines.push('頼まれた内容：'+(quizOK?'覚えていた':'覚えていなかった'));
+    if(a1!==null)lines.push('反応の平均：'+(a1/1000).toFixed(2)+' 秒'+(a2!==null?'（リンゴの回だけ '+(a2/1000).toFixed(2)+' 秒）':'（リンゴの回は反応なし）'));
+    if(quizOK&&appleHit<4)lines.push('内容は答えられたのに実行できていません。落ちたのは記憶ではなく、その瞬間に思い出す働きのほうです。');
+    breakdownEl.textContent=lines.join('\n');
+  }
+
+  function start(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    if(running)return;running=true;
+    clearTimers();
+    plan=buildPlan();
+    idx=0;sortOK=0;sortNG=0;sortTO=0;appleHit=0;appleBtn=0;appleTO=0;falseTap=0;firstOK=null;
+    rtAll=[];rtApple=[];quizOK=false;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');result.classList.add('hide');quiz.classList.add('hide');
+    play.classList.remove('hide');
+    renderStrip();
+    qnoEl.textContent='1 / '+TOTAL;
+    lastEl.innerHTML='&nbsp;';
+    barIn.style.width='100%';
+    foodEl.classList.add('hide');
+    countEl.classList.remove('hide');
+    phase='count';
+    var n=3;
+    countEl.textContent=String(n);
+    msg.textContent='はじまります';
+    ticker=setInterval(function(){
+      n--;
+      if(n<=0){clearInterval(ticker);ticker=null;countEl.classList.add('hide');startTrial();return}
+      countEl.textContent=String(n);
+    },600);
+  }
+
+  function share(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    var t='【頼まれてたのに選手権】\n頼まれごとを思い出せたのは 4回中 '+appleHit+' 回。仕分けは '+sortOK+' / 16。\n'+rank(appleHit)+'\n内容は覚えているのに、その瞬間に出てこないやつです。';
+    window.open('https://x.com/intent/tweet?text='+encodeURIComponent(t)+'&url='+encodeURIComponent(GAME_URL),'_blank');
+  }
+
+  bind(document.getElementById('startBtn'),start);
+  bind(document.getElementById('retryBtn'),start);
+  bind(document.getElementById('shareBtn'),share);
+  bind(document.getElementById('btnAma'),function(){respond('ama')});
+  bind(document.getElementById('btnShio'),function(){respond('shio')});
+  bind(foodEl,function(){respond('food')});
+  document.addEventListener('keydown',function(e){
+    if(e.repeat)return;
+    if(phase==='trial'){
+      if(e.code==='ArrowLeft'||e.code==='Digit1'){e.preventDefault();respond('ama')}
+      else if(e.code==='ArrowRight'||e.code==='Digit2'){e.preventDefault();respond('shio')}
+      else if(e.code==='ArrowUp'||e.code==='Space'){e.preventDefault();respond('food')}
+      return;
+    }
+    if((e.code==='Space'||e.code==='Enter')&&play.classList.contains('hide')&&quiz.classList.contains('hide')){start(e)}
+  });
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>頼まれてたのに選手権 について</h2>
+<p>食べ物を「あまい」「しょっぱい」に仕分けるだけの作業です。ただし始める前に一度だけ約束をします。🍎 が出たときだけ、ボタンを押さずにその食べ物をタップすること。約束の内容は覚えているのに、その瞬間には出てこない、ということが起きます。</p>
+<h3>なぜ難しいのか</h3><p>予定を実行するには2つの別々の働きが要ります。何をするか覚えていること（内容の記憶）と、実行すべき瞬間に自分でそれに気づくこと（展望記憶）です。落ちるのはたいてい後者のほうで、内容はあとから聞けば答えられます。手がかりは外から「今です」と教えてくれません。目の前の作業に乗っているときは、合図が視界に入っていても、それが約束の合図だと結びつかないまま通り過ぎます。この形の失敗を実験室で作れることは、1990年にアインシュタインとマクダニエルが報告しています。進行中の課題の最中に決められたものが出たら別の反応をする、という手続きで、このゲームと同じ形です。もうひとつ効くのが時間です。仕分けの答えは訓練された素早い反応で、約束の反応は記憶から取り出す遅い反応なので、急かされるほど速いほうが先に出ます。このゲームは1問あたりの持ち時間が2.0秒から1.1秒まで縮んでいきます。だから逃すときは「忘れていた」のではなく、思い出す前にボタンを押し終えている、という形になります。</p>
+<h3>コツ</h3><ul><li>約束を「合図と動作をひとつにした文」にしてから始める。『リンゴを見たら指をボタンから離す』のように、いつ何をするかを結んでおくと、その瞬間に出てきやすくなります</li><li>残り時間のバーを見ないこと。急かされていると自覚するほど、仕分けの反応が先に出ます。見るのは食べ物だけにする</li><li>1回目を逃したあとは自分で警戒が上がるので、たいてい2回目からは思い出せます。逆に言うと、いちばん素の状態が見えるのは1回目です</li></ul>
+<h3>記録の目安</h3><p>4回とも思い出せる人は珍しくありません。約束をしたのが数十秒前だからです。よく落ちるのは1回目で、そこから先は自分の警戒が上がります。仕分けのほうは16問中14問できれば標準的なところです。⚠️ 逃した回の内訳に「ボタンを押した」が並んでいたら、それは忘れていたのではなく、目の前の作業のほうが先に出た、ということです。結果画面には、リンゴの回だけの反応時間も出しています。ふつうの回より遅ければ、そこで思い出す作業に時間を取られています。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../naniiro-dakke/">◀ 🎨 なに色だっけ選手権</a></li><li><a href="../sushi-stack/">🍣 寿司積み選手権</a></li><li><a href="../rizumu-tap/">🌀 リズムタップ選手権</a></li><li><a href="../moritsuke-sagi/">🍔 盛りつけ詐欺選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "頼まれてたのに選手権", "description": "食べ物を「あまい」「しょっぱい」に仕分けるだけ。ただし🍎が出たときだけ、ボタンを押さずに食べ物をタップする約束です。内容は覚えているのに、その瞬間に出てこない全20問のバカゲー。", "url": "https://bakage.com/games/tanomareteta/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
