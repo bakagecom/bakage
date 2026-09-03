@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>迷ってないのに選手権 | バカゲー製作所</title>
+<meta name="description" content="出た絵柄と同じボタンを押すだけ。でもボタンが2個・4個・8個と変わります。答えは分かっているのに、選択肢が増えるだけで遅くなる。自分の遅くなった量がミリ秒で出る全24問のバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-JLPMYL3495');</script>
+<style>
+:root{--bg:#CFE0F7;--ink:#17171f;--white:#fff;--yellow:#ffe14d;--pink:#ff4f81;--green:#4fd07a}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;user-select:none;touch-action:manipulation;overflow-y:auto}
+body.playing{overflow:hidden;touch-action:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:.9rem;font-weight:900}.topbar a{color:var(--ink);text-decoration:none;opacity:.75}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px}.panel{width:100%;max-width:420px;text-align:center}
+.card{background:var(--white);border:4px solid var(--ink);border-radius:18px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+h1{font-size:1.45rem;margin-bottom:12px}.card p{font-size:.92rem;line-height:1.8;margin:7px 0}
+.rule{margin:12px 0;padding:12px 10px;border:3px dashed var(--ink);border-radius:12px;background:#fffbe6;font-size:.95rem;line-height:1.7;font-weight:900}
+.small{font-size:.78rem;opacity:.75;line-height:1.7}
+.btn{margin-top:16px;padding:14px 28px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:900 1rem inherit;cursor:pointer}.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hide{display:none!important}
+.hud{display:flex;justify-content:space-between;font-weight:900;margin:0 4px 6px;font-size:.9rem}
+.field{position:relative;width:100%;height:150px;background:var(--white);border:4px solid var(--ink);border-radius:14px;box-shadow:6px 6px 0 var(--ink);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.target{font-size:4.6rem;line-height:1}
+.count{font-size:3.4rem;font-weight:900;line-height:1}
+.wait{font-size:1.4rem;font-weight:900;opacity:.35}
+.choices{display:grid;gap:8px;margin-top:12px;min-height:132px;align-content:start}
+.ch{padding:14px 4px;border:3px solid var(--ink);border-radius:12px;background:#fff;font:900 1.9rem inherit;color:var(--ink);cursor:pointer;box-shadow:4px 4px 0 var(--ink);line-height:1.1}
+.ch:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.msg{min-height:2.4em;margin-top:8px;font-weight:900;line-height:1.5;font-size:.86rem}
+.strip{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin-top:4px}
+.bit{height:9px;border-radius:2px;background:#fff;border:2px solid var(--ink)}
+.bit.done{background:var(--yellow)}
+.bit.bad{background:var(--pink)}
+.score{font-size:2.4rem;font-weight:900;margin:8px 0}
+.rank{font-weight:900;margin:10px 0}
+.breakdown{font-size:.84rem;line-height:1.85;margin-top:10px;text-align:left;white-space:pre-line}
+@media(max-width:480px){.topbar{padding:14px 16px}.stage{padding:12px}.card{padding:22px 16px}h1{font-size:1.22rem}.field{height:130px}.target{font-size:3.9rem}.ch{font-size:1.6rem;padding:12px 2px}.choices{min-height:118px}}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/mayottenai/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="迷ってないのに選手権">
+<meta property="og:description" content="出た絵柄と同じボタンを押すだけ。でもボタンが2個・4個・8個と変わります。答えは分かっているのに、選択肢が増えるだけで遅くなる全24問。">
+<meta property="og:url" content="https://bakage.com/games/mayottenai/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-mayottenai.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-mayottenai.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>🔘 迷ってないのに選手権</span></div>
+<div class="stage"><div class="panel">
+  <div id="intro" class="card">
+    <h1>🔘 迷ってないのに選手権</h1>
+    <p>真ん中に出た絵柄と<strong>同じボタンを押す</strong>だけ。迷う要素はどこにもありません。</p>
+    <div class="rule">ただし、ボタンの数が<br><u>2個 → 4個 → 8個</u> と変わります。</div>
+    <p class="small">練習4問のあと、8問ずつの3区間で全24問。区間の順番は毎回シャッフルします。最後に、2択と8択でどれだけ遅くなったかを出します。<br>キーボード：1〜8 の数字キーでも押せます。</p>
+    <button class="btn" id="startBtn">タップして開始</button>
+  </div>
+  <div id="play" class="hide">
+    <div class="hud"><span id="qno">練習</span><span id="lastrt">&nbsp;</span></div>
+    <div class="field" id="field">
+      <div class="target hide" id="target">🍎</div>
+      <div class="count hide" id="countdown">3</div>
+      <div class="wait hide" id="wait">・・・</div>
+    </div>
+    <div class="choices" id="choices"></div>
+    <div class="msg" id="msg">はじまります</div>
+    <div class="strip" id="strip"></div>
+  </div>
+  <div id="result" class="card hide">
+    <h1>結果</h1><p>8択は2択より、これだけ遅くなりました</p>
+    <div class="score" id="score">+0 ms</div>
+    <div class="rank" id="rank"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <button class="btn" id="retryBtn">もう一度</button><button class="btn sub" id="shareBtn">Xで共有</button>
+  </div>
+</div></div>
+<script>
+(function(){
+  'use strict';
+  var GAME_URL='https://bakage.com/games/mayottenai/';
+  var POOL=['🍎','🍌','🍇','🍉','🍑','🍍','🥝','🍒'];
+  var SIZES=[2,4,8];
+  var PER=8, WARM=4, LIMIT=3000, GAP_MIN=350, GAP_MAX=650, FEED_MS=170;
+
+  var intro=document.getElementById('intro'),play=document.getElementById('play'),result=document.getElementById('result');
+  var targetEl=document.getElementById('target'),countEl=document.getElementById('countdown'),waitEl=document.getElementById('wait');
+  var choicesEl=document.getElementById('choices'),qnoEl=document.getElementById('qno'),lastEl=document.getElementById('lastrt');
+  var msg=document.getElementById('msg'),stripEl=document.getElementById('strip');
+  var scoreEl=document.getElementById('score'),rankEl=document.getElementById('rank'),breakdownEl=document.getElementById('breakdown');
+
+  var phase='idle',running=false,timers=[],ticker=null;
+  var order=[],blockPos=0,trialPos=0,scored=0,cur=null,t0=0,curSet=[];
+  var stats={},early=0,warmLeft=0;
+
+  function bind(el,fn){
+    var guard=0;
+    el.addEventListener('touchstart',function(e){e.preventDefault();guard=Date.now();fn(e)},{passive:false});
+    el.addEventListener('click',function(e){if(Date.now()-guard<600)return;fn(e)},{passive:false});
+  }
+  function later(fn,ms){timers.push(setTimeout(fn,ms))}
+  function clearTimers(){for(var i=0;i<timers.length;i++)clearTimeout(timers[i]);timers=[];if(ticker){clearInterval(ticker);ticker=null}}
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+  function rnd(lo,hi){return lo+Math.floor(Math.random()*(hi-lo+1))}
+  function avg(a){if(!a.length)return null;var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
+
+  function renderStrip(){
+    stripEl.innerHTML='';
+    for(var i=0;i<SIZES.length*PER;i++){
+      var d=document.createElement('div');
+      d.className='bit'+(i<scored?(marks[i]?' done':' bad'):'');
+      stripEl.appendChild(d);
+    }
+  }
+  var marks=[];
+
+  function drawChoices(set){
+    choicesEl.innerHTML='';
+    choicesEl.style.gridTemplateColumns='repeat('+(set.length<=2?2:(set.length<=4?2:4))+',1fr)';
+    for(var i=0;i<set.length;i++){
+      (function(em){
+        var b=document.createElement('button');
+        b.className='ch';b.type='button';b.textContent=em;
+        bind(b,function(){answer(em)});
+        choicesEl.appendChild(b);
+      })(set[i]);
+    }
+  }
+
+  function startBlock(){
+    if(blockPos>=order.length){finish();return}
+    var n=order[blockPos];
+    curSet=shuffle(POOL.slice()).slice(0,n);
+    drawChoices(curSet);
+    trialPos=0;
+    msg.textContent=n+'択の区間です（'+PER+'問）';
+    nextTrial();
+  }
+
+  function nextTrial(){
+    if(warmLeft<=0&&trialPos>=PER){blockPos++;startBlock();return}
+    phase='gap';
+    targetEl.classList.add('hide');
+    waitEl.classList.remove('hide');
+    later(showTarget,rnd(GAP_MIN,GAP_MAX));
+  }
+
+  function showTarget(){
+    phase='trial';
+    waitEl.classList.add('hide');
+    cur=curSet[Math.floor(Math.random()*curSet.length)];
+    targetEl.textContent=cur;
+    targetEl.classList.remove('hide');
+    qnoEl.textContent=warmLeft>0?('練習 '+(WARM-warmLeft+1)+' / '+WARM)
+      :(curSet.length+'択　'+(scored+1)+' / '+(SIZES.length*PER));
+    msg.textContent='同じ絵柄のボタンを押す';
+    t0=Date.now();
+    later(function(){settle(null,true)},LIMIT);
+  }
+
+  function answer(em){
+    if(phase==='gap'){early++;msg.textContent='早すぎです（絵柄が出てから押す）';return}
+    if(phase!=='trial')return;
+    if(Date.now()-t0<120){early++;msg.textContent='早すぎです（見てから押していません）';return}
+    settle(em,false);
+  }
+
+  function settle(em,timeout){
+    if(phase!=='trial')return;
+    phase='feed';
+    clearTimers();
+    var rt=Date.now()-t0, ok=(!timeout&&em===cur);
+    targetEl.classList.add('hide');
+    if(warmLeft>0){
+      warmLeft--;
+      lastEl.textContent=timeout?'時間切れ':(rt/1000).toFixed(2)+' 秒';
+      msg.textContent=warmLeft>0?'練習中です':'ここから本番です';
+      trialPos=0;
+      later(function(){warmLeft>0?nextTrial():startBlock()},FEED_MS);
+      return;
+    }
+    var s=stats[curSet.length];
+    if(timeout){s.miss++;marks[scored]=false}
+    else if(ok){s.rt.push(rt);marks[scored]=true}
+    else{s.wrong++;marks[scored]=false}
+    lastEl.textContent=timeout?'時間切れ':(ok?(rt/1000).toFixed(2)+' 秒':'ちがう');
+    scored++;trialPos++;
+    renderStrip();
+    msg.textContent='';
+    later(nextTrial,FEED_MS);
+  }
+
+  function rank(d){
+    if(d===null)return'🧐 判定できるだけの回数がありません';
+    if(d<80)return'🏆 選択肢に動じない人';
+    if(d<160)return'⚡ ほとんど引きずられない人';
+    if(d<260)return'🙂 人並みに遅くなる人';
+    if(d<400)return'😅 選択肢に弱い人';
+    return'🤦 ボタンが増えると別人になる人';
+  }
+
+  function finish(){
+    running=false;phase='done';clearTimers();
+    document.body.classList.remove('playing');
+    play.classList.add('hide');result.classList.remove('hide');
+    var a2=avg(stats[2].rt),a4=avg(stats[4].rt),a8=avg(stats[8].rt);
+    var diff=(a2!==null&&a8!==null)?Math.round(a8-a2):null;
+    scoreEl.textContent=diff===null?'—':((diff>=0?'+':'')+diff+' ms');
+    rankEl.textContent=rank(diff===null?null:Math.abs(diff));
+    var lines=[],i,n;
+    for(i=0;i<SIZES.length;i++){
+      n=SIZES[i];
+      var a=avg(stats[n].rt);
+      lines.push(n+'択：'+(a===null?'記録なし':Math.round(a)+' ms')+'（正解 '+stats[n].rt.length+' / '+PER
+        +'　押しちがい '+stats[n].wrong+'　時間切れ '+stats[n].miss+'）');
+    }
+    if(a2!==null&&a4!==null&&a8!==null){
+      lines.push('選択肢が2倍になるごとの増え方：'+Math.round((a8-a2)/2)+' ms');
+    }
+    lines.push('区間の順番：'+order.join('択 → ')+'択');
+    lines.push('フライング（絵柄が出る前に押した）：'+early+' 回');
+    lines.push('この差には「決める時間」だけでなく「ボタンを探す時間」も入っています。');
+    breakdownEl.textContent=lines.join('\n');
+  }
+
+  function start(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    if(running)return;running=true;
+    clearTimers();
+    order=shuffle(SIZES.slice());
+    stats={};for(var i=0;i<SIZES.length;i++)stats[SIZES[i]]={rt:[],wrong:0,miss:0};
+    marks=[];scored=0;blockPos=0;trialPos=0;early=0;warmLeft=WARM;
+    document.body.classList.add('playing');
+    intro.classList.add('hide');result.classList.add('hide');play.classList.remove('hide');
+    renderStrip();
+    qnoEl.textContent='練習';
+    lastEl.innerHTML='&nbsp;';
+    targetEl.classList.add('hide');
+    waitEl.classList.add('hide');
+    countEl.classList.remove('hide');
+    curSet=shuffle(POOL.slice()).slice(0,4);
+    drawChoices(curSet);
+    phase='count';
+    var n=3;
+    countEl.textContent=String(n);
+    msg.textContent='まず練習が'+WARM+'問あります';
+    ticker=setInterval(function(){
+      n--;
+      if(n<=0){clearInterval(ticker);ticker=null;countEl.classList.add('hide');nextTrial();return}
+      countEl.textContent=String(n);
+    },600);
+  }
+
+  function share(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    var a2=avg(stats[2].rt),a8=avg(stats[8].rt);
+    var d=(a2!==null&&a8!==null)?Math.round(a8-a2):null;
+    var t='【迷ってないのに選手権】\n答えは分かっているのに、8択は2択より '+(d===null?'？':d)+' ms 遅くなりました。\n'
+      +rank(d===null?null:Math.abs(d))+'\nボタンが増えるだけで遅くなるやつです。';
+    window.open('https://x.com/intent/tweet?text='+encodeURIComponent(t)+'&url='+encodeURIComponent(GAME_URL),'_blank');
+  }
+
+  bind(document.getElementById('startBtn'),start);
+  bind(document.getElementById('retryBtn'),start);
+  bind(document.getElementById('shareBtn'),share);
+  document.addEventListener('keydown',function(e){
+    if(e.repeat)return;
+    if(phase==='trial'||phase==='gap'){
+      var m=/^Digit([1-8])$/.exec(e.code);
+      if(m){e.preventDefault();var k=parseInt(m[1],10)-1;if(k<curSet.length)answer(curSet[k]);return}
+    }
+    if((e.code==='Space'||e.code==='Enter')&&play.classList.contains('hide')){start(e)}
+  });
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>迷ってないのに選手権 について</h2>
+<p>出た絵柄と同じボタンを押すだけ。迷う要素はどこにもないのに、ボタンが2個から8個に増えるだけで反応が遅くなります。その遅くなった量が、最後にミリ秒で出ます。</p>
+<h3>なぜ難しいのか</h3><p>反応を返す前に、候補をひとつに絞り込む工程が必要です。候補が多いほどこの絞り込みに時間がかかり、選択肢の数が2倍になるごとに遅れが一定量ずつ積み上がります。1952年にヒックが報告した関係です。画面の上ではこれに、押すべきボタンを目で探す時間も加わります。つまりここで出る差は「決める時間」と「探す時間」の合計で、決める分だけを取り出したものではありません。区間の順番を毎回シャッフルしているのは、あとの区間ほど慣れて速くなるぶんと混ざらないようにするためです。最初の練習4問を採点しないのも同じ理由です。</p>
+<h3>コツ</h3><ul><li>絵柄が出る前に、ボタンの並びを一度なめて位置を頭に入れておく。探す時間のぶんは削れます</li><li>指を画面の中央あたりに置いておく。8択はボタンまでの移動距離そのものが長くなります</li><li>焦ると押しちがいが増えます。押しちがいは平均に入らないので、正確さを捨てても記録は縮みません</li></ul>
+<h3>記録の目安</h3><p>2択で0.5秒前後、8択で0.8秒前後が目安です。差は0.2秒前後が普通で、0に近いほど選択肢の数に引きずられていません。ただし1区間8問しかないので、1回の結果はかなりぶれます。差の大きさより、何度やっても同じ向きに出ることのほうが確かです。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../tanomareteta/">◀ 📝 頼まれてたのに選手権</a></li><li><a href="../sushi-stack/">🍣 寿司積み選手権</a></li><li><a href="../rizumu-tap/">🌀 リズムタップ選手権</a></li><li><a href="../moritsuke-sagi/">🍔 盛りつけ詐欺選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "迷ってないのに選手権", "description": "出た絵柄と同じボタンを押すだけ。でもボタンが2個・4個・8個と変わります。答えは分かっているのに、選択肢が増えるだけで遅くなる全24問。", "url": "https://bakage.com/games/mayottenai/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
