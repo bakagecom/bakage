@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>止まれなかった | バカゲー製作所</title>
+<meta name="description" content="矢印の向きのボタンを速く押すだけ。ただし時々あとから赤い ✋ が出て、そのときだけ押してはいけない。赤くなる遅れが自動で伸び縮みし、最後にあなたが止まるまでにかかった時間をミリ秒で出す全26問のバカゲー。">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JLPMYL3495"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-JLPMYL3495');</script>
+<style>
+:root{--bg:#CFE0F7;--ink:#17171f;--white:#fff;--yellow:#ffe14d;--pink:#ff4f81;--red:#e23b4a;--blue:#2f6fd0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif;display:flex;flex-direction:column;user-select:none;touch-action:manipulation;overflow-y:auto}
+body.playing{overflow:hidden;touch-action:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:.9rem;font-weight:900}.topbar a{color:var(--ink);text-decoration:none;opacity:.75}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px}.panel{width:100%;max-width:420px;text-align:center}
+.card{background:var(--white);border:4px solid var(--ink);border-radius:18px;padding:26px 22px;box-shadow:8px 8px 0 var(--ink)}
+h1{font-size:1.45rem;margin-bottom:12px}.card p{font-size:.92rem;line-height:1.8;margin:7px 0}
+.rule{margin:12px 0;padding:12px 10px;border:3px dashed var(--ink);border-radius:12px;background:#fffbe6;font-size:.95rem;line-height:1.7;font-weight:900}
+.small{font-size:.78rem;opacity:.75;line-height:1.7}
+.btn{margin-top:16px;padding:14px 28px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:900 1rem inherit;cursor:pointer}.btn:active{transform:translateY(2px)}
+.btn.sub{background:#fff;color:var(--ink);border:3px solid var(--ink);margin-left:8px}
+.hide{display:none!important}
+.hud{display:flex;justify-content:space-between;font-weight:900;margin:0 4px 6px;font-size:.9rem}
+.field{position:relative;width:100%;height:clamp(220px,38vh,300px);background:var(--white);border:4px solid var(--ink);border-radius:14px;box-shadow:6px 6px 0 var(--ink);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.field.stopnow{background:var(--red)}
+.arrow{font-size:5.2rem;font-weight:900;line-height:1}
+.wait{font-size:1.6rem;font-weight:900;opacity:.3}
+.count{font-size:3.4rem;font-weight:900;line-height:1}
+.sign{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);color:#fff;font-size:3.4rem;font-weight:900;line-height:1.15;text-align:center}
+.sign small{display:block;font-size:1.1rem;letter-spacing:.2em}
+.keys{display:flex;gap:10px;margin-top:10px}
+.key{flex:1;padding:18px 0;border:4px solid var(--ink);border-radius:14px;background:var(--white);box-shadow:5px 5px 0 var(--ink);font:900 1.7rem inherit;color:var(--ink);cursor:pointer}
+.key:active{transform:translate(2px,2px);box-shadow:3px 3px 0 var(--ink)}
+.msg{min-height:2.4em;margin-top:8px;font-weight:900;line-height:1.5;font-size:.86rem}
+.strip{display:grid;grid-template-columns:repeat(26,1fr);gap:2px;margin-top:4px}
+.bit{height:9px;border-radius:2px;background:#fff;border:2px solid var(--ink)}
+.bit.done{background:var(--yellow)}
+.bit.bad{background:var(--pink)}
+.bit.held{background:var(--blue)}
+.score{font-size:2.4rem;font-weight:900;margin:8px 0}
+.rank{font-weight:900;margin:10px 0}
+.breakdown{font-size:.84rem;line-height:1.85;margin-top:10px;text-align:left;white-space:pre-line}
+@media(max-width:480px){.topbar{padding:14px 16px}.stage{padding:12px}.card{padding:22px 16px}h1{font-size:1.22rem}.arrow{font-size:4.4rem}.key{font-size:1.5rem;padding:15px 0}}
+</style>
+<!-- bakage:head -->
+<link rel="canonical" href="https://bakage.com/games/tomarenakatta/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8474927598037118" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-8474927598037118">
+<meta property="og:title" content="止まれなかった">
+<meta property="og:description" content="矢印の向きのボタンを速く押すだけ。ただし時々あとから赤い ✋ が出て、そのときは押してはいけない。赤くなるまでの遅れが自動で伸び縮みし、止まるまでにかかった時間がミリ秒で出る全26問。">
+<meta property="og:url" content="https://bakage.com/games/tomarenakatta/">
+<meta property="og:image" content="https://bakage.com/assets/ogp-tomarenakatta.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@bakage_com">
+<meta name="twitter:image" content="https://bakage.com/assets/ogp-tomarenakatta.png">
+<!-- /bakage:head -->
+<style>
+/* 注入分をゲーム本体の外に出すための調整。
+   原稿は body 自体を height:100% の flex コンテナにしているため、
+   解説や回遊リンクを body 直下に足すと flex の兄弟になり、
+   .stage（ゲーム描画領域）が押し縮められて要素が重なる。
+   2026-08-12、34本すべて・スマホとPCの両方で発生していることを実測。
+   ゲーム本体を .bkg-game で包み、body は通常の文書に戻す。 */
+html{height:auto!important}
+body{height:auto!important;display:block!important;overflow:visible!important}
+body.playing{overflow:hidden!important}
+.bkg-game{display:flex;flex-direction:column;min-height:100vh;min-height:100svh;
+position:relative;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+</style>
+</head>
+<body>
+<div class="bkg-game">
+
+<div class="topbar"><a href="../../">← バカゲー製作所</a><span>✋ 止まれなかった</span></div>
+<div class="stage"><div class="panel">
+  <div id="intro" class="card">
+    <h1>✋ 止まれなかった</h1>
+    <p>矢印が出たら、<strong>その向きのボタンを速く押す</strong>だけ。</p>
+    <div class="rule">ただし、押す前に画面が赤くなって ✋ が出たら、<u>そのときは押さない</u>。</div>
+    <p class="small">赤くなるまでの遅れは自動で伸び縮みします。止まれたら次はぎりぎりまで遅らせ、押してしまったら次は早めます。練習3問のあと本番26問。最後に、あなたが止まるまでにかかった時間をミリ秒で出します。</p>
+    <button class="btn" id="startBtn">タップして開始</button>
+  </div>
+  <div id="play" class="hide">
+    <div class="hud"><span id="qno">練習</span><span id="lastrt">&nbsp;</span></div>
+    <div class="field" id="field">
+      <div class="count hide" id="countdown">3</div>
+      <div class="wait hide" id="wait">・</div>
+      <div class="arrow hide" id="arrow">→</div>
+      <div class="sign hide" id="stopSign">✋<small>とまれ</small></div>
+    </div>
+    <div class="keys">
+      <button class="key" id="btnL" type="button">←</button>
+      <button class="key" id="btnR" type="button">→</button>
+    </div>
+    <div class="msg" id="msg">はじまります</div>
+    <div class="strip" id="strip"></div>
+  </div>
+  <div id="result" class="card hide">
+    <h1>結果</h1><p>合図が出てから、あなたが止まるまでにかかった時間</p>
+    <div class="score" id="score">— ms</div>
+    <div class="rank" id="rank"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <button class="btn" id="retryBtn">もう一度</button><button class="btn sub" id="shareBtn">Xで共有</button>
+  </div>
+</div></div>
+<script>
+(function(){
+  'use strict';
+  var GAME_URL='https://bakage.com/games/tomarenakatta/';
+  var GO=18, STOP=8, TOTAL=GO+STOP, WARM=3;
+  var SSD0=200, SSD_STEP=50, SSD_MIN=50, SSD_MAX=650, SSD_DEMO=350;
+  var LIMIT=1400, FEED_MS=380, GAP_MIN=450, GAP_MAX=750;
+
+  var intro=document.getElementById('intro'),play=document.getElementById('play'),result=document.getElementById('result');
+  var fieldEl=document.getElementById('field'),countEl=document.getElementById('countdown'),waitEl=document.getElementById('wait');
+  var arrowEl=document.getElementById('arrow'),signEl=document.getElementById('stopSign');
+  var qnoEl=document.getElementById('qno'),lastEl=document.getElementById('lastrt');
+  var msg=document.getElementById('msg'),stripEl=document.getElementById('strip');
+  var scoreEl=document.getElementById('score'),rankEl=document.getElementById('rank'),breakdownEl=document.getElementById('breakdown');
+
+  var phase='idle',running=false,timers=[],ticker=null;
+  var plan=[],pos=0,scored=0,warmLeft=0,t0=0,cur=null,marks=[];
+  var ssd=SSD0,goRT=[],goWrong=0,goMiss=0,held=0,failRT=[],ssdUsed=[],lastSSD=SSD0;
+
+  function bind(el,fn){
+    var guard=0;
+    el.addEventListener('touchstart',function(e){e.preventDefault();guard=Date.now();fn(e)},{passive:false});
+    el.addEventListener('click',function(e){if(Date.now()-guard<600)return;fn(e)},{passive:false});
+  }
+  function later(fn,ms){timers.push(setTimeout(fn,ms))}
+  function clearTimers(){for(var i=0;i<timers.length;i++)clearTimeout(timers[i]);timers=[];if(ticker){clearInterval(ticker);ticker=null}}
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+  function avg(a){if(!a.length)return null;var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
+  function ms(v){return v===null?'—':Math.round(v)+'ms'}
+
+  function renderStrip(){
+    stripEl.innerHTML='';
+    for(var i=0;i<TOTAL;i++){
+      var d=document.createElement('div');
+      d.className='bit'+(i<scored?(marks[i]==='held'?' held':(marks[i]==='ok'?' done':' bad')):'');
+      stripEl.appendChild(d);
+    }
+  }
+
+  function makePlan(){
+    var a=[],i;
+    for(i=0;i<GO;i++)a.push('go');
+    for(i=0;i<STOP;i++)a.push('stop');
+    shuffle(a);
+    while(a[0]==='stop'){shuffle(a)}
+    var out=[];
+    for(i=0;i<a.length;i++)out.push({kind:a[i],dir:Math.random()<0.5?'L':'R'});
+    return out;
+  }
+
+  function clearField(){
+    arrowEl.classList.add('hide');
+    signEl.classList.add('hide');
+    waitEl.classList.add('hide');
+    fieldEl.classList.remove('stopnow');
+  }
+
+  function nextTrial(){
+    if(warmLeft<=0&&pos>=plan.length){finish();return}
+    if(warmLeft>0){
+      cur={kind:(warmLeft===1?'stop':'go'),dir:Math.random()<0.5?'L':'R',ssd:SSD_DEMO};
+    }else{
+      cur=plan[pos];
+      cur.ssd=ssd;
+    }
+    phase='gap';
+    clearField();
+    waitEl.classList.remove('hide');
+    qnoEl.textContent=(warmLeft>0)?('練習 '+(WARM-warmLeft+1)+' / '+WARM):((scored+1)+' / '+TOTAL);
+    msg.textContent=(warmLeft>0)?(cur.kind==='stop'?'次は「とまれ」が出ます':'練習です'):'';
+    later(showArrow,GAP_MIN+Math.floor(Math.random()*(GAP_MAX-GAP_MIN+1)));
+  }
+
+  function showArrow(){
+    phase='trial';
+    waitEl.classList.add('hide');
+    arrowEl.textContent=(cur.dir==='L')?'←':'→';
+    arrowEl.classList.remove('hide');
+    t0=Date.now();
+    if(cur.kind==='stop')later(showStop,cur.ssd);
+    later(function(){settle(null,true)},LIMIT);
+  }
+
+  function showStop(){
+    if(phase!=='trial')return;
+    fieldEl.classList.add('stopnow');
+    arrowEl.classList.add('hide');
+    signEl.classList.remove('hide');
+  }
+
+  function answer(dir){
+    if(phase!=='trial')return;
+    settle(dir,false);
+  }
+
+  function settle(dir,timeout){
+    if(phase!=='trial')return;
+    phase='feed';
+    clearTimers();
+    var rt=Date.now()-t0;
+    var isStop=(cur.kind==='stop');
+    var ok=(!timeout&&dir===cur.dir);
+    var mark='bad',text='';
+
+    if(isStop){
+      if(timeout){mark='held';text='止まれました'}
+      else{mark='bad';text='押してしまいました（'+rt+'ms）'}
+    }else{
+      if(timeout){mark='bad';text='時間切れ'}
+      else if(ok){mark='ok';text=rt+'ms'}
+      else{mark='bad';text='逆を押しました'}
+    }
+
+    if(warmLeft>0){
+      warmLeft--;
+      lastEl.textContent=text;
+      msg.textContent=(warmLeft>0)?'練習はあと'+warmLeft+'問':'ここから本番です';
+      clearField();
+      later(nextTrial,FEED_MS);
+      return;
+    }
+
+    if(isStop){
+      ssdUsed.push(cur.ssd);
+      lastSSD=cur.ssd;
+      if(timeout){held++;ssd=Math.min(SSD_MAX,ssd+SSD_STEP)}
+      else{failRT.push(rt);ssd=Math.max(SSD_MIN,ssd-SSD_STEP)}
+    }else{
+      if(timeout)goMiss++;
+      else if(ok)goRT.push(rt);
+      else goWrong++;
+    }
+
+    marks[scored]=mark;
+    lastEl.textContent=text;
+    scored++;pos++;
+    renderStrip();
+    msg.textContent='';
+    clearField();
+    later(nextTrial,FEED_MS);
+  }
+
+  function ssrt(){
+    var g=avg(goRT),s=avg(ssdUsed);
+    if(g===null||s===null||goRT.length<6||ssdUsed.length<4)return null;
+    var v=g-s;
+    return (v<=0)?0:v;
+  }
+
+  function rank(v){
+    if(v===null)return'🧐 判定できるだけの回数がありません';
+    if(v<=0)return'🧐 合図より先に押していたので測れませんでした';
+    if(v<200)return'🏆 ブレーキが効きすぎている人';
+    if(v<260)return'⚡ すぐ止まれる人';
+    if(v<340)return'🙂 人並みに止まれる人';
+    if(v<440)return'😅 一拍おくれる人';
+    return'🤦 もう指が出てる人';
+  }
+
+  function finish(){
+    running=false;phase='done';clearTimers();clearField();
+    document.body.classList.remove('playing');
+    play.classList.add('hide');result.classList.remove('hide');
+    var v=ssrt();
+    scoreEl.textContent=(v===null||v<=0)?'測れませんでした':(Math.round(v)+' ms');
+    rankEl.textContent=rank(v);
+    var lines=[];
+    lines.push('ふつうの回：平均 '+ms(avg(goRT))+'（正解 '+goRT.length+' / '+GO+'　逆押し '+goWrong+'　時間切れ '+goMiss+'）');
+    lines.push('とまれの回：止まれた '+held+' / '+STOP+'　遅れの平均 '+ms(avg(ssdUsed))+'　最後の遅れ '+lastSSD+'ms');
+    lines.push('止まれなかった回の平均：'+ms(avg(failRT))+'（ふつうの回より速ければ、速すぎて間に合わなかった、ということです）');
+    lines.push('上の数字は、ふつうの回の平均から遅れの平均を引いたものです。');
+    if(held===0||held===STOP)lines.push('⚠️ 止まれた回数が0回か'+STOP+'回に寄ると、遅れの伸び縮みが働ききっていません。この回の数字は当てになりません。');
+    lines.push('⚠️ とまれの回は'+STOP+'回しかないので、1回の結果はかなりぶれます。');
+    breakdownEl.textContent=lines.join('\n');
+  }
+
+  function start(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    if(running)return;running=true;
+    clearTimers();clearField();
+    plan=makePlan();
+    marks=[];scored=0;pos=0;warmLeft=WARM;
+    ssd=SSD0;lastSSD=SSD0;goRT=[];goWrong=0;goMiss=0;held=0;failRT=[];ssdUsed=[];
+    document.body.classList.add('playing');
+    intro.classList.add('hide');result.classList.add('hide');play.classList.remove('hide');
+    renderStrip();
+    qnoEl.textContent='練習';
+    lastEl.innerHTML='&nbsp;';
+    countEl.classList.remove('hide');
+    phase='count';
+    var n=3;
+    countEl.textContent=String(n);
+    msg.textContent='まず練習が'+WARM+'問あります';
+    ticker=setInterval(function(){
+      n--;
+      if(n<=0){clearInterval(ticker);ticker=null;countEl.classList.add('hide');nextTrial();return}
+      countEl.textContent=String(n);
+    },600);
+  }
+
+  function share(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    var v=ssrt();
+    var t='【止まれなかった】\n合図が出てから止まるまでにかかった時間は '+((v===null||v<=0)?'測れませんでした':Math.round(v)+' ms でした')+'。\n'
+      +rank(v)+'\n押すのをやめるのにも、押すのと同じくらい時間がかかります。';
+    window.open('https://x.com/intent/tweet?text='+encodeURIComponent(t)+'&url='+encodeURIComponent(GAME_URL),'_blank');
+  }
+
+  bind(document.getElementById('startBtn'),start);
+  bind(document.getElementById('retryBtn'),start);
+  bind(document.getElementById('shareBtn'),share);
+  bind(document.getElementById('btnL'),function(){answer('L')});
+  bind(document.getElementById('btnR'),function(){answer('R')});
+  document.addEventListener('keydown',function(e){
+    if(e.repeat)return;
+    if(e.code==='ArrowLeft'){answer('L');return}
+    if(e.code==='ArrowRight'){answer('R');return}
+    if((e.code==='Space'||e.code==='Enter')&&play.classList.contains('hide')){start(e)}
+  });
+})();
+</script>
+</div>
+<!-- bakage:footer -->
+<style>
+.bkg-nav{max-width:900px;margin:32px auto 0;clear:both;padding:20px 16px;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-nav h2{font-size:1rem;margin:0 0 12px;opacity:.75}
+.bkg-nav ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bkg-nav a{display:block;padding:12px 14px;background:#fff;border:3px solid #181820;border-radius:10px;
+box-shadow:4px 4px 0 #181820;text-decoration:none;color:#181820;font-weight:700;font-size:.9rem}
+.bkg-nav a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #181820}
+.bkg-foot{max-width:900px;margin:24px auto 40px;padding:0 16px;text-align:center;font-size:.8rem;opacity:.75;
+font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-foot a{color:inherit}
+.bkg-ad{max-width:900px;margin:28px auto 0;padding:0 16px}
+.bkg-about{max-width:760px;margin:36px auto 0;clear:both;padding:24px 20px;background:#fff;border:3px solid #181820;
+border-radius:12px;box-shadow:5px 5px 0 #181820;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",Meiryo,sans-serif}
+.bkg-about h2{font-size:1.15rem;margin:0 0 12px}
+.bkg-about h3{font-size:.95rem;margin:20px 0 6px;padding-left:8px;border-left:5px solid #FFD100}
+.bkg-about p{font-size:.9rem;line-height:1.95;margin:0}
+.bkg-about ul{margin:6px 0 0;padding-left:1.2em}
+.bkg-about li{font-size:.9rem;line-height:1.9}
+</style>
+<section class="bkg-about">
+<h2>止まれなかった について</h2>
+<p>矢印が出たら、その向きのボタンをできるだけ速く押すだけ。ただし時々、押す前に画面が赤くなって ✋ が出ます。そのときだけ押してはいけない。分かっているのに、指はもう出ています。</p>
+<h3>なぜ難しいのか</h3><p>矢印が見えた時点で「押しにいく働き」がすでに走り出しています。赤い合図は、そのあとから「止めにいく働き」を走らせる。どちらが先に着くかの競走で、止めるほうが間に合えば止まれ、間に合わなければ押してしまう。ローガンとコーワンが1984年に示した競走モデルの考え方です。厄介なのは、止めにいく働きにかかる時間そのものは外から見えないことです。うまく止まれた回には反応が無いので、何ミリ秒かかったのかを記録できません。そこで測るものを入れ替えます。このゲームは、赤くなるまでの遅れのほうを動かします。止まれたら次は50ミリ秒だけ遅らせて難しくし、押してしまったら次は50ミリ秒だけ早めて易しくする。これを続けると、遅れは「ちょうど半分だけ止まれる長さ」に自然と落ち着きます。そこは押しにいく働きと止めにいく働きが同時に着く点なので、ふつうの回の平均反応時間から遅れの平均を引けば、止めにいく働きにかかった時間だけが残ります。結果画面の数字はこの引き算です。競走モデルからは、もう1つ予想が出ます。止まれなかった回は、たまたま押すのが速かった回のはずだ、ということです。結果画面に「止まれなかった回の平均」を別に出しているのはそのためで、それがふつうの回の平均より速く出ていれば、あなたの手元でも競走が起きています。</p>
+<h3>コツ</h3><ul><li>速く押そうとしないこと。押す速さと止まれる確率は交換の関係にあり、しかも赤くなるまでの遅れはあなたの速さに合わせて伸びます。急いでも記録は良くなりません</li><li>かといって、赤が出るのを待って構えるのもだめです。待てばふつうの回の平均が伸び、遅れもそのぶん伸びるので、引き算の結果はどこへも動きません。矢印を見たら普通に押す、が正しい遊び方です</li><li>結果は回数ではなく読み方で見ます。止まれた回数が8回の半分あたりに寄っていれば遅れの調整が効いた回で、0回や8回に張りついた回の数字は当てになりません</li></ul>
+<h3>記録の目安</h3><p>練習3問のあと本番26問（ふつうの回18・とまれの回8）です。記録は止まれた回数ではなく、上に出るミリ秒のほうです。実験室の研究では200ミリ秒前後になることが多く、300ミリ秒を超えると遅いほうにあたります。⚠️ ただしこのゲームの合図は画面の色で、実験でよく使われる音より気づくのが遅いぶん、数字は大きめに出ます。⚠️ とまれの回は8回しかないので、1回の結果はかなりぶれます。何度か回して同じあたりに落ちるかで見てください。⚠️ 赤くなるまでの遅れは50〜650ミリ秒の範囲しか動かないので、その端に張りついた回も当てになりません。</p>
+</section>
+
+<nav class="bkg-nav">
+<h2>ほかのバカゲーもどうぞ</h2>
+<ul><li><a href="../katteni-mitsukaru/">◀ 🔍 勝手に見つかるほう</a></li><li><a href="../suuji-sagashi/">🎺 数字さがし選手権</a></li><li><a href="../sokuzan-senshuken/">🧲 瞬間暗算選手権</a></li><li><a href="../deka-moji/">🔢 デカ文字選手権</a></li></ul>
+</nav>
+<div class="bkg-foot">
+<p><a href="../../">🏭 バカゲー製作所トップ</a> ｜ <a href="../../about.html">このサイトについて</a>
+ ｜ <a href="../../privacy.html">プライバシーポリシー</a>
+ ｜ <a href="../../contact.html">お問い合わせ</a> ｜ <a href="https://x.com/bakage_com">工場見学 @bakage_com</a></p>
+</div>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "止まれなかった", "description": "矢印の向きのボタンを速く押すだけ。ただし時々あとから赤い ✋ が出て、そのときは押してはいけない。赤くなるまでの遅れが自動で伸び縮みし、止まるまでにかかった時間がミリ秒で出る全26問。", "url": "https://bakage.com/games/tomarenakatta/", "applicationCategory": "GameApplication", "operatingSystem": "Any", "browserRequirements": "HTML5", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}, "publisher": {"@type": "Organization", "name": "バカゲー製作所"}}</script>
+<!-- /bakage:footer -->
+</body>
+</html>
